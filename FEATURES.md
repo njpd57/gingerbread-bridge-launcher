@@ -58,26 +58,36 @@ Si el usuario elige como fondo del sistema un fondo **animado** (live wallpaper)
 - **API:** `sendWallpaperTap(x, y)` al tocar un hueco vacío cuando el fondo es "Fondo del sistema". Hoy esos toques solo generan pulsos en nuestro fondo Nexus.
 - **Esfuerzo:** muy bajo.
 
+### 7. Widget de búsqueda de aplicaciones
+Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 con el logo de Google, un campo de texto y el botón del micrófono. Nuestra versión tendría el mismo aspecto, pero buscaría **aplicaciones instaladas**, porque Bridge no puede abrir búsquedas web.
+- Al tocar la barra se abre un panel de búsqueda a pantalla completa, al estilo de la búsqueda rápida de Gingerbread: el campo arriba con el teclado abierto y, debajo, la lista de resultados con icono y nombre, que se filtra mientras se escribe.
+- La búsqueda ignora mayúsculas y tildes ("camara" encuentra "Cámara"), pone primero los nombres que empiezan por el texto y después los que lo contienen. Si hay una sola coincidencia, "Intro" en el teclado la abre.
+- Se podrían mostrar las **apps usadas hace poco** cuando el campo está vacío, guardadas en localStorage, como hacía la búsqueda rápida.
+- El logo de Google se sustituye por una lupa o un texto propio ("Buscar aplicaciones"), para no usar la marca.
+- **API:** la lista de apps que ya carga el cajón (`getAppsURL`) y `requestLaunchApp(packageName)`. El panel se cierra con el botón de inicio (`newIntent`, a través de `useMenuStore`) y con el truco de `history.pushState` que ya usa el cajón para el botón Atrás.
+- **Limitaciones:** no hay búsqueda web (Bridge no abre URLs ni intents) ni búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
+- **Esfuerzo:** medio. Hay que añadir el tipo de widget (`WidgetKind`/`WIDGET_SIZES`, `HomeGrid.vue`, `DragLayer.vue` y `AddDialog.vue`) y el panel de búsqueda. Además, el teclado puede tapar los resultados, por lo que conviene hacerlo junto con la idea 9.
+
 ---
 
 ## Mejoras de uso
 
-### 7. Doble toque para bloquear la pantalla
+### 8. Doble toque para bloquear la pantalla
 No existía en Gingerbread, pero es muy práctico. Sería opcional en Apariencia.
 - **API:** `requestLockScreen()` y `getCanLockScreen()`. Requiere activar el servicio de accesibilidad de Bridge y permitir el bloqueo en sus ajustes. En Android 9 y posteriores, después de bloquear así hay que desbloquear con el PIN, no con la huella; Bridge lo advierte en su documentación.
 - **Esfuerzo:** bajo.
 
-### 8. Que el teclado no tape los campos
+### 9. Que el teclado no tape los campos
 Al escribir la ciudad del tiempo o renombrar una carpeta, el teclado puede tapar el campo.
 - **API:** `getImeWindowInsets()` y el evento `imeWindowInsetsChanged`, para subir el contenido lo que ocupa el teclado.
 - **Esfuerzo:** bajo.
 
-### 9. Cambio de página por el borde sin chocar con el gesto "Atrás"
+### 10. Cambio de página por el borde sin chocar con el gesto "Atrás"
 Al arrastrar un icono al borde para pasar de página, esa zona coincide con el gesto de volver atrás de Android.
 - **API:** `getSystemGesturesWindowInsets()` y `getMandatorySystemGesturesWindowInsets()`, para usar esa zona como referencia en `EDGE_PX` (`useDragStore`).
 - **Esfuerzo:** bajo.
 
-### 10. Esquivar la cámara con precisión
+### 11. Esquivar la cámara con precisión
 La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del recorte se puede reservar justo ese espacio y colocar las notificaciones y los iconos a su alrededor.
 - **API:** `getDisplayCutoutPath()` (Android 12+) y `getDisplayShapePath()` (Android 14+, esquinas redondeadas de la pantalla). Ambas devuelven un path SVG.
 - **Esfuerzo:** medio.
@@ -86,7 +96,7 @@ La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del reco
 
 ## Herramientas y mantenimiento
 
-### 11. Pantalla "Acerca de" y diagnóstico
+### 12. Pantalla "Acerca de" y diagnóstico
 Una opción en el menú (o una pulsación larga en "Bridge") que muestre:
 - La versión de Bridge (`getBridgeVersionName` / `getBridgeVersionCode`) y de Android (`getAndroidAPILevel`).
 - **Los insets que reporta Bridge en ese momento.** Nos habría ahorrado adivinar cuando la barra de estado medía 0.
@@ -94,13 +104,96 @@ Una opción en el menú (o una pulsación larga en "Bridge") que muestre:
 - Un botón para abrir la **consola de desarrollo** de Bridge (`requestOpenDeveloperConsole`).
 - **Esfuerzo:** bajo.
 
-### 12. Detectar funciones según la versión
+### 13. Detectar funciones según la versión
 Usar `getAndroidAPILevel()` para ocultar las opciones que el teléfono no soporta. Por ejemplo, la forma del recorte solo existe desde Android 12, y el modo noche "personalizado" desde Android 11.
 - **Esfuerzo:** bajo, y se hace junto con las funciones que lo necesiten.
 
-### 13. Errores con el estilo del launcher
+### 14. Errores con el estilo del launcher
 Hoy, cuando algo falla, Bridge muestra su propio aviso (`showToastIfFailed`). Se podría pasar `false` y mostrar el error con un aviso al estilo Gingerbread, usando `getLastErrorMessage()` para el texto.
 - **Esfuerzo:** bajo.
+
+---
+
+## Widgets nuevos
+
+Todos son HTML y usan solo APIs web, localStorage o servicios gratuitos sin clave, así que no dependen de Bridge. Cada uno se añade en los cuatro sitios de siempre: `WidgetKind`/`WIDGET_SIZES`, `HomeGrid.vue`, `DragLayer.vue` y `AddDialog.vue`. El widget de búsqueda está en la idea 7.
+
+### 15. Reloj digital
+Hora grande con la fecha debajo, con la tipografía y el estilo de la pantalla de bloqueo de Gingerbread. Complementa al reloj analógico que ya existe.
+- **Tamaño:** 4×1 (y quizá una versión 2×1).
+- **Esfuerzo:** muy bajo.
+
+### 16. Calendario del mes
+La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas para cambiar de mes. No muestra eventos, porque la API no puede leer el calendario del teléfono.
+- **Tamaño:** 4×2 o 4×3.
+- **Esfuerzo:** bajo. Los nombres de meses y días salen de `Intl.DateTimeFormat('es')`.
+
+### 17. Cuenta regresiva
+Los días que faltan para una fecha elegida (un cumpleaños, un viaje), con un título. Se configura al añadirlo, con un diálogo `GbDialog`.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo. Cada instancia necesita guardar su propia configuración, lo que sirve de base para otros widgets configurables.
+
+### 18. Pronóstico extendido
+El tiempo de los próximos 4 o 5 días (icono, máxima y mínima), con la misma ciudad que el widget del tiempo.
+- **API:** Open-Meteo, pidiendo `forecast_days` > 1 en `useWeatherStore` (hoy pide 1).
+- **Tamaño:** 4×2.
+- **Esfuerzo:** bajo.
+
+### 19. Sol y luna
+La hora de salida y puesta del sol y la fase lunar, con un dibujo de la luna.
+- **API:** `sunrise`/`sunset` de Open-Meteo, en la misma petición del tiempo. La fase lunar se calcula localmente a partir de la fecha.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo.
+
+### 20. Batería
+El porcentaje y un icono de batería al estilo Gingerbread (verde, amarillo o rojo, y el rayo cuando está cargando).
+- **API:** la Battery API, a través de `useDeviceStatus`, que ya usa la barra de estado.
+- **Tamaño:** 1×1.
+- **Esfuerzo:** muy bajo.
+
+### 21. Nota adhesiva
+Una nota amarilla con texto que se edita al tocarla y se guarda en localStorage.
+- **Tamaño:** 2×2.
+- **Esfuerzo:** bajo. Conviene hacerlo junto con la idea 9, porque el teclado puede tapar la nota.
+
+### 22. Cronómetro y temporizador
+Un cronómetro con vueltas y un temporizador que avisa con un sonido.
+- **API:** Web Audio para el sonido y la vibración web (`navigator.vibrate`), si el WebView lo permite.
+- **Limitación:** el aviso solo suena mientras el launcher está visible. Al abrir otra app, el WebView se pausa y no hay notificaciones. Hay que avisarlo en la interfaz, y al volver (`afterResume`) mostrar si el tiempo ya terminó.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo.
+
+### 23. Calculadora
+Una calculadora básica en el escritorio, con teclas al estilo de la calculadora de Gingerbread (fondo negro y pulsación naranja).
+- **Tamaño:** 4×3.
+- **Esfuerzo:** bajo. Hay que evaluar las expresiones sin `eval`.
+
+### 24. Lista de tareas
+Una lista corta de tareas que se marcan al tocarlas; se añaden desde un campo al pie. Se guarda en localStorage.
+- **Tamaño:** 2×2 o 4×2.
+- **Esfuerzo:** bajo. Tiene los mismos problemas con el teclado que la nota (idea 9).
+
+### 25. Marco de fotos
+El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente girada. La foto se elige con `<input type="file">` y se guarda en IndexedDB, porque localStorage se queda corto. Opcionalmente, puede ir rotando entre varias fotos.
+- **Tamaño:** 2×2.
+- **Esfuerzo:** medio. Conviene reducir las fotos (con un canvas) antes de guardarlas.
+
+### 26. Apps más usadas
+Una fila con las 4 apps que más se abren. El launcher cuenta los lanzamientos al llamar a `requestLaunchApp` (desde el cajón, el escritorio, las carpetas y la búsqueda) y los guarda en localStorage. Ese mismo contador serviría para las "apps recientes" de la búsqueda (idea 7).
+- **API:** `requestLaunchApp` y el evento `appRemoved`, para quitar las apps desinstaladas.
+- **Tamaño:** 4×1.
+- **Esfuerzo:** bajo.
+
+### 27. Titulares RSS
+Los últimos titulares de un feed RSS configurable, en una lista que se desplaza.
+- **Limitaciones:** los titulares no se pueden abrir, porque Bridge no abre URLs. Como mucho, al tocar uno se abre la app del navegador sin la noticia. Además, muchos feeds no permiten CORS; habría que elegir feeds que lo permitan o pasar por un proxy público.
+- **Tamaño:** 4×2.
+- **Esfuerzo:** medio.
+
+### 28. Frase del día
+Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin red), con su autor.
+- **Tamaño:** 4×1.
+- **Esfuerzo:** muy bajo.
 
 ---
 
