@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { useHomeLayoutStore } from '../useHomeLayoutStore';
+import { nextTick } from 'vue';
+import { autoGridRows, useHomeLayoutStore } from '../useHomeLayoutStore';
 import { useBridgeEventStore } from '../useBridgeEventStore';
 import { DEFAULT_PAGE } from '../useWorkspaceStore';
 
@@ -22,9 +23,9 @@ describe('useHomeLayoutStore', () =>
     it('rejects areas that overlap an item or leave the grid', () =>
     {
         const layout = useHomeLayoutStore();
-        // clock covers x 1-2, y 0-1
+        // large clock covers rows 0-1, weather row 2
         expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 2, y: 1, w: 1, h: 1 })).toBe(false);
-        expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 0, y: 0, w: 1, h: 1 })).toBe(true);
+        expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 0, y: 3, w: 1, h: 1 })).toBe(true);
         expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 3, y: 3, w: 2, h: 1 })).toBe(false);
         expect(layout.isAreaFree({ page: -1, x: 0, y: 0, w: 1, h: 1 })).toBe(false);
         // same cells on another page are free
@@ -34,7 +35,7 @@ describe('useHomeLayoutStore', () =>
     it('ignores the dragged item itself when checking a move', () =>
     {
         const layout = useHomeLayoutStore();
-        expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 2, y: 0, w: 2, h: 2 }, 'clock')).toBe(true);
+        expect(layout.isAreaFree({ page: DEFAULT_PAGE, x: 0, y: 0, w: 4, h: 2 }, 'clock')).toBe(true);
     });
 
     it('adds, moves and removes app shortcuts', () =>
@@ -56,11 +57,45 @@ describe('useHomeLayoutStore', () =>
         const layout = useHomeLayoutStore();
         expect(layout.findFreeSpot(0, 1, 1, { x: 2, y: 3 })).toEqual({ page: 0, x: 2, y: 3 });
         // (1, 0) is under the clock, so fall back to the first free cell
-        expect(layout.findFreeSpot(DEFAULT_PAGE, 1, 1, { x: 1, y: 0 })).toEqual({ page: DEFAULT_PAGE, x: 0, y: 0 });
+        expect(layout.findFreeSpot(DEFAULT_PAGE, 1, 1, { x: 1, y: 0 })).toEqual({ page: DEFAULT_PAGE, x: 0, y: 3 });
         // clock + weather leave no room for another 4x1 except the last row
         expect(layout.findFreeSpot(DEFAULT_PAGE, 4, 1)).toEqual({ page: DEFAULT_PAGE, x: 0, y: 3 });
         layout.addWidget('weather', DEFAULT_PAGE, 0, 3);
         expect(layout.findFreeSpot(DEFAULT_PAGE, 4, 1)).toBeNull();
+    });
+
+    it('fits more rows on taller screens, within limits', () =>
+    {
+        // 4 columns of 96px -> 120px tall cells
+        expect(autoGridRows(384, 480)).toBe(4);
+        expect(autoGridRows(384, 720)).toBe(6);
+        expect(autoGridRows(384, 5000)).toBe(7);
+        expect(autoGridRows(384, 100)).toBe(4);
+        expect(autoGridRows(0, 0)).toBe(4);
+    });
+
+    it('uses the fixed row setting over the automatic one', () =>
+    {
+        const layout = useHomeLayoutStore();
+        layout.autoRows = 6;
+        expect(layout.rows).toBe(6);
+        layout.rowsSetting = 5;
+        expect(layout.rows).toBe(5);
+    });
+
+    it('moves items that no longer fit when rows shrink', async () =>
+    {
+        const layout = useHomeLayoutStore();
+        layout.autoRows = 6;
+        await nextTick();
+        layout.addApp('com.android.chrome', 'Chrome', DEFAULT_PAGE, 3, 5);
+
+        layout.autoRows = 4;
+        await nextTick();
+
+        // the only free cells left on the default page are in row 3
+        const chrome = layout.items.find(i => i.type === 'app')!;
+        expect(chrome).toMatchObject({ page: DEFAULT_PAGE, x: 0, y: 3 });
     });
 
     it('creates, fills, renames and empties folders', () =>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
+import { useWindowSize } from '@vueuse/core';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useDragStore } from '@/stores/useDragStore';
+import { autoGridRows, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
 import { px } from './utils/el-utils';
 import Workspace from './home/Workspace.vue';
@@ -15,14 +17,25 @@ import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
+import GridDialog from './menu/GridDialog.vue';
 import FolderPanel from './home/FolderPanel.vue';
 
 const DOCK_HEIGHT = 56;
+const GRID_SIDE_PADDING = 8;
 
 const insets = useWindowInsetsStore();
 const menu = useMenuStore();
 const settings = useSettingsStore();
 const drag = useDragStore();
+const layout = useHomeLayoutStore();
+
+// fit as many Gingerbread-shaped rows as the screen allows (tall phones get more)
+const windowSize = useWindowSize();
+watchEffect(() =>
+{
+    const gridHeight = windowSize.height.value - insets.statusBars.top - DOCK_HEIGHT - insets.navigationBars.bottom;
+    layout.autoRows = autoGridRows(windowSize.width.value - GRID_SIDE_PADDING, gridHeight);
+});
 
 const wallpaper = ref<InstanceType<typeof NexusWallpaper>>();
 
@@ -92,6 +105,7 @@ function onWorkspaceClick(e: MouseEvent)
         <OptionsMenu />
         <AddDialog />
         <WallpaperDialog />
+        <GridDialog />
 
     </div>
 </template>

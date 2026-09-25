@@ -26,6 +26,7 @@ onBeforeUnmount(() => drag.registerGrid(props.page, null));
 
 const items = computed(() => layout.items.filter(i =>
     i.page === props.page
+    && layout.isInGrid(i)
     // hide shortcuts to apps that aren't installed (once the app list has loaded)
     && (i.type !== 'app' || apps.apps.size === 0 || apps.apps.has(i.packageName))
 ));
@@ -79,12 +80,15 @@ function onItemClick(item: HomeItem)
 </script>
 
 <template>
-    <div class="home-grid" ref="el">
+    <div
+        class="home-grid"
+        ref="el"
+        :style="{ 'grid-template-rows': `repeat(${layout.rows}, 1fr)` }">
         <div
             v-for="item in items"
             :key="item.id"
             class="home-item"
-            :class="[item.type, { dragging: drag.draggedItemId === item.id }]"
+            :class="[item.type, item.type === 'widget' ? item.widget : null, { dragging: drag.draggedItemId === item.id }]"
             :style="gridArea(item)"
             @pointerdown="onItemPointerDown(item, $event)"
             @pointermove="longPress.move"
@@ -101,7 +105,7 @@ function onItemClick(item: HomeItem)
             <Shortcut v-else-if="item.type === 'folder'" :label="item.name">
                 <FolderIcon :open="menu.openFolderId === item.id" />
             </Shortcut>
-            <div v-else-if="item.widget === 'clock'" class="clock-container">
+            <div v-else-if="item.widget === 'clock' || item.widget === 'clockLarge'" class="clock-container">
                 <AnalogClock class="clock" />
             </div>
             <WeatherWidget v-else-if="item.widget === 'weather'" class="weather" />
@@ -121,7 +125,6 @@ $gingerbread-orange: #ffa800;
 .home-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
     height: 100%;
     padding: 0 4px;
 
@@ -135,6 +138,12 @@ $gingerbread-orange: #ffa800;
 
         &.dragging {
             visibility: hidden;
+        }
+
+        // let the clocks use the whole cell area
+        &.clock,
+        &.clockLarge {
+            padding: 0;
         }
 
         &.app,

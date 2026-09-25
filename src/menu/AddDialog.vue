@@ -37,6 +37,7 @@ const sortedApps = computed(() =>
 
 const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'clock', label: 'Reloj analógico' },
+    { kind: 'clockLarge', label: 'Reloj analógico grande' },
     { kind: 'weather', label: 'Tiempo' },
 ];
 

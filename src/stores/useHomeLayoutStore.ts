@@ -1,15 +1,30 @@
 import { defineStore } from "pinia";
+import { computed, ref, watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import { useBridgeEventStore } from "./useBridgeEventStore";
 import { DEFAULT_PAGE, PAGE_COUNT } from "./useWorkspaceStore";
 
 export const GRID_COLS = 4;
-export const GRID_ROWS = 4;
+export const MIN_GRID_ROWS = 4;
+export const MAX_GRID_ROWS = 7;
 
-export type WidgetKind = 'clock' | 'weather';
+// Gingerbread's cells were about 25% taller than wide (80 x 100 dp)
+const CELL_ASPECT = 1.25;
+
+/** How many rows fit in a grid of this size while keeping Gingerbread-shaped cells. */
+export function autoGridRows(gridWidth: number, gridHeight: number)
+{
+    const cellWidth = gridWidth / GRID_COLS;
+    if (cellWidth <= 0 || gridHeight <= 0) return MIN_GRID_ROWS;
+    const rows = Math.round(gridHeight / (cellWidth * CELL_ASPECT));
+    return Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, rows));
+}
+
+export type WidgetKind = 'clock' | 'clockLarge' | 'weather';
 
 export const WIDGET_SIZES: Record<WidgetKind, { w: number; h: number }> = {
     clock: { w: 2, h: 2 },
+    clockLarge: { w: 4, h: 2 },
     weather: { w: 4, h: 1 },
 };
 
@@ -59,7 +74,7 @@ export const DEFAULT_FOLDER_NAME = 'Carpeta';
 function defaultItems(): HomeItem[]
 {
     return [
-        { id: 'clock', type: 'widget', widget: 'clock', page: DEFAULT_PAGE, x: 1, y: 0, ...WIDGET_SIZES.clock },
+        { id: 'clock', type: 'widget', widget: 'clockLarge', page: DEFAULT_PAGE, x: 0, y: 0, ...WIDGET_SIZES.clockLarge },
         { id: 'weather', type: 'widget', widget: 'weather', page: DEFAULT_PAGE, x: 0, y: 2, ...WIDGET_SIZES.weather },
     ];
 }
@@ -82,12 +97,18 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
 
     const items = useLocalStorage<HomeItem[]>('home.items', defaultItems());
 
+    // 0 = automatic, otherwise a fixed number of rows chosen by the user
+    const rowsSetting = useLocalStorage<number>('home.gridRows', 0);
+    // measured from the screen by App.vue
+    const autoRows = ref(MIN_GRID_ROWS);
+    const rows = computed(() => rowsSetting.value || autoRows.value);
+
     function isAreaFree(area: GridArea, ignoreId?: string)
     {
         const inBounds = area.page >= 0 && area.page < PAGE_COUNT
             && area.x >= 0 && area.y >= 0
             && area.x + area.w <= GRID_COLS
-            && area.y + area.h <= GRID_ROWS;
+            && area.y + area.h <= rows.value;
 
         return inBounds && !items.value.some(i => i.id !== ignoreId && overlaps(i, area));
     }
@@ -98,7 +119,7 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
         if (preferred && isAreaFree({ page, x: preferred.x, y: preferred.y, w, h }))
             return { page, x: preferred.x, y: preferred.y };
 
-        for (let y = 0; y <= GRID_ROWS - h; y++)
+        for (let y = 0; y <= rows.value - h; y++)
             for (let x = 0; x <= GRID_COLS - w; x++)
                 if (isAreaFree({ page, x, y, w, h }))
                     return { page, x, y };
@@ -173,6 +194,36 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
         items.value = items.value.filter(i => i.id !== id);
     }
 
+    function isInGrid(i: GridArea)
+    {
+        return i.y + i.h <= rows.value;
+    }
+
+    // with fewer rows, move items that fell off the bottom to a free spot:
+    // first on their own page, then on the others. Items that fit nowhere stay
+    // hidden until there are enough rows again.
+    function fitItemsToGrid()
+    {
+        for (const item of items.value.filter(i => !isInGrid(i)))
+        {
+            const pages = [item.page, ...Array.from({ length: PAGE_COUNT }, (_, p) => p).filter(p => p !== item.page)];
+            for (const page of pages)
+            {
+                const spot = findFreeSpot(page, item.w, item.h);
+                if (spot)
+                {
+                    moveItem(item.id, spot.page, spot.x, spot.y);
+                    break;
+                }
+            }
+        }
+    }
+
+    watch(rows, (now, before) =>
+    {
+        if (now < before) fitItemsToGrid();
+    });
+
     // uninstalled apps take their shortcuts (and their place in folders) with them
     bridgeEvents.addEventListener(ev =>
     {
@@ -186,6 +237,10 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
 
     return {
         items,
+        rows,
+        rowsSetting,
+        autoRows,
+        isInGrid,
         isAreaFree,
         findFreeSpot,
         folderAt,

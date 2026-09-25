@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref, shallowRef, watch } from "vue";
-import { GRID_COLS, GRID_ROWS, useHomeLayoutStore, type WidgetKind } from "./useHomeLayoutStore";
+import { GRID_COLS, useHomeLayoutStore, type WidgetKind } from "./useHomeLayoutStore";
 import { useWorkspaceStore } from "./useWorkspaceStore";
 
 const EDGE_PX = 28;
@@ -78,7 +78,7 @@ export const useDragStore = defineStore('drag', () =>
         return {
             page: workspace.currentPage,
             x: Math.min(GRID_COLS - 1, Math.floor((clientX - rect.left) / (rect.width / GRID_COLS))),
-            y: Math.min(GRID_ROWS - 1, Math.floor((clientY - rect.top) / (rect.height / GRID_ROWS))),
+            y: Math.min(layout.rows - 1, Math.floor((clientY - rect.top) / (rect.height / layout.rows))),
         };
     }
 
@@ -117,11 +117,11 @@ export const useDragStore = defineStore('drag', () =>
         }
 
         const cellW = rect.width / GRID_COLS;
-        const cellH = rect.height / GRID_ROWS;
+        const cellH = rect.height / layout.rows;
         const left = x - a.offsetX;
         const top = y - a.offsetY;
         const col = Math.max(0, Math.min(GRID_COLS - a.w, Math.round((left - rect.left) / cellW)));
-        const row = Math.max(0, Math.min(GRID_ROWS - a.h, Math.round((top - rect.top) / cellH)));
+        const row = Math.max(0, Math.min(layout.rows - a.h, Math.round((top - rect.top) / cellH)));
         const page = workspace.currentPage;
 
         target.value = {
@@ -217,7 +217,7 @@ export const useDragStore = defineStore('drag', () =>
 
         const rect = currentGridRect();
         const cellW = rect ? rect.width / GRID_COLS : 80;
-        const cellH = rect ? rect.height / GRID_ROWS : 100;
+        const cellH = rect ? rect.height / layout.rows : 100;
         const ghostWidth = w * cellW;
         const ghostHeight = h * cellH;
 

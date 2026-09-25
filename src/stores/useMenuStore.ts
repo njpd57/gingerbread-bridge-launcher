@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
-export type LauncherDialog = 'wallpaper' | 'add';
+export type LauncherDialog = 'wallpaper' | 'add' | 'grid';
 
 export interface AddAnchor
 {

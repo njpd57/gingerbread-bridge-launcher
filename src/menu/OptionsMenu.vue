@@ -37,6 +37,16 @@ function run(action: () => void)
                     <span>Fondo de pantalla</span>
                 </button>
 
+                <button class="item" @click="menu.showDialog('grid')">
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                        <g fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="4" width="22" height="24" rx="2" />
+                            <path d="M5 12h22M5 20h22M12.3 4v24M19.7 4v24" />
+                        </g>
+                    </svg>
+                    <span>Cuadrícula</span>
+                </button>
+
                 <button class="item" @click="run(() => Bridge.requestExpandNotificationShade(true))">
                     <svg viewBox="0 0 32 32" aria-hidden="true">
                         <rect x="5" y="4" width="22" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
@@ -86,11 +96,10 @@ $gingerbread-orange: #ffa800;
     justify-content: flex-end;
 }
 
-// Gingerbread's options menu: a dark panel of icon + label cells with thin dividers.
-// With 5 items it shows 3 on the first row and 2 wider ones on the second.
+// Gingerbread's options menu: a dark panel of icon + label cells with thin dividers, 3 per row
 .options-menu {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     border-top: 1px solid #8a8a8a;
     background: linear-gradient(to bottom, #3a3a3a, #1c1c1c);
     box-shadow: 0 -4px 16px rgba(#000, 0.6);
@@ -113,14 +122,7 @@ $gingerbread-orange: #ffa800;
         font-size: 13px;
         cursor: pointer;
 
-        grid-column: span 2;
-
-        &:nth-child(n + 4) {
-            grid-column: span 3;
-        }
-
-        &:nth-child(3),
-        &:nth-child(5) {
+        &:nth-child(3n) {
             border-right: none;
         }
 

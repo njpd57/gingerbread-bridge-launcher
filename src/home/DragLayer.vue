@@ -33,7 +33,7 @@ const ghostStyle = computed(() =>
             <Shortcut v-else-if="drag.active.ghost.type === 'folder'" :label="drag.active.ghost.name">
                 <FolderIcon />
             </Shortcut>
-            <div v-else-if="drag.active.ghost.widget === 'clock'" class="clock-container">
+            <div v-else-if="drag.active.ghost.widget !== 'weather'" class="clock-container">
                 <AnalogClock class="clock" />
             </div>
             <WeatherWidget v-else class="weather" />
