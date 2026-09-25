@@ -22,7 +22,7 @@ export const useAppsStore = defineStore('apps', () =>
 
     const apps = ref(new Map<string, InstalledAppInfo>());
 
-    const requestStatus = ref(RequestStatus.Error);
+    const requestStatus = ref(RequestStatus.Idle);
     const requestErrorMessage = ref('');
 
     async function requestAppsAsync()

@@ -1,28 +1,8 @@
-@font-face {
-    font-family: "Francois One";
-    src: url("@/assets/fonts/FrancoisOne-Regular.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "Signika";
-    font-weight: normal;
-    src: url("@/assets/fonts/Signika-Regular.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "Signika";
-    font-weight: 600;
-    src: url("@/assets/fonts/Signika-SemiBold.ttf") format("truetype");
-}
-
-.bridge-tester-root {
-    @include c.theme-vars(c.$theme-light);
-    color-scheme: light;
-
-    @include sz.size-vars(sz.$sizes);
-    @include t.font-family-vars(t.$font-families);
-
-    @extend %type-pri;
+.launcher-root {
+    color-scheme: dark;
+    color: #fff;
+    font-family: "Droid Sans", "Roboto", sans-serif;
+    font-size: 14px;
 
     box-sizing: border-box;
     margin: 0;
@@ -34,93 +14,5 @@
         box-sizing: border-box;
         margin: 0;
         -webkit-tap-highlight-color: transparent;
-    }
-
-    .separator {
-        height: sz.$border-regular;
-        width: 100%;
-        background-color: c.$border-soft;
-    }
-
-    .type-jumbo {
-        @extend %type-jumbo;
-    }
-
-    .type-title {
-        @extend %type-title;
-    }
-
-    .type-header {
-        @extend %type-header;
-    }
-
-    .type-caption {
-        @extend %type-caption;
-    }
-
-    .type-pri {
-        @extend %type-pri;
-    }
-
-    .type-sec {
-        @extend %type-sec;
-    }
-
-    .type-button {
-        @extend %type-button;
-    }
-    
-    .type-mono {
-        @extend %type-mono;
-    }
-
-    .col {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .row {
-        display: flex;
-        flex-direction: row;
-    }
-
-    .pri {
-        @extend %type-pri;
-        color: c.$text-pri;
-    }
-
-    .sec {
-        @extend %type-pri;
-        color: c.$text-sec;
-    }
-
-    .bullet {
-        display: inline-block;
-        margin: 0 sz.$pad-min;
-
-        &:after {
-            content: "•";
-        }
-    }
-
-    .field {
-        > label {
-            display: block;
-            @extend %type-pri;
-            color: c.$text-sec;
-            margin-bottom: sz.$pad-half;
-            padding: 0 calc(sz.$corner-medium / 2);
-        }
-
-        + .field {
-            margin-top: sz.$pad-min;
-        }
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    .bridge-tester-root {
-        @include c.theme-vars(c.$theme-dark);
-        color-scheme: dark;
     }
 }

@@ -4,16 +4,13 @@ import '@/assets/styles/base.scss';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import injectBridgeMockInDev from './mock/injectBridgeMockInDev';
-import VWave from 'v-wave';
 import App from './App.vue';
 
-console.log('@main: !!window.Bridge:', !!window.Bridge);
 injectBridgeMockInDev();
 
 const app = createApp(App);
 
 app.config.globalProperties.Bridge = Bridge;
 app.use(createPinia());
-app.use(VWave, { cancellationPeriod: 100 });
 
 app.mount('#app');
