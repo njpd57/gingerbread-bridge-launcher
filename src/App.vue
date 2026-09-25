@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { px } from './utils/el-utils';
 import Workspace from './home/Workspace.vue';
@@ -7,16 +8,29 @@ import AppDrawer from './drawer/AppDrawer.vue';
 import AnalogClock from './widgets/clock/AnalogClock.vue';
 import WeatherWidget from './widgets/weather/WeatherWidget.vue';
 import { DEFAULT_PAGE } from './stores/useWorkspaceStore';
+import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 
 const insets = useWindowInsetsStore();
+
+const wallpaper = ref<InstanceType<typeof NexusWallpaper>>();
+
+// taps on empty workspace space (not on widgets) send pulses across the wallpaper
+function onWorkspaceClick(e: MouseEvent)
+{
+    if ((e.target as HTMLElement).classList.contains('page'))
+        wallpaper.value?.burst(e.clientX, e.clientY);
+}
 
 </script>
 
 <template>
     <div class="launcher-root">
 
+        <NexusWallpaper ref="wallpaper" />
+
         <Workspace
             class="workspace"
+            @click="onWorkspaceClick"
             :style="{
                 'padding-top': px(insets.statusBars.top),
             }">
@@ -45,8 +59,11 @@ const insets = useWindowInsetsStore();
     width: 100%;
     height: 100%;
     overflow: hidden;
-    // placeholder until the Nexus live wallpaper (step 5)
-    background: radial-gradient(ellipse at 50% 80%, #2a3140 0%, #0b0d12 60%, #000 100%);
+    background-color: #000;
+
+    > .workspace {
+        position: relative;
+    }
 
     .widgets {
         display: flex;

@@ -19,7 +19,10 @@ function scrollToPage(page: number, smooth: boolean)
 function onScroll()
 {
     if (!el.value || el.value.clientWidth === 0) return;
-    workspace.currentPage = Math.round(el.value.scrollLeft / el.value.clientWidth);
+    const { scrollLeft, scrollWidth, clientWidth } = el.value;
+    workspace.currentPage = Math.round(scrollLeft / clientWidth);
+    const maxScroll = scrollWidth - clientWidth;
+    workspace.scrollProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0.5;
 }
 
 onMounted(() => scrollToPage(workspace.currentPage, false));

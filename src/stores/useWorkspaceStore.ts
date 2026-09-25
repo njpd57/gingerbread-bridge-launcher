@@ -14,6 +14,9 @@ export const useWorkspaceStore = defineStore('workspace', () =>
     // updated by Workspace.vue from its scroll position
     const currentPage = ref(DEFAULT_PAGE);
 
+    // horizontal scroll position from 0 (first page) to 1 (last page), used for wallpaper parallax
+    const scrollProgress = ref(DEFAULT_PAGE / (PAGE_COUNT - 1));
+
     // set by goToPage(), consumed (and reset to null) by Workspace.vue
     const pendingPage = ref<number | null>(null);
 
@@ -36,6 +39,7 @@ export const useWorkspaceStore = defineStore('workspace', () =>
 
     return {
         currentPage,
+        scrollProgress,
         pendingPage,
         goToPage,
     };
