@@ -23,6 +23,7 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - También puedes usar el fondo de pantalla del sistema.
 - **Menú de opciones** (mantén pulsado un hueco vacío): Añadir, Fondo de pantalla, Apariencia, Notificaciones, Ajustes y Bridge.
 - **Apariencia**:
+  - Barra de estado de Samsung o una **barra propia de Gingerbread**. La barra de Gingerbread muestra la hora y la batería reales. La señal y el Wi-Fi son simulados: suben y bajan poco a poco y tienen flechas de actividad, pero no reflejan la intensidad real. No muestra notificaciones; se toca la barra para abrirlas.
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.
   - Altura de la barra de estado: automática o manual.
   - Número de filas de la cuadrícula: automático según el alto de la pantalla, o de 4 a 7.

@@ -8,6 +8,9 @@ import { useSettingsStore } from "./useSettingsStore";
 // used when the status bar is shown but every inset Bridge reports is 0
 export const FALLBACK_STATUS_BAR_HEIGHT = 32;
 
+// height of our own Gingerbread status bar (25dp, like the original), unless the camera cutout is taller
+export const GINGERBREAD_STATUS_BAR_HEIGHT = 25;
+
 // re-read the insets a little after startup, in case Bridge reported them before the first layout
 const STARTUP_REFRESH_DELAYS_MS = [300, 1500];
 
@@ -90,6 +93,8 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
     /** The status bar height as detected from Bridge (with a fallback), ignoring the manual setting. */
     const measuredStatusBarHeight = computed(() =>
     {
+        if (settings.gingerbreadStatusBar)
+            return Math.max(GINGERBREAD_STATUS_BAR_HEIGHT, insets.displayCutout.top);
         if (toggles.statusBarAppearance === 'hide') return 0;
         const measured = Math.max(
             insets.statusBars.top,

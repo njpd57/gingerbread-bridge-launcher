@@ -62,6 +62,8 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
   - Long-pressing empty workspace opens the options menu. It records the pressed cell as `addAnchor`, which "Añadir" uses to place new items.
   - The Android home button (Bridge's `newIntent` event) is handled in `useWorkspaceStore`. It closes the first open thing in this order: menus, then the drawer; if nothing is open, it returns to the default page.
 - **`useSettingsStore`** holds the wallpaper and status bar preferences.
+  - Turning on `gingerbreadStatusBar` hides the system status bar through Bridge (remembering the previous appearance so it can be restored), and `App.vue` draws `statusbar/GingerbreadStatusBar.vue` instead.
+  - That bar gets battery and connectivity from web APIs (`useDeviceStatus`), because Bridge exposes neither. Signal and Wi-Fi strength can't be read, so `useSimulatedSignal` fakes a slowly drifting level (narrowed by the browser's `effectiveType` estimate when available) plus data activity arrows.
   - Choosing a wallpaper also switches Bridge's "draw system wallpaper behind WebView" setting (through `useTogglesStore`) to match.
   - With the system wallpaper, it also sends wallpaper scroll offsets.
 - **The weather widget uses Open-Meteo** (geocoding and forecast, no API key). The city and the last result are cached in localStorage, and it refreshes when the data is stale and on resume.

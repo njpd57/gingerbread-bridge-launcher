@@ -16,6 +16,11 @@ const settings = useSettingsStore();
 const insets = useWindowInsetsStore();
 const toggles = useTogglesStore();
 
+const statusBarKindOptions: { value: boolean; label: string }[] = [
+    { value: false, label: 'Samsung' },
+    { value: true, label: 'Gingerbread' },
+];
+
 const bridgeButtonOptions: { value: BridgeButtonVisibility; label: string }[] = [
     { value: 'shown', label: 'Visible' },
     { value: 'hidden', label: 'Oculto' },
@@ -48,6 +53,29 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
         @close="menu.closeAll()">
 
         <div class="section-title">Barra de estado</div>
+
+        <section class="options">
+            <div class="segmented">
+                <button
+                    v-for="opt in statusBarKindOptions"
+                    :key="opt.label"
+                    :class="{ selected: settings.gingerbreadStatusBar === opt.value }"
+                    @click="settings.gingerbreadStatusBar = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+            <div class="field-hint">
+                <template v-if="settings.gingerbreadStatusBar">
+                    Oculta la barra del sistema en el launcher y dibuja la de Gingerbread.
+                    La hora y la batería son reales; la señal y el Wi-Fi son decorativos
+                    y no se ven las notificaciones. Tócala para abrirlas.
+                </template>
+                <template v-else>
+                    La barra del sistema, con un fondo opcional detrás. El color de sus iconos
+                    se cambia en los ajustes de Bridge.
+                </template>
+            </div>
+        </section>
 
         <GbRadioRow
             v-for="opt in statusBarOptions"
@@ -83,9 +111,8 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
                 <span class="value">{{ Math.round(insets.statusBarHeight) }} px</span>
             </div>
             <div class="field-hint">
-                Ajústala para que el fondo cubra justo la barra de Samsung. También mueve el contenido
-                de las pantallas para que no quede debajo de la barra.
-                El color de los iconos se cambia en los ajustes de Bridge.
+                Ajústala para que la barra no tape la cámara, o para que el fondo cubra justo la barra
+                de Samsung. También mueve el contenido de las pantallas para que no quede debajo.
             </div>
         </section>
 

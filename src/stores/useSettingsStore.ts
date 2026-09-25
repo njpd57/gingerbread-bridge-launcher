@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
+import type { SystemBarAppearance } from "@bridgelauncher/api";
 import { useTogglesStore } from "./useTogglesStore";
 import { PAGE_COUNT, useWorkspaceStore } from "./useWorkspaceStore";
 
@@ -26,6 +27,10 @@ export const useSettingsStore = defineStore('settings', () =>
     const statusBarBackground = useLocalStorage<StatusBarBackground>('settings.statusBarBackground', 'none');
     // -1 = automatic (measured), otherwise a fixed height in CSS px
     const statusBarHeight = useLocalStorage<number>('settings.statusBarHeight', -1);
+    // draw our own Gingerbread status bar instead of the system one (hidden through Bridge)
+    const gingerbreadStatusBar = useLocalStorage<boolean>('settings.gingerbreadStatusBar', false);
+    // the Bridge status bar appearance to restore when turning the Gingerbread bar off
+    const savedStatusBarAppearance = useLocalStorage<SystemBarAppearance>('settings.savedStatusBarAppearance', 'light-fg');
 
     // Bridge only needs to draw the system wallpaper when the Nexus canvas isn't covering it
     watch(wallpaper, kind =>
@@ -33,6 +38,24 @@ export const useSettingsStore = defineStore('settings', () =>
         const drawSystem = kind === 'system';
         if (toggles.drawSystemWallpaperBehindWebView !== drawSystem)
             toggles.drawSystemWallpaperBehindWebView = drawSystem;
+    }, { immediate: true });
+
+    // our Gingerbread bar replaces the system one: hide it while on, restore it when turned off.
+    // On startup it only re-hides (if the Bridge setting was changed meanwhile), it never un-hides.
+    watch(gingerbreadStatusBar, (on, wasOn) =>
+    {
+        if (on)
+        {
+            if (toggles.statusBarAppearance !== 'hide')
+            {
+                savedStatusBarAppearance.value = toggles.statusBarAppearance;
+                toggles.statusBarAppearance = 'hide';
+            }
+        }
+        else if (wasOn)
+        {
+            toggles.statusBarAppearance = savedStatusBarAppearance.value;
+        }
     }, { immediate: true });
 
     // scroll the system wallpaper along with the pages, like a regular launcher
@@ -50,5 +73,6 @@ export const useSettingsStore = defineStore('settings', () =>
         nexusFps,
         statusBarBackground,
         statusBarHeight,
+        gingerbreadStatusBar,
     };
 });

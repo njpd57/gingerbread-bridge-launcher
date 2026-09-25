@@ -18,6 +18,7 @@ import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
 import AppearanceDialog from './menu/AppearanceDialog.vue';
 import FolderPanel from './home/FolderPanel.vue';
+import GingerbreadStatusBar from './statusbar/GingerbreadStatusBar.vue';
 
 const DOCK_HEIGHT = 56;
 const GRID_SIDE_PADDING = 8;
@@ -112,9 +113,16 @@ function onWorkspaceClick(e: MouseEvent)
         <WallpaperDialog />
         <AppearanceDialog />
 
-        <!-- optional Gingerbread-style background behind the (translucent) system status bar -->
+        <!-- our own Gingerbread status bar, replacing the system one (hidden through Bridge) -->
+        <GingerbreadStatusBar
+            v-if="settings.gingerbreadStatusBar"
+            class="gb-status-bar"
+            :background="settings.statusBarBackground"
+            :style="{ 'height': 'var(--status-bar-height)' }" />
+
+        <!-- otherwise, an optional Gingerbread-style background behind the (translucent) system status bar -->
         <div
-            v-if="settings.statusBarBackground !== 'none'"
+            v-else-if="settings.statusBarBackground !== 'none'"
             class="status-bar-bg"
             :class="settings.statusBarBackground"
             :style="{ 'height': 'var(--status-bar-height)' }"></div>
@@ -141,6 +149,13 @@ function onWorkspaceClick(e: MouseEvent)
 
     > .dock {
         position: absolute;
+        left: 0;
+        right: 0;
+    }
+
+    > .gb-status-bar {
+        position: absolute;
+        top: 0;
         left: 0;
         right: 0;
     }
