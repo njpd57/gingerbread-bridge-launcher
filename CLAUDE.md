@@ -18,6 +18,7 @@ npm run test:unit    # vitest in watch mode (jsdom)
 npx vitest run       # all tests once
 npx vitest run src/stores/__tests__/useHomeLayoutStore.spec.ts -t "folders"   # a single file / test
 npm run deploy [remote_dir]   # build and adb-push dist/ to the phone (scripts/deploy.sh)
+npm run grant-permissions     # adb: grant Bridge WRITE_SECURE_SETTINGS (needed to change the system night mode)
 ```
 
 To run the launcher on a device, point Bridge's "project dir" setting at a folder containing the contents of `dist/`. The Vite build uses stable, unhashed asset names (`assets/index.js`), so copying a new `dist/` over the old one is enough.
@@ -25,6 +26,8 @@ To run the launcher on a device, point Bridge's "project dir" setting at a folde
 ## Bridge runtime
 
 - `Bridge` is a global that only exists inside Bridge. In development, `src/mock/injectBridgeMockInDev.ts` installs `BridgeMock` from `@bridgelauncher/api-mock`. That mock reads its app list and icons from `public/mock/`, and calls such as `requestLaunchApp` show an `alert`. Types come from `@bridgelauncher/api` (v0.1.0, the latest). `Bridge` is also a Vue global property, so templates can call `Bridge.*` directly.
+- **The installed Bridge can lack methods that the API types declare.** Bridge 0.1.0alpha has no `getCanRequestSystemNightMode`, and calling a missing method throws; when that happens while a store is being created, the whole launcher fails to load. Guard any method the launcher didn't already use successfully on the device with `bridgeHas()` from `src/utils/bridge-utils.ts`.
+- **Permissions granted outside Bridge don't fire events.** `WRITE_SECURE_SETTINGS` (night mode) is granted over adb, and lock screen needs Bridge's accessibility service; `useTogglesStore` re-reads the permission state on `afterResume`. The user-facing steps are in the README's "Permisos opcionales" section.
 - **There is a single `window.onBridgeEvent` handler, and `useBridgeEventStore` owns it.** Everything else subscribes with `bridgeEvents.addEventListener(...)`. Never assign `window.onBridgeEvent` anywhere else.
 - **The API can't do these things; don't design features that need them:**
   - Receive back-button events. The drawer uses a `history.pushState` workaround instead.

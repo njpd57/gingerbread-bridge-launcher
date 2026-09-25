@@ -12,16 +12,17 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
 
 - **5 pantallas de inicio** que se recorren deslizando. Arranca en la del centro, y el botón de inicio de Android vuelve a ella.
 - **Dock de Gingerbread**: Teléfono · Cajón de apps · Navegador. A los lados, los puntos indican cuántas pantallas quedan hacia cada lado; al tocarlos cambias de pantalla.
-- **Cajón de apps**: cuadrícula de 4 columnas sobre fondo negro, con animación de zoom y botón de inicio para cerrarlo.
+- **Cajón de apps**: cuadrícula de 4 columnas sobre fondo negro, con animación de zoom y botón de inicio para cerrarlo. Su botón de lista abre **Administrar aplicaciones**, que lleva a la ficha de cada app en Android.
 - **Escritorio editable**:
   - Mantén pulsada una app del cajón para arrastrarla al escritorio.
   - Mantén pulsado un icono o widget para moverlo. Si lo llevas al borde, pasa a la pantalla siguiente.
-  - Durante el arrastre, el dock se convierte en una papelera para quitar elementos.
+  - Durante el arrastre, el dock se convierte en una papelera: quita elementos del escritorio, y si la app viene del cajón, la **desinstala** (Android pide confirmación).
+  - Al instalar una app, su icono se añade solo al escritorio, como hacía el Market (se puede desactivar).
 - **Carpetas**:
   - Arrastra apps encima de una carpeta para meterlas.
   - Tócala para abrirla y toca su título para cambiarle el nombre.
   - Desde una carpeta abierta puedes sacar apps arrastrándolas.
-- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2) y el tiempo (4×1), con datos de [Open-Meteo](https://open-meteo.com/).
+- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), y **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes.
 - **Fondo animado "Nexus"**: pulsos de luz de colores que recorren la pantalla. Al tocar un hueco vacío salen pulsos desde ese punto.
   - Se puede configurar la cantidad de pulsos, la velocidad y los fps (30, 60 o 120).
   - También puedes usar el fondo de pantalla del sistema.
@@ -32,6 +33,8 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Altura de la barra de estado: automática o manual.
   - Número de filas de la cuadrícula: automático según el alto de la pantalla, o de 4 a 7.
   - Mostrar u ocultar el botón flotante de Bridge.
+  - **Brillo naranja** de Gingerbread al llegar al final de una lista, o el efecto de Android.
+  - Añadir o no el icono de las apps que instalas.
 - **Aspecto de Gingerbread**: tipografía Droid Sans, dock de cristal, sombra bajo los iconos y el naranja de Gingerbread al pulsar.
 
 La configuración y el diseño del escritorio se guardan en el propio teléfono.
@@ -54,7 +57,24 @@ npm run deploy                       # copia a /sdcard/projects/gingerbread-laun
 npm run deploy -- /sdcard/otra/ruta  # u otra carpeta
 ```
 
+Para activar el botón del modo noche, mira [Permisos opcionales](#permisos-opcionales).
+
 **Recomendado:** en **Apariencia**, oculta el botón flotante de Bridge, que tapa el dock. En los ajustes de Bridge, ajusta el color de los iconos de la barra de estado según el fondo que elijas para ella.
+
+## Permisos opcionales
+
+Algunas funciones necesitan permisos que Bridge no pide por sí solo. Sin ellos el launcher funciona igual, pero esos botones del widget **Control de energía** se ven apagados y, al tocarlos, explican qué falta.
+
+| Función | Qué hace falta | Cómo |
+|---|---|---|
+| **Modo noche** (botón de la luna) | Permiso `WRITE_SECURE_SETTINGS` para Bridge | Con el teléfono conectado por adb (depuración USB activada): `npm run grant-permissions`, o a mano: `adb shell pm grant com.tored.bridgelauncher android.permission.WRITE_SECURE_SETTINGS` |
+| **Bloquear pantalla** (botón del candado) | El servicio de accesibilidad de Bridge y permitir el bloqueo | En Android: *Ajustes → Accesibilidad → Bridge* (activar), y en los ajustes de Bridge, permitir que el proyecto bloquee la pantalla. Después de bloquear así, se desbloquea con PIN o patrón, no con huella |
+
+Sobre el permiso del modo noche:
+- **Basta con darlo una vez.** Se mantiene al reiniciar el teléfono y al actualizar Bridge, pero **se pierde si desinstalas y vuelves a instalar Bridge**.
+- No hace falta reiniciar nada: el launcher vuelve a comprobar los permisos cada vez que vuelves a él.
+- Para comprobar si está dado: `adb shell dumpsys package com.tored.bridgelauncher | grep "WRITE_SECURE_SETTINGS: granted"` debe mostrar `granted=true`.
+- Algunas versiones de Bridge (como la 0.1.0alpha) no pueden comprobar este permiso. En ese caso el launcher intenta el cambio igualmente y, si falta el permiso, Bridge muestra un aviso.
 
 ## Desarrollo
 

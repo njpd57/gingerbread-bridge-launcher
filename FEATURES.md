@@ -1,5 +1,7 @@
 # Funciones posibles con la API de Bridge
 
+**Estado:** las ideas 1 a 5 ya están implementadas (marcadas con ✅).
+
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
 ## Qué usamos y qué no
@@ -20,27 +22,29 @@ Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la A
 
 ## Ideas muy de Gingerbread
 
-### 1. Desinstalar arrastrando a la papelera
+### 1. Desinstalar arrastrando a la papelera ✅ Hecho
 En Gingerbread, arrastrar una app **desde el cajón** hasta la papelera abría el diálogo de desinstalación. Hoy, en nuestro launcher, eso no hace nada.
 - **API:** `requestAppUninstall(packageName)`. Android pide confirmación y, si se desinstala, el evento `appRemoved` ya limpia el escritorio.
 - **Esfuerzo:** bajo. Es un caso más en `applyDrop()` de `useDragStore`, y un icono de papelera distinto ("Desinstalar") cuando el arrastre viene del cajón.
 
-### 2. "Administrar aplicaciones" e información de la app
+### 2. "Administrar aplicaciones" e información de la app ✅ Hecho
 El menú de Gingerbread tenía "Administrar aplicaciones". Además se podría abrir la ficha de la app al mantenerla pulsada sin moverla, o al soltarla sobre una zona "Info".
 - **API:** `requestOpenAppInfo(packageName)` y `requestOpenAndroidSettings()`.
 - **Esfuerzo:** bajo.
 
-### 3. Brillo naranja de overscroll
+### 3. Brillo naranja de overscroll ✅ Hecho
 **El brillo naranja al llegar al final de una lista se estrenó justo en Gingerbread.** Bridge permite desactivar el efecto moderno de Android (el estiramiento) para dibujar el nuestro: un brillo naranja en el borde del cajón al llegar arriba o abajo, y en los extremos del escritorio al pasar de la primera o la última página.
 - **API:** `requestSetOverscrollEffects('none')` y el evento `overscrollEffectsChanged`.
 - **Esfuerzo:** medio. Hay que detectar el "tirón" en el borde y dibujar el brillo con un degradado.
 
-### 4. Añadir el icono al instalar una app
+### 4. Añadir el icono al instalar una app ✅ Hecho
 El Market de la época agregaba el icono al escritorio al instalar una app. Sería una opción en Apariencia: *"Añadir icono al escritorio al instalar"*.
 - **API:** el evento `appInstalled`, que ya se recibe, más `findFreeSpot()` del store del escritorio.
 - **Esfuerzo:** bajo.
 
-### 5. Widget "Control de energía"
+### 5. Widget "Control de energía" ✅ Hecho
+
+> Para el botón del modo noche hay que conceder el permiso una vez con `npm run grant-permissions` (ver "Permisos opcionales" en el README). Bridge 0.1.0alpha no tiene `getCanRequestSystemNightMode()`, así que el launcher intenta el cambio sin poder comprobar el permiso antes.
 Imitar el widget clásico de 4×1 con lo que Bridge **sí** puede hacer:
   - **Bloquear pantalla** (`requestLockScreen`).
   - **Modo noche** (`requestSetSystemNightMode`). Requiere dar un permiso a Bridge una sola vez por adb: `adb shell pm grant com.tored.bridgelauncher android.permission.WRITE_SECURE_SETTINGS`.

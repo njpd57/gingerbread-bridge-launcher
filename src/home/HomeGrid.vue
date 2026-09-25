@@ -9,6 +9,7 @@ import FolderIcon from './icons/FolderIcon.vue';
 import { useMenuStore } from '@/stores/useMenuStore';
 import AnalogClock from '@/widgets/clock/AnalogClock.vue';
 import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
+import PowerControlWidget from '@/widgets/power/PowerControlWidget.vue';
 
 const props = defineProps<{
     page: number;
@@ -109,6 +110,7 @@ function onItemClick(item: HomeItem)
                 <AnalogClock class="clock" />
             </div>
             <WeatherWidget v-else-if="item.widget === 'weather'" class="weather" />
+            <PowerControlWidget v-else-if="item.widget === 'power'" />
         </div>
 
         <div

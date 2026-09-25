@@ -5,6 +5,7 @@ import Shortcut from './Shortcut.vue';
 import FolderIcon from './icons/FolderIcon.vue';
 import AnalogClock from '@/widgets/clock/AnalogClock.vue';
 import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
+import PowerControlWidget from '@/widgets/power/PowerControlWidget.vue';
 
 const drag = useDragStore();
 
@@ -33,10 +34,11 @@ const ghostStyle = computed(() =>
             <Shortcut v-else-if="drag.active.ghost.type === 'folder'" :label="drag.active.ghost.name">
                 <FolderIcon />
             </Shortcut>
-            <div v-else-if="drag.active.ghost.widget !== 'weather'" class="clock-container">
+            <WeatherWidget v-else-if="drag.active.ghost.widget === 'weather'" class="weather" />
+            <PowerControlWidget v-else-if="drag.active.ghost.widget === 'power'" />
+            <div v-else class="clock-container">
                 <AnalogClock class="clock" />
             </div>
-            <WeatherWidget v-else class="weather" />
         </div>
     </div>
 </template>

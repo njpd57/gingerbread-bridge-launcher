@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, toValue, readonly, computed } from "vue";
 import { useBridgeEventStore } from "./useBridgeEventStore";
+import { bridgeHas } from "@/utils/bridge-utils";
 import type { BridgeButtonVisibility, OverscrollEffects, SystemNightModeOrError, BridgeTheme, SystemBarAppearance } from '@bridgelauncher/api';
 
 export const useTogglesStore = defineStore('toggles', () => 
@@ -15,7 +16,25 @@ export const useTogglesStore = defineStore('toggles', () =>
     const statusBarAppearance = ref(Bridge.getStatusBarAppearance());
     const navigationBarAppearance = ref(Bridge.getNavigationBarAppearance());
 
-    const canLockScreen = ref(Bridge.getCanLockScreen());
+    // these can be missing from older Bridge builds even though the API types declare them
+    const supportsLockScreen = bridgeHas('requestLockScreen') && bridgeHas('getCanLockScreen');
+    const supportsNightMode = bridgeHas('requestSetSystemNightMode');
+
+    const canLockScreen = ref(false);
+    const canRequestSystemNightMode = ref(false);
+
+    // permissions can be granted outside Bridge (e.g. `adb shell pm grant`) without an event,
+    // so they're read at startup and again whenever the launcher comes back to the foreground
+    function readPermissions()
+    {
+        canLockScreen.value = supportsLockScreen && Bridge.getCanLockScreen();
+        // without the permission check, assume it can and let the request (and Bridge's error toast) tell
+        canRequestSystemNightMode.value = supportsNightMode
+            && (bridgeHas('getCanRequestSystemNightMode') ? Bridge.getCanRequestSystemNightMode() : true);
+        systemNightMode.value = Bridge.getSystemNightMode();
+    }
+
+    readPermissions();
 
     bridgeEvents.addEventListener(ev =>
     {
@@ -35,6 +54,10 @@ export const useTogglesStore = defineStore('toggles', () =>
             navigationBarAppearance.value = ev.newValue;
         else if (ev.name === 'canLockScreenChanged')
             canLockScreen.value = ev.newValue;
+        else if (ev.name === 'canRequestSystemNightModeChanged')
+            canRequestSystemNightMode.value = ev.newValue;
+        else if (ev.name === 'afterResume')
+            readPermissions();
     });
 
     return {
@@ -54,7 +77,7 @@ export const useTogglesStore = defineStore('toggles', () =>
             get: () => toValue(systemNightMode),
             set: x =>
             {
-                if (x !== 'unknown' && x !== 'error')
+                if (supportsNightMode && x !== 'unknown' && x !== 'error')
                     Bridge.requestSetSystemNightMode(x);
             }
         }),
@@ -71,6 +94,9 @@ export const useTogglesStore = defineStore('toggles', () =>
             set: x => Bridge.requestSetNavigationBarAppearance(x),
         }),
 
-        canLockScreen: readonly(canLockScreen)
+        supportsLockScreen,
+        supportsNightMode,
+        canLockScreen: readonly(canLockScreen),
+        canRequestSystemNightMode: readonly(canRequestSystemNightMode),
     };
 });
