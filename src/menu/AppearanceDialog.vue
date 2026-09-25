@@ -4,6 +4,8 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import { MAX_GRID_ROWS, MIN_GRID_ROWS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
 import { MAX_STATUS_BAR_HEIGHT, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
+import { useTogglesStore } from '@/stores/useTogglesStore';
+import type { BridgeButtonVisibility } from '@bridgelauncher/api';
 import GbDialog from '@/components/GbDialog.vue';
 import GbButton from '@/components/GbButton.vue';
 import GbRadioRow from '@/components/GbRadioRow.vue';
@@ -12,6 +14,12 @@ const menu = useMenuStore();
 const layout = useHomeLayoutStore();
 const settings = useSettingsStore();
 const insets = useWindowInsetsStore();
+const toggles = useTogglesStore();
+
+const bridgeButtonOptions: { value: BridgeButtonVisibility; label: string }[] = [
+    { value: 'shown', label: 'Visible' },
+    { value: 'hidden', label: 'Oculto' },
+];
 
 const statusBarOptions: { value: StatusBarBackground; label: string }[] = [
     { value: 'none', label: 'Transparente' },
@@ -97,6 +105,22 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 «Auto» elige las filas según el alto de tu pantalla.
                 Si reduces las filas, lo que no quepa se mueve a un hueco libre.
+            </div>
+        </section>
+
+        <section class="options">
+            <div class="field-label">Botón flotante de Bridge</div>
+            <div class="segmented">
+                <button
+                    v-for="opt in bridgeButtonOptions"
+                    :key="opt.value"
+                    :class="{ selected: toggles.bridgeButtonVisibility === opt.value }"
+                    @click="toggles.bridgeButtonVisibility = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+            <div class="field-hint">
+                Ocultarlo deja libre el dock. Los ajustes de Bridge siguen en el menú de opciones (Bridge).
             </div>
         </section>
 

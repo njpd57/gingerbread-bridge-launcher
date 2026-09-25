@@ -115,8 +115,8 @@ button {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         grid-auto-rows: min-content;
-        row-gap: 10px;
-        padding: 12px 4px;
+        row-gap: 4px;
+        padding: 10px 2px;
         overflow-y: auto;
         overscroll-behavior: contain;
 
@@ -124,19 +124,21 @@ button {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 6px 2px;
+            gap: 3px;
+            padding: 6px 2px 4px;
             border-radius: 6px;
 
             > img {
                 width: 48px;
                 height: 48px;
+                filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
             }
 
             > .label {
                 max-width: 100%;
+                min-height: 2.3em;
                 font-size: 12px;
-                line-height: 1.2;
+                line-height: 1.15;
                 text-align: center;
                 text-shadow: 0 1px 2px #000;
                 // up to two lines, then ellipsis

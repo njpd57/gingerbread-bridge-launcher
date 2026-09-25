@@ -163,9 +163,16 @@ button {
         justify-content: space-around;
         flex: 0 1 220px;
         height: $hotseat-height;
-        border-radius: 6px 6px 0 0;
-        border-top: 1px solid rgba(#fff, 0.18);
-        background: linear-gradient(to bottom, rgba(#3a3a3a, 0.85), rgba(#111, 0.9));
+        // Gingerbread's glassy dock: a gloss on the top half over a dark translucent body
+        border-radius: 8px 8px 0 0;
+        border: 1px solid rgba(#fff, 0.16);
+        border-bottom: none;
+        background:
+            linear-gradient(to bottom, rgba(#fff, 0.16), rgba(#fff, 0.05) 50%, transparent 50%),
+            linear-gradient(to bottom, rgba(#4a4a4a, 0.7), rgba(#101010, 0.9));
+        box-shadow:
+            inset 0 1px 0 rgba(#fff, 0.3),
+            0 -2px 10px rgba(#000, 0.45);
 
         &.trash {
             transition: background 0.1s;

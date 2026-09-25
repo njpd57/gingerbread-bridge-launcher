@@ -26,6 +26,8 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.
   - Altura de la barra de estado: automática o manual.
   - Número de filas de la cuadrícula: automático según el alto de la pantalla, o de 4 a 7.
+  - Mostrar u ocultar el botón flotante de Bridge.
+- **Aspecto de Gingerbread**: tipografía Droid Sans, dock de cristal, sombra bajo los iconos y el naranja de Gingerbread al pulsar.
 
 La configuración y el diseño del escritorio se guardan en el propio teléfono.
 
@@ -47,7 +49,7 @@ npm run deploy                       # copia a /sdcard/projects/gingerbread-laun
 npm run deploy -- /sdcard/otra/ruta  # u otra carpeta
 ```
 
-**Recomendado:** en los ajustes de Bridge, oculta el botón flotante de Bridge (tapa el dock) y ajusta el color de los iconos de la barra de estado según el fondo que elijas en **Apariencia**.
+**Recomendado:** en **Apariencia**, oculta el botón flotante de Bridge, que tapa el dock. En los ajustes de Bridge, ajusta el color de los iconos de la barra de estado según el fondo que elijas para ella.
 
 ## Desarrollo
 
@@ -76,6 +78,8 @@ Vienen de lo que permite la API de Bridge (v0.1.0):
 ## Créditos
 
 Basado en [Bridge Launcher API Tester](https://github.com/bridgelauncher/api-tester) de Tored, bajo licencia MIT (ver [LICENSE](LICENSE)).
+
+La tipografía Droid Sans viene del Android Open Source Project (android-2.3.7_r1), bajo licencia Apache 2.0 (ver [src/assets/fonts/NOTICE](src/assets/fonts/NOTICE)).
 
 - [Bridge Launcher](https://github.com/bridgelauncher)
 - [Tipos de la API y mock de desarrollo](https://github.com/bridgelauncher/api)

@@ -1,3 +1,16 @@
+// Droid Sans, Gingerbread's system font (Apache 2.0, from AOSP android-2.3.7_r1; see assets/fonts/NOTICE)
+@font-face {
+    font-family: "Droid Sans";
+    font-weight: normal;
+    src: url("@/assets/fonts/DroidSans.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Droid Sans";
+    font-weight: bold;
+    src: url("@/assets/fonts/DroidSans-Bold.ttf") format("truetype");
+}
+
 .launcher-root {
     color-scheme: dark;
     color: #fff;
