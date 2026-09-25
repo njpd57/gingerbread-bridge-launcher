@@ -1,0 +1,193 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
+import { useDrawerStore } from '@/stores/useDrawerStore';
+import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
+import { px } from '@/utils/el-utils';
+import HomeIcon from '@/home/icons/HomeIcon.vue';
+
+const apps = useAppsStore();
+const drawer = useDrawerStore();
+const insets = useWindowInsetsStore();
+
+const gridEl = ref<HTMLElement>();
+
+const sortedApps = computed(() =>
+    Array.from(apps.apps.values())
+        .sort((a, b) => a.label.localeCompare(b.label))
+);
+
+// like Gingerbread, the drawer always opens scrolled to the top
+watch(() => drawer.isOpen, isOpen =>
+{
+    if (isOpen && gridEl.value)
+        gridEl.value.scrollTop = 0;
+});
+
+function launch(packageName: string)
+{
+    Bridge.requestLaunchApp(packageName, true);
+}
+
+</script>
+
+<template>
+    <Transition name="zoom">
+        <div
+            v-show="drawer.isOpen"
+            class="app-drawer"
+            :style="{
+                'padding-top': px(insets.statusBars.top),
+                'padding-bottom': px(insets.navigationBars.bottom),
+            }">
+
+            <div class="grid" ref="gridEl">
+                <button
+                    v-for="app in sortedApps"
+                    :key="app.packageName"
+                    class="app"
+                    @click="launch(app.packageName)">
+                    <img
+                        :src="Bridge.getDefaultAppIconURL(app.packageName)"
+                        loading="lazy"
+                        alt="" />
+                    <span class="label">{{ app.label }}</span>
+                </button>
+
+                <div v-if="sortedApps.length === 0" class="message">
+                    <template v-if="apps.requestStatus === RequestStatus.Error">
+                        No se pudieron cargar las aplicaciones.
+                        <button class="retry" @click="apps.requestAppsAsync()">Reintentar</button>
+                    </template>
+                    <template v-else>Cargando…</template>
+                </div>
+            </div>
+
+            <div class="bottom-bar">
+                <button class="home" aria-label="Volver al inicio" @click="drawer.close()">
+                    <HomeIcon />
+                </button>
+            </div>
+
+        </div>
+    </Transition>
+</template>
+
+<style scoped lang="scss">
+$gingerbread-orange: #ffa800;
+$bar-height: 56px;
+
+button {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.app-drawer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #000;
+
+    > .grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: min-content;
+        row-gap: 10px;
+        padding: 12px 4px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        > .app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 2px;
+            border-radius: 6px;
+
+            > img {
+                width: 48px;
+                height: 48px;
+            }
+
+            > .label {
+                max-width: 100%;
+                font-size: 12px;
+                line-height: 1.2;
+                text-align: center;
+                text-shadow: 0 1px 2px #000;
+                // up to two lines, then ellipsis
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                word-break: break-word;
+            }
+
+            // Gingerbread's orange pressed highlight
+            &:active {
+                background: linear-gradient(to bottom, rgba($gingerbread-orange, 0.9), rgba(#e07000, 0.9));
+            }
+        }
+
+        > .message {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding-top: 48px;
+            color: rgba(#fff, 0.7);
+
+            > .retry {
+                padding: 8px 16px;
+                border: 1px solid rgba(#fff, 0.3);
+                border-radius: 4px;
+            }
+        }
+    }
+
+    > .bottom-bar {
+        display: flex;
+        justify-content: center;
+        height: $bar-height;
+        border-top: 1px solid rgba(#fff, 0.18);
+        background: linear-gradient(to bottom, #2a2a2a, #0a0a0a);
+
+        > .home {
+            display: grid;
+            place-items: center;
+            width: 72px;
+
+            > svg {
+                width: 36px;
+                height: 36px;
+                transition: filter 0.1s;
+            }
+
+            &:active > svg {
+                filter: drop-shadow(0 0 4px $gingerbread-orange) drop-shadow(0 0 2px $gingerbread-orange);
+            }
+        }
+    }
+}
+
+// Gingerbread's all-apps zoom: grows from slightly smaller while fading in
+.zoom-enter-active,
+.zoom-leave-active {
+    transition: transform 0.25s $ease-mat-decel, opacity 0.25s $ease-mat-decel;
+}
+
+.zoom-enter-from,
+.zoom-leave-to {
+    transform: scale(0.8);
+    opacity: 0;
+}
+</style>

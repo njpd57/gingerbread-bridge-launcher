@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
 import { PAGE_COUNT, useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useDrawerStore } from '@/stores/useDrawerStore';
 import PhoneIcon from './icons/PhoneIcon.vue';
 import AllAppsIcon from './icons/AllAppsIcon.vue';
 import BrowserIcon from './icons/BrowserIcon.vue';
@@ -27,6 +28,7 @@ const BROWSER_PACKAGES = [
 
 const apps = useAppsStore();
 const workspace = useWorkspaceStore();
+const drawer = useDrawerStore();
 
 const dotsLeft = computed(() => workspace.currentPage);
 const dotsRight = computed(() => PAGE_COUNT - 1 - workspace.currentPage);
@@ -38,12 +40,6 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
         Bridge.requestLaunchApp(packageName, true);
     else
         Bridge.showToast(notFoundMessage);
-}
-
-function openAllApps()
-{
-    // temporary: Bridge's own drawer, until our Gingerbread drawer exists
-    Bridge.requestOpenBridgeAppDrawer(true);
 }
 
 </script>
@@ -68,7 +64,7 @@ function openAllApps()
             <button
                 class="hotseat-button"
                 aria-label="Aplicaciones"
-                @click="openAllApps">
+                @click="drawer.open()">
                 <AllAppsIcon />
             </button>
             <button

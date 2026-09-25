@@ -3,6 +3,7 @@ import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { px } from './utils/el-utils';
 import Workspace from './home/Workspace.vue';
 import Dock from './home/Dock.vue';
+import AppDrawer from './drawer/AppDrawer.vue';
 
 const insets = useWindowInsetsStore();
 
@@ -22,6 +23,8 @@ const insets = useWindowInsetsStore();
             :style="{
                 'bottom': px(insets.navigationBars.bottom),
             }" />
+
+        <AppDrawer />
 
     </div>
 </template>
