@@ -9,8 +9,10 @@ import PhoneIcon from './icons/PhoneIcon.vue';
 import AllAppsIcon from './icons/AllAppsIcon.vue';
 import BrowserIcon from './icons/BrowserIcon.vue';
 import TrashIcon from './icons/TrashIcon.vue';
+import { bridgeHas } from '@/utils/bridge-utils';
+import type { BridgeDefaultAppRole } from '@/types/bridge-fork';
 
-// Bridge can't tell us the default dialer/browser, so launch the first installed candidate
+// fallback for Bridge builds that can't tell us the default dialer/browser: the first installed candidate
 const PHONE_PACKAGES = [
     'com.google.android.dialer',
     'com.android.dialer',
@@ -48,9 +50,11 @@ const trashLabel = computed(() => drag.active?.payload.source === 'drawer' ? 'De
 const dotsLeft = computed(() => workspace.currentPage);
 const dotsRight = computed(() => PAGE_COUNT - 1 - workspace.currentPage);
 
-function launchFirstInstalled(candidates: string[], notFoundMessage: string)
+// the user's default app when Bridge can tell us, otherwise the first installed candidate
+function launchDefaultApp(role: BridgeDefaultAppRole, candidates: string[], notFoundMessage: string)
 {
-    const packageName = candidates.find(p => apps.apps.has(p));
+    const defaultPackage = bridgeHas('getDefaultAppPackageName') ? Bridge.getDefaultAppPackageName(role) : null;
+    const packageName = defaultPackage ?? candidates.find(p => apps.apps.has(p));
     if (packageName)
         launcher.launch(packageName);
     else
@@ -82,7 +86,7 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
             <button
                 class="hotseat-button"
                 aria-label="Teléfono"
-                @click="launchFirstInstalled(PHONE_PACKAGES, 'No se encontró una app de teléfono')">
+                @click="launchDefaultApp('dialer', PHONE_PACKAGES, 'No se encontró una app de teléfono')">
                 <PhoneIcon />
             </button>
             <button
@@ -94,7 +98,7 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
             <button
                 class="hotseat-button"
                 aria-label="Navegador"
-                @click="launchFirstInstalled(BROWSER_PACKAGES, 'No se encontró un navegador')">
+                @click="launchDefaultApp('browser', BROWSER_PACKAGES, 'No se encontró un navegador')">
                 <BrowserIcon />
             </button>
         </div>

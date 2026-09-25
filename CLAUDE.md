@@ -38,8 +38,11 @@ Development happens on the **`dev`** branch. Keep `.claude/` (other agents' work
   - Receive back-button events. The drawer uses a `history.pushState` workaround instead.
   - Read media sessions or notifications.
   - Embed native app widgets. All widgets are HTML.
-  - Open URLs or intents other than launching an app by package name.
-  - Tell which apps are the default dialer or browser. `Dock.vue` tries a list of known package names instead.
+  - Open intents other than launching an app by package name or opening a URL (the latter needs our fork, below).
+- **Our Bridge fork ([njpd57/bridge-launcher](https://github.com/njpd57/bridge-launcher)) adds methods** that the published types lack. They are declared by module augmentation in `src/types/bridge-fork.d.ts`, and the dev mock implements them (`ForkBridgeMock` in `src/mock/injectBridgeMockInDev.ts`), so add new fork methods to both. Always call them behind `bridgeHas()` with a fallback for stock Bridge:
+  - `requestSetScreenOrientation` / `getScreenOrientation`: `main.ts` locks the home screen to portrait at startup.
+  - `getDefaultAppPackageName(role)`: `Dock.vue` uses it for the phone and browser buttons, falling back to a list of known package names.
+  - `requestOpenUrl(url)`: the search panel offers a web search (Google), also on Enter when the query doesn't match exactly one app.
 - **Window insets are unreliable on the real device.** Bridge reported 0 for the status bar there. `useWindowInsetsStore` resolves the bar heights anyway: it re-reads the insets after startup and on resume, falls back to other insets, then to `env(safe-area-inset-*)` (`index.html` sets `viewport-fit=cover`), then to a minimum. The user can also set a manual status bar height. **For layout, use the CSS variables `--status-bar-height` and `--nav-bar-height`, which are set on `.launcher-root`, not the raw insets.**
 
 ## Architecture

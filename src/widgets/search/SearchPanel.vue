@@ -7,6 +7,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useKeyboardInset } from '@/composables/useKeyboardInset';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
 import { searchApps } from '@/utils/search';
+import { bridgeHas } from '@/utils/bridge-utils';
 import OverscrollGlow from '@/components/OverscrollGlow.vue';
 import SearchGlyph from './SearchGlyph.vue';
 
@@ -33,6 +34,9 @@ const recentApps = computed(() => launcher.recent
     .filter((a): a is InstalledAppInfo => !!a));
 
 const isQueryEmpty = computed(() => query.value.trim() === '');
+
+// only our Bridge fork can open URLs
+const canSearchWeb = bridgeHas('requestOpenUrl');
 const shownApps = computed(() => isQueryEmpty.value ? recentApps.value : results.value);
 
 watch(() => menu.isSearchOpen, async open =>
@@ -49,11 +53,20 @@ function launch(app: InstalledAppInfo)
     launcher.launch(app.packageName);
 }
 
-// "Enter" on the keyboard opens the app when there's exactly one match
+function searchWeb()
+{
+    const url = `https://www.google.com/search?q=${encodeURIComponent(query.value.trim())}`;
+    if (Bridge.requestOpenUrl(url))
+        menu.closeAll();
+}
+
+// "Enter" on the keyboard opens the app when there's exactly one match, and searches the web otherwise
 function onSubmit()
 {
     if (results.value.length === 1)
         launch(results.value[0]);
+    else if (canSearchWeb && !isQueryEmpty.value)
+        searchWeb();
 }
 
 function clear()
@@ -103,6 +116,11 @@ function clear()
                     <div v-if="!isQueryEmpty && results.length === 0" class="empty">
                         No se encontraron aplicaciones
                     </div>
+
+                    <button v-if="canSearchWeb && !isQueryEmpty" class="row web" @click="searchWeb">
+                        <span class="web-icon"><SearchGlyph /></span>
+                        <span class="label">Buscar «{{ query.trim() }}» en la web</span>
+                    </button>
                 </div>
                 <OverscrollGlow edge="top" :intensity="glow.start.value" :pulling="glow.pulling.value" />
                 <OverscrollGlow edge="bottom" :intensity="glow.end.value" :pulling="glow.pulling.value" />
@@ -225,10 +243,22 @@ $gingerbread-orange: #ffa800;
                     border-bottom: none;
                 }
 
-                > img {
+                > img,
+                > .web-icon {
                     flex-shrink: 0;
                     width: 40px;
                     height: 40px;
+                }
+
+                > .web-icon {
+                    display: grid;
+                    place-items: center;
+                    color: #2f67c5;
+
+                    > :deep(svg) {
+                        width: 28px;
+                        height: 28px;
+                    }
                 }
 
                 &:active {
