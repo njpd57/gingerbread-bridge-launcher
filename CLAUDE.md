@@ -53,7 +53,7 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
 
 - **The home screen model is `useHomeLayoutStore`.** It holds a flat list of items (`app` | `widget` | `folder`), each with `page, x, y, w, h`.
   - The grid has `GRID_COLS` (4) columns and a **variable** number of rows. `autoGridRows()` picks the row count from the screen size (Gingerbread's cell proportions, 4–7 rows), and the user can override it.
-  - When the row count shrinks, `fitItemsToGrid()` moves items that no longer fit.
+  - When the row count shrinks, `fitItemsToGrid()` moves items that no longer fit. That move is permanent, so `App.vue` only measures the automatic rows in **portrait**: rotating to landscape keeps the portrait rows (persisted as `home.autoRows`) instead of shrinking the grid. `main.ts` also tries `screen.orientation.lock('portrait')`, which the WebView will probably reject.
   - Widget sizes are defined in `WIDGET_SIZES`. **Adding a widget kind touches three places:** `WidgetKind`/`WIDGET_SIZES`, the render branch in `widgets/WidgetView.vue` (used by both `HomeGrid` and `DragLayer`), and the list in `AddDialog.vue`.
 - **Drag and drop runs through `useDragStore`.**
   - Each `HomeGrid` registers its element per page, and the `Dock` registers the trash zone, which replaces the hotseat while a drag is active. Drop targets are computed from those elements' on-screen rectangles.

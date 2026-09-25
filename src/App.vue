@@ -31,10 +31,13 @@ const settings = useSettingsStore();
 const drag = useDragStore();
 const layout = useHomeLayoutStore();
 
-// fit as many Gingerbread-shaped rows as the screen allows (tall phones get more)
+// fit as many Gingerbread-shaped rows as the screen allows (tall phones get more).
+// Only measured in portrait: in landscape the rows stay as they were, because fewer rows would
+// move items that no longer fit, and rotating back wouldn't put them back.
 const windowSize = useWindowSize();
 watchEffect(() =>
 {
+    if (windowSize.width.value > windowSize.height.value) return;
     const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
     layout.autoRows = autoGridRows(windowSize.width.value - GRID_SIDE_PADDING, gridHeight);
 });

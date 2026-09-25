@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import { useBridgeEventStore } from "./useBridgeEventStore";
 import { DEFAULT_PAGE, PAGE_COUNT } from "./useWorkspaceStore";
@@ -105,8 +105,9 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
 
     // 0 = automatic, otherwise a fixed number of rows chosen by the user
     const rowsSetting = useLocalStorage<number>('home.gridRows', 0);
-    // measured from the screen by App.vue
-    const autoRows = ref(MIN_GRID_ROWS);
+    // measured from the screen by App.vue (in portrait only); remembered so that starting up
+    // in landscape keeps the portrait layout instead of falling back to the minimum
+    const autoRows = useLocalStorage<number>('home.autoRows', MIN_GRID_ROWS);
     const rows = computed(() => rowsSetting.value || autoRows.value);
 
     function isAreaFree(area: GridArea, ignoreId?: string)
