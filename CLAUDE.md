@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A recreation of the Android 2.3 **Gingerbread** home screen launcher, built as a web project for [Bridge Launcher](https://github.com/bridgelauncher/launcher). Bridge is an Android app that shows a WebView as the home screen and exposes Android features to it through `window.Bridge`. This repo started as Bridge's `api-tester` example, so the README still describes that project. There is no native Android code here.
+A recreation of the Android 2.3 **Gingerbread** home screen launcher, built as a web project for [Bridge Launcher](https://github.com/bridgelauncher/launcher). Bridge is an Android app that shows a WebView as the home screen and exposes Android features to it through `window.Bridge`. It started as a fork of Bridge's `api-tester` example and now lives in its own repo (`github.com/njpd57/gingerbread-bridge-launcher`). There is no native Android code here.
+
+`FEATURES.md` is the roadmap: every idea with the Bridge API calls it needs, marked ✅ when done and ◐ when partly done. `README.md` is the user-facing documentation (in Spanish), including the optional permissions.
 
 Stack: Vue 3 (`<script setup>`), TypeScript, Pinia setup stores, VueUse, SCSS, Vite 4 and Vitest. **User-facing text is in Spanish**; code and comments are in English.
 
@@ -16,12 +18,15 @@ npm run build        # type-check (vue-tsc) + vite build -> dist/
 npm run type-check   # vue-tsc only
 npm run test:unit    # vitest in watch mode (jsdom)
 npx vitest run       # all tests once
+npx vitest run --dir src   # only this repo's tests (git worktrees under .claude/ would otherwise be picked up too)
 npx vitest run src/stores/__tests__/useHomeLayoutStore.spec.ts -t "folders"   # a single file / test
 npm run deploy [remote_dir]   # build and adb-push dist/ to the phone (scripts/deploy.sh)
 npm run grant-permissions     # adb: grant Bridge WRITE_SECURE_SETTINGS (needed to change the system night mode)
 ```
 
 To run the launcher on a device, point Bridge's "project dir" setting at a folder containing the contents of `dist/`. The Vite build uses stable, unhashed asset names (`assets/index.js`), so copying a new `dist/` over the old one is enough.
+
+Development happens on the **`dev`** branch. Keep `.claude/` (other agents' worktrees) out of commits.
 
 ## Bridge runtime
 
@@ -46,10 +51,12 @@ To run the launcher on a device, point Bridge's "project dir" setting at a folde
 4. `AppDrawer`.
 5. `FolderPanel`.
 6. `DragLayer`.
-7. The options menu and dialogs.
-8. The status bar background strip.
+7. The options menu, the dialogs and the search panel.
+8. The status bar: either `statusbar/GingerbreadStatusBar.vue` (our own bar) or a background strip behind the system one.
 
-State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `useLocalStorage`: `home.items`, `home.gridRows`, `settings.*` and `weather.*`.
+State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `useLocalStorage`: `home.items`, `home.gridRows`, `home.autoRows`, `launcher.recentApps`, `settings.*` and `weather.*`.
+
+Widgets live in `src/widgets/<name>/`; `widgets/WidgetView.vue` maps each `WidgetKind` to its component.
 
 - **The home screen model is `useHomeLayoutStore`.** It holds a flat list of items (`app` | `widget` | `folder`), each with `page, x, y, w, h`.
   - The grid has `GRID_COLS` (4) columns and a **variable** number of rows. `autoGridRows()` picks the row count from the screen size (Gingerbread's cell proportions, 4–7 rows), and the user can override it.
@@ -63,11 +70,13 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
 - **Launch apps through `useAppLauncherStore().launch()`**, never `Bridge.requestLaunchApp` directly: it records recent apps (shown by the search panel when its field is empty).
 - **The search widget** opens `widgets/search/SearchPanel.vue` via `menu.showSearch()`; matching lives in `utils/search.ts` (accent- and case-insensitive, ranked). The panel pads itself above the keyboard with `useKeyboardInset()`, which combines Bridge's IME inset with how much the WebView already shrank.
 - **Long press is the `useLongPress` composable.** One instance can serve a whole `v-for`. Click handlers must call `consumeLongPress()`, so the click that ends a long press is ignored.
-- **`useMenuStore` is the single source of truth for overlays**: the options menu, the open dialog (`LauncherDialog`) and the open folder.
+- **`useMenuStore` is the single source of truth for overlays**: the options menu, the open dialog (`LauncherDialog`), the open folder and the search panel.
   - Long-pressing empty workspace opens the options menu. It records the pressed cell as `addAnchor`, which "Añadir" uses to place new items.
   - The Android home button (Bridge's `newIntent` event) is handled in `useWorkspaceStore`. It closes the first open thing in this order: menus (including the search panel), then the drawer; if nothing is open, it returns to the default page.
   - The drawer and the search panel push a history entry when they open, so the back button (which Bridge forwards to the WebView history) closes them. This works on the test device.
-- **`useSettingsStore`** holds the wallpaper and status bar preferences.
+- **`useSettingsStore`** holds the launcher's preferences (wallpaper, status bar, overscroll glow, adding icons on install). Whenever it changes a Bridge setting for a feature (hiding the status bar, turning off Bridge's overscroll effect), it saves the previous value and restores it when the feature is turned off.
+  - With `addIconOnInstall`, it listens for `appInstalled` and puts the new app's icon in the first free cell (`addAppAnywhere()`), starting on the default page.
+  - `gingerbreadOverscroll` draws Gingerbread's orange glow at the ends of scroll containers (`useOverscrollGlow` + `OverscrollGlow.vue`, used by the drawer, the workspace, dialogs, folders and search).
   - Turning on `gingerbreadStatusBar` hides the system status bar through Bridge (remembering the previous appearance so it can be restored), and `App.vue` draws `statusbar/GingerbreadStatusBar.vue` instead.
   - That bar gets battery and connectivity from web APIs (`useDeviceStatus`), because Bridge exposes neither. Signal and Wi-Fi strength can't be read, so `useSimulatedSignal` fakes a slowly drifting level (narrowed by the browser's `effectiveType` estimate when available) plus data activity arrows.
   - Choosing a wallpaper also switches Bridge's "draw system wallpaper behind WebView" setting (through `useTogglesStore`) to match.
@@ -82,4 +91,5 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
   - Dialogs, buttons and radio rows reuse `GbDialog`, `GbButton` and `GbRadioRow` from `src/components/`.
   - Icons are inline SVG Vue components, under `src/home/icons/` and in the widgets' folders.
 - `src/assets/styles/shared/vars.scss` (durations and easings such as `$ease-mat-decel`) is auto-injected into every SCSS block by `vite.config.ts`.
-- Tests cover the pure store logic (the layout model, inset parsing). DOM, canvas and drag behavior are verified in the browser or on the device.
+- Fonts in `src/assets/fonts/` come from AOSP android-2.3.7_r1 (Apache 2.0, see `NOTICE`): Droid Sans for everything and Clockopia for the digital clock.
+- Tests cover pure logic: the layout model, inset parsing, `bridgeHas()`, app search, the month grid and the quote of the day. Keep new logic in pure functions so it can be tested the same way. DOM, canvas and drag behavior are verified in the browser or on the device.

@@ -35,15 +35,17 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Mostrar u ocultar el botón flotante de Bridge.
   - **Brillo naranja** de Gingerbread al llegar al final de una lista, o el efecto de Android.
   - Añadir o no el icono de las apps que instalas.
-- **Aspecto de Gingerbread**: tipografía Droid Sans, dock de cristal, sombra bajo los iconos y el naranja de Gingerbread al pulsar.
+- **Aspecto de Gingerbread**: tipografía Droid Sans (y Clockopia en el reloj digital), dock de cristal, sombra bajo los iconos y el naranja de Gingerbread al pulsar.
 
 La configuración y el diseño del escritorio se guardan en el propio teléfono.
 
 ## Instalación en el teléfono
 
 1. Instala [Bridge Launcher](https://github.com/bridgelauncher/launcher) y ponlo como launcher predeterminado.
-2. Genera el build:
+2. Descarga el proyecto y genera el build:
    ```bash
+   git clone https://github.com/njpd57/gingerbread-bridge-launcher
+   cd gingerbread-bridge-launcher
    npm install
    npm run build
    ```
@@ -86,6 +88,8 @@ npm run test:unit    # tests (Vitest) en modo watch
 npx vitest run       # tests una sola vez
 ```
 
+El desarrollo se hace en la rama **`dev`**. Si tienes otros *worktrees* de git dentro de `.claude/`, Vitest también encuentra sus tests; para ejecutar solo los de este proyecto usa `npx vitest run --dir src`.
+
 En el navegador, `window.Bridge` se reemplaza por un mock ([@bridgelauncher/api-mock](https://github.com/bridgelauncher/api)) con apps de ejemplo en `public/mock/`. Abrir una app muestra un `alert`. Para ver el diseño en tamaño de teléfono, usa la vista de dispositivo móvil de las herramientas de desarrollo. La pulsación larga se simula manteniendo pulsado el clic.
 
 Las notas de arquitectura para trabajar en el código están en [CLAUDE.md](CLAUDE.md).
@@ -97,7 +101,8 @@ Vienen de lo que permite la API de Bridge (v0.1.0):
 - **No hay widgets nativos de Android**: todos los widgets están hechos en HTML.
 - **No se puede leer la música que suena** ni controlar otras apps (por eso no hay widget de música).
 - **Teléfono y Navegador** abren la primera app instalada de una lista de apps conocidas, porque Bridge no indica cuáles son las predeterminadas.
-- **Botón Atrás**: Bridge no avisa cuando se pulsa. El cajón intenta cerrarse con el historial del WebView, pero lo fiable es su botón de inicio o el botón de inicio de Android.
+- **Botón Atrás**: Bridge no avisa cuando se pulsa. El cajón y la búsqueda se cierran con Atrás gracias al historial del WebView (comprobado en un Galaxy Z Flip5), y también con su botón de casa o el botón de inicio de Android.
+- **Modo horizontal**: el launcher no puede impedir que la pantalla gire; eso lo decide Bridge. Intenta bloquearse en vertical, aunque es probable que el WebView no lo permita. Aun así, al girar **no se desordenan los iconos**: en horizontal se mantienen las filas de vertical. Si no quieres que gire nunca, desactiva la rotación automática en el panel rápido de Android.
 - **Barra de estado**: en algunos teléfonos Bridge informa mal su altura. Si el contenido queda debajo de ella, ajústala a mano en **Apariencia**.
 
 ## Créditos
