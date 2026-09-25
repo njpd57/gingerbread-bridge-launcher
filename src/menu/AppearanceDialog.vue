@@ -21,6 +21,11 @@ const statusBarKindOptions: { value: boolean; label: string }[] = [
     { value: true, label: 'Gingerbread' },
 ];
 
+const addIconOptions: { value: boolean; label: string }[] = [
+    { value: true, label: 'Añadir icono' },
+    { value: false, label: 'No añadir' },
+];
+
 const overscrollOptions: { value: boolean; label: string }[] = [
     { value: true, label: 'Brillo naranja' },
     { value: false, label: 'Efecto de Android' },
@@ -137,6 +142,23 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 «Auto» elige las filas según el alto de tu pantalla.
                 Si reduces las filas, lo que no quepa se mueve a un hueco libre.
+            </div>
+        </section>
+
+        <section class="options">
+            <div class="field-label">Al instalar una aplicación</div>
+            <div class="segmented">
+                <button
+                    v-for="opt in addIconOptions"
+                    :key="opt.label"
+                    :class="{ selected: settings.addIconOnInstall === opt.value }"
+                    @click="settings.addIconOnInstall = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+            <div class="field-hint">
+                Pone el icono en el primer hueco libre de la pantalla central (o de las demás si está llena),
+                como hacía el Market.
             </div>
         </section>
 

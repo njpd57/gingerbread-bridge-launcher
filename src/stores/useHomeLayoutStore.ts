@@ -141,6 +141,32 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
         ];
     }
 
+    /** Pages in the order to look for room: the given one first, then the rest from left to right. */
+    function pagesFrom(first: number)
+    {
+        return [first, ...Array.from({ length: PAGE_COUNT }, (_, p) => p).filter(p => p !== first)];
+    }
+
+    /** Adds an app shortcut in the first free cell, starting on `firstPage`. Returns where it went, or null if every page is full. */
+    function addAppAnywhere(packageName: string, label: string, firstPage: number)
+    {
+        for (const page of pagesFrom(firstPage))
+        {
+            const spot = findFreeSpot(page, 1, 1);
+            if (spot)
+            {
+                addApp(packageName, label, spot.page, spot.x, spot.y);
+                return spot;
+            }
+        }
+        return null;
+    }
+
+    function hasShortcut(packageName: string)
+    {
+        return items.value.some(i => i.type === 'app' && i.packageName === packageName);
+    }
+
     function addWidget(widget: WidgetKind, page: number, x: number, y: number)
     {
         items.value = [
@@ -206,8 +232,7 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
     {
         for (const item of items.value.filter(i => !isInGrid(i)))
         {
-            const pages = [item.page, ...Array.from({ length: PAGE_COUNT }, (_, p) => p).filter(p => p !== item.page)];
-            for (const page of pages)
+            for (const page of pagesFrom(item.page))
             {
                 const spot = findFreeSpot(page, item.w, item.h);
                 if (spot)
@@ -245,6 +270,8 @@ export const useHomeLayoutStore = defineStore('homeLayout', () =>
         findFreeSpot,
         folderAt,
         addApp,
+        addAppAnywhere,
+        hasShortcut,
         addWidget,
         addFolder,
         renameFolder,

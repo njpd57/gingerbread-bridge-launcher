@@ -3,7 +3,9 @@ import { watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import type { OverscrollEffects, SystemBarAppearance } from "@bridgelauncher/api";
 import { useTogglesStore } from "./useTogglesStore";
-import { PAGE_COUNT, useWorkspaceStore } from "./useWorkspaceStore";
+import { useBridgeEventStore } from "./useBridgeEventStore";
+import { useHomeLayoutStore } from "./useHomeLayoutStore";
+import { DEFAULT_PAGE, PAGE_COUNT, useWorkspaceStore } from "./useWorkspaceStore";
 
 export type WallpaperKind = 'nexus' | 'system';
 export type Level = 'low' | 'normal' | 'high';
@@ -19,6 +21,8 @@ export const useSettingsStore = defineStore('settings', () =>
 {
     const toggles = useTogglesStore();
     const workspace = useWorkspaceStore();
+    const bridgeEvents = useBridgeEventStore();
+    const layout = useHomeLayoutStore();
 
     const wallpaper = useLocalStorage<WallpaperKind>('settings.wallpaper', 'nexus');
     const nexusDensity = useLocalStorage<Level>('settings.nexusDensity', 'normal');
@@ -35,6 +39,8 @@ export const useSettingsStore = defineStore('settings', () =>
     const gingerbreadOverscroll = useLocalStorage<boolean>('settings.gingerbreadOverscroll', true);
     // Bridge's overscroll setting to restore when turning the Gingerbread glow off
     const savedOverscrollEffects = useLocalStorage<OverscrollEffects>('settings.savedOverscrollEffects', 'default');
+    // like the Market of the time: put newly installed apps on the home screen
+    const addIconOnInstall = useLocalStorage<boolean>('settings.addIconOnInstall', true);
 
     // Bridge only needs to draw the system wallpaper when the Nexus canvas isn't covering it
     watch(wallpaper, kind =>
@@ -79,6 +85,18 @@ export const useSettingsStore = defineStore('settings', () =>
         }
     }, { immediate: true });
 
+    bridgeEvents.addEventListener(ev =>
+    {
+        if (ev.name !== 'appInstalled' || !addIconOnInstall.value) return;
+        const { packageName, label } = ev.app;
+        if (layout.hasShortcut(packageName)) return;
+
+        if (layout.addAppAnywhere(packageName, label, DEFAULT_PAGE))
+            Bridge.showToast(`Se ha creado el acceso directo «${label}».`);
+        else
+            Bridge.showToast(`No hay espacio para el icono de «${label}».`);
+    });
+
     // scroll the system wallpaper along with the pages, like a regular launcher
     Bridge.setWallpaperOffsetSteps(1 / (PAGE_COUNT - 1), 0);
     watch(() => workspace.scrollProgress, progress =>
@@ -96,5 +114,6 @@ export const useSettingsStore = defineStore('settings', () =>
         statusBarHeight,
         gingerbreadStatusBar,
         gingerbreadOverscroll,
+        addIconOnInstall,
     };
 });
