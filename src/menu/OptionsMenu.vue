@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { useMenuStore } from '@/stores/useMenuStore';
-import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
-import { px } from '@/utils/el-utils';
 
 const menu = useMenuStore();
-const insets = useWindowInsetsStore();
 
 function run(action: () => void)
 {
@@ -19,7 +16,7 @@ function run(action: () => void)
         <div v-if="menu.isOptionsMenuOpen" class="menu-overlay" @click.self="menu.closeAll()">
             <nav
                 class="options-menu"
-                :style="{ 'padding-bottom': px(insets.navigationBars.bottom) }">
+                :style="{ 'padding-bottom': 'var(--nav-bar-height)' }">
 
                 <button class="item" @click="menu.showDialog('add')">
                     <svg viewBox="0 0 32 32" aria-hidden="true">
@@ -37,14 +34,15 @@ function run(action: () => void)
                     <span>Fondo de pantalla</span>
                 </button>
 
-                <button class="item" @click="menu.showDialog('grid')">
+                <button class="item" @click="menu.showDialog('appearance')">
                     <svg viewBox="0 0 32 32" aria-hidden="true">
                         <g fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="5" y="4" width="22" height="24" rx="2" />
-                            <path d="M5 12h22M5 20h22M12.3 4v24M19.7 4v24" />
+                            <path d="M5 9h22" stroke-width="3" />
+                            <path d="M5 16h22M5 22h22M12.3 12v16M19.7 12v16" stroke-width="1.5" />
                         </g>
                     </svg>
-                    <span>Cuadrícula</span>
+                    <span>Apariencia</span>
                 </button>
 
                 <button class="item" @click="run(() => Bridge.requestExpandNotificationShade(true))">

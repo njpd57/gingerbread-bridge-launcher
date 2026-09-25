@@ -1,111 +1,139 @@
-import type { WindowInsets, WindowInsetsJson } from "@bridgelauncher/api";
+import type { BridgeEventListener, WindowInsets } from "@bridgelauncher/api";
 import { defineStore } from "pinia";
-import { computed, ref, toValue } from "vue";
+import { computed, reactive } from "vue";
 import { useBridgeEventStore } from "./useBridgeEventStore";
+import { useTogglesStore } from "./useTogglesStore";
+import { useSettingsStore } from "./useSettingsStore";
 
-export function parseInsets(json: WindowInsetsJson): WindowInsets
+// used when the status bar is shown but every inset Bridge reports is 0
+export const FALLBACK_STATUS_BAR_HEIGHT = 32;
+
+// re-read the insets a little after startup, in case Bridge reported them before the first layout
+const STARTUP_REFRESH_DELAYS_MS = [300, 1500];
+
+const ZERO: WindowInsets = { left: 0, top: 0, right: 0, bottom: 0 };
+
+/** Accepts the insets as Bridge's JSON string or as an already-parsed object; anything invalid becomes zeros. */
+export function toInsets(value: unknown): WindowInsets
 {
-    return JSON.parse(json) as WindowInsets;
+    try
+    {
+        const o = typeof value === 'string' ? JSON.parse(value) : value;
+        if (!o || typeof o !== 'object') return ZERO;
+        const n = (v: unknown) => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+        const r = o as Record<string, unknown>;
+        return { left: n(r.left), top: n(r.top), right: n(r.right), bottom: n(r.bottom) };
+    }
+    catch
+    {
+        return ZERO;
+    }
 }
 
-export const useWindowInsetsStore = defineStore('windowInsets', () => 
+const SOURCES = {
+    statusBars: () => Bridge.getStatusBarsWindowInsets(),
+    statusBarsIgnoringVisibility: () => Bridge.getStatusBarsIgnoringVisibilityWindowInsets(),
+    navigationBars: () => Bridge.getNavigationBarsWindowInsets(),
+    navigationBarsIgnoringVisibility: () => Bridge.getNavigationBarsIgnoringVisibilityWindowInsets(),
+    systemBars: () => Bridge.getSystemBarsWindowInsets(),
+    displayCutout: () => Bridge.getDisplayCutoutWindowInsets(),
+};
+
+type InsetsName = keyof typeof SOURCES;
+
+const EVENTS: Record<string, InsetsName> = {
+    statusBarsWindowInsetsChanged: 'statusBars',
+    statusBarsIgnoringVisibilityWindowInsetsChanged: 'statusBarsIgnoringVisibility',
+    navigationBarsWindowInsetsChanged: 'navigationBars',
+    navigationBarsIgnoringVisibilityWindowInsetsChanged: 'navigationBarsIgnoringVisibility',
+    systemBarsWindowInsetsChanged: 'systemBars',
+    displayCutoutWindowInsetsChanged: 'displayCutout',
+};
+
+export const useWindowInsetsStore = defineStore('windowInsets', () =>
 {
     const bridgeEvents = useBridgeEventStore();
+    const toggles = useTogglesStore();
+    const settings = useSettingsStore();
 
-    const statusBars = ref(parseInsets(Bridge.getStatusBarsWindowInsets()));
-    const statusBarsIgnoringVisibility = ref(parseInsets(Bridge.getStatusBarsIgnoringVisibilityWindowInsets()));
+    const insets = reactive({} as Record<InsetsName, WindowInsets>);
 
-    const navigationBars = ref(parseInsets(Bridge.getNavigationBarsWindowInsets()));
-    const navigationBarsIgnoringVisibility = ref(parseInsets(Bridge.getNavigationBarsIgnoringVisibilityWindowInsets()));
-
-    const captionBar = ref(parseInsets(Bridge.getCaptionBarWindowInsets()));
-    const captionBarIgnoringVisibility = ref(parseInsets(Bridge.getCaptionBarIgnoringVisibilityWindowInsets()));
-
-    const systemBars = ref(parseInsets(Bridge.getSystemBarsWindowInsets()));
-    const systemBarsIgnoringVisibility = ref(parseInsets(Bridge.getSystemBarsIgnoringVisibilityWindowInsets()));
-
-    const ime = ref(parseInsets(Bridge.getImeWindowInsets()));
-    const imeAnimationSource = ref(parseInsets(Bridge.getImeAnimationSourceWindowInsets()));
-    const imeAnimationTarget = ref(parseInsets(Bridge.getImeAnimationTargetWindowInsets()));
-
-    const tappableElement = ref(parseInsets(Bridge.getTappableElementWindowInsets()));
-    const tappableElementIgnoringVisibility = ref(parseInsets(Bridge.getTappableElementIgnoringVisibilityWindowInsets()));
-
-    const systemGestures = ref(parseInsets(Bridge.getSystemGesturesWindowInsets()));
-    const mandatorySystemGestures = ref(parseInsets(Bridge.getMandatorySystemGesturesWindowInsets()));
-
-    const displayCutout = ref(parseInsets(Bridge.getDisplayCutoutWindowInsets()));
-    const waterfall = ref(parseInsets(Bridge.getWaterfallWindowInsets()));
-
-    bridgeEvents.addEventListener(ev =>
+    function refresh()
     {
-        if (ev.name === 'statusBarsWindowInsetsChanged')
-            statusBars.value = ev.newValue;
-        else if (ev.name === 'statusBarsIgnoringVisibilityWindowInsetsChanged')
-            statusBarsIgnoringVisibility.value = ev.newValue;
+        for (const name of Object.keys(SOURCES) as InsetsName[])
+        {
+            try { insets[name] = toInsets(SOURCES[name]()); }
+            catch { insets[name] = ZERO; }
+        }
+    }
 
-        else if (ev.name === 'navigationBarsWindowInsetsChanged')
-            navigationBars.value = ev.newValue;
-        else if (ev.name === 'navigationBarsIgnoringVisibilityWindowInsetsChanged')
-            navigationBarsIgnoringVisibility.value = ev.newValue;
+    refresh();
+    for (const delay of STARTUP_REFRESH_DELAYS_MS)
+        setTimeout(refresh, delay);
+    window.addEventListener('resize', refresh);
 
-        else if (ev.name === 'captionBarWindowInsetsChanged')
-            captionBar.value = ev.newValue;
-        else if (ev.name === 'captionBarIgnoringVisibilityWindowInsetsChanged')
-            captionBarIgnoringVisibility.value = ev.newValue;
+    const onBridgeEvent: BridgeEventListener = ev =>
+    {
+        if (ev.name === 'afterResume')
+        {
+            refresh();
+            return;
+        }
+        const name = EVENTS[ev.name];
+        if (name && 'newValue' in ev)
+            insets[name] = toInsets(ev.newValue);
+    };
+    bridgeEvents.addEventListener(onBridgeEvent);
 
-        else if (ev.name === 'systemBarsWindowInsetsChanged')
-            systemBars.value = ev.newValue;
-        else if (ev.name === 'systemBarsIgnoringVisibilityWindowInsetsChanged')
-            systemBarsIgnoringVisibility.value = ev.newValue;
+    const isStatusBarHeightManual = computed(() => settings.statusBarHeight >= 0);
 
-        else if (ev.name === 'imeWindowInsetsChanged')
-            ime.value = ev.newValue;
-        else if (ev.name === 'imeAnimationSourceWindowInsetsChanged')
-            imeAnimationSource.value = ev.newValue;
-        else if (ev.name === 'imeAnimationTargetWindowInsetsChanged')
-            imeAnimationTarget.value = ev.newValue;
-
-        else if (ev.name === 'tappableElementWindowInsetsChanged')
-            tappableElement.value = ev.newValue;
-        else if (ev.name === 'tappableElementIgnoringVisibilityWindowInsetsChanged')
-            tappableElementIgnoringVisibility.value = ev.newValue;
-
-        else if (ev.name === 'systemGesturesWindowInsetsChanged')
-            systemGestures.value = ev.newValue;
-        else if (ev.name === 'mandatorySystemGesturesWindowInsetsChanged')
-            mandatorySystemGestures.value = ev.newValue;
-
-        else if (ev.name === 'displayCutoutWindowInsetsChanged')
-            displayCutout.value = ev.newValue;
-        else if (ev.name === 'waterfallWindowInsetsChanged')
-            waterfall.value = ev.newValue;
+    /** The status bar height as detected from Bridge (with a fallback), ignoring the manual setting. */
+    const measuredStatusBarHeight = computed(() =>
+    {
+        if (toggles.statusBarAppearance === 'hide') return 0;
+        const measured = Math.max(
+            insets.statusBars.top,
+            insets.statusBarsIgnoringVisibility.top,
+            insets.systemBars.top,
+            insets.displayCutout.top,
+        );
+        return measured > 0 ? measured : FALLBACK_STATUS_BAR_HEIGHT;
     });
 
+    /** Space to leave at the top for the status bar, in CSS px: the manual height if set, otherwise the measured one. */
+    const statusBarHeight = computed(() =>
+        isStatusBarHeightManual.value ? settings.statusBarHeight : measuredStatusBarHeight.value);
+
+    /** Space to leave at the bottom for the navigation bar (0 with hidden gesture navigation), in CSS px. */
+    const navigationBarHeight = computed(() =>
+    {
+        if (toggles.navigationBarAppearance === 'hide') return 0;
+        return Math.max(
+            insets.navigationBars.bottom,
+            insets.navigationBarsIgnoringVisibility.bottom,
+            insets.systemBars.bottom,
+        );
+    });
+
+    // CSS values that also honour the WebView's own safe area, whichever is larger
+    const statusBarCss = computed(() =>
+    {
+        if (isStatusBarHeightManual.value || statusBarHeight.value === 0)
+            return `${statusBarHeight.value}px`;
+        return `max(${statusBarHeight.value}px, env(safe-area-inset-top, 0px))`;
+    });
+
+    const navigationBarCss = computed(() => toggles.navigationBarAppearance === 'hide'
+        ? '0px'
+        : `max(${navigationBarHeight.value}px, env(safe-area-inset-bottom, 0px))`);
+
     return {
-        statusBars,
-        statusBarsIgnoringVisibility,
-
-        navigationBars,
-        navigationBarsIgnoringVisibility,
-
-        captionBar,
-        captionBarIgnoringVisibility,
-
-        systemBars,
-        systemBarsIgnoringVisibility,
-
-        ime,
-        imeAnimationSource,
-        imeAnimationTarget,
-
-        tappableElement,
-        tappableElementIgnoringVisibility,
-
-        systemGestures,
-        mandatorySystemGestures,
-
-        displayCutout,
-        waterfall,
+        insets,
+        measuredStatusBarHeight,
+        statusBarHeight,
+        navigationBarHeight,
+        statusBarCss,
+        navigationBarCss,
+        refresh,
     };
 });

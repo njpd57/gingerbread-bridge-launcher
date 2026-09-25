@@ -3,6 +3,7 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore, type Level, type NexusFps, type WallpaperKind } from '@/stores/useSettingsStore';
 import GbDialog from '@/components/GbDialog.vue';
 import GbButton from '@/components/GbButton.vue';
+import GbRadioRow from '@/components/GbRadioRow.vue';
 
 const menu = useMenuStore();
 const settings = useSettingsStore();
@@ -34,20 +35,15 @@ const fpsOptions: NexusFps[] = [30, 60, 120];
         title="Fondo de pantalla"
         @close="menu.closeAll()">
 
-        <label
+        <GbRadioRow
             v-for="opt in wallpaperOptions"
             :key="opt.value"
-            class="radio-row">
-            <span class="text">
-                <span class="label">{{ opt.label }}</span>
-                <span class="hint">{{ opt.hint }}</span>
-            </span>
-            <input
-                v-model="settings.wallpaper"
-                type="radio"
-                name="wallpaper"
-                :value="opt.value" />
-        </label>
+            name="wallpaper"
+            :value="opt.value"
+            :model-value="settings.wallpaper"
+            :label="opt.label"
+            :hint="opt.hint"
+            @update:model-value="settings.wallpaper = opt.value" />
 
         <section v-if="settings.wallpaper === 'nexus'" class="options">
             <div class="field-label">Cantidad de pulsos</div>
@@ -101,56 +97,6 @@ const fpsOptions: NexusFps[] = [30, 60, 120];
 </template>
 
 <style scoped lang="scss">
-$gingerbread-green: #8fd400;
-
-.radio-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 60px;
-    padding: 8px 16px;
-    border-bottom: 1px solid rgba(#fff, 0.1);
-    cursor: pointer;
-
-    &:active {
-        background: linear-gradient(to bottom, #ffc64d, #ff8a00);
-        color: #111;
-    }
-
-    > .text {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-
-        > .label {
-            font-size: 17px;
-        }
-
-        > .hint {
-            font-size: 13px;
-            opacity: 0.65;
-        }
-    }
-
-    // Gingerbread radio: gray bezel with a green dot when checked
-    > input {
-        appearance: none;
-        flex-shrink: 0;
-        width: 26px;
-        height: 26px;
-        margin: 0;
-        border: 2px solid #8a8a8a;
-        border-radius: 50%;
-        background: radial-gradient(circle, #555 0%, #2a2a2a 100%);
-
-        &:checked {
-            background: radial-gradient(circle, $gingerbread-green 0 42%, #2a2a2a 48% 100%);
-            border-color: #bdbdbd;
-        }
-    }
-}
-
 .options {
     display: flex;
     flex-direction: column;

@@ -2,16 +2,13 @@
 import { computed, ref, watch } from 'vue';
 import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
-import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useLongPress } from '@/composables/useLongPress';
 import type { InstalledAppInfo } from '@/stores/useAppsStore';
-import { px } from '@/utils/el-utils';
 import HomeIcon from '@/home/icons/HomeIcon.vue';
 
 const apps = useAppsStore();
 const drawer = useDrawerStore();
-const insets = useWindowInsetsStore();
 const drag = useDragStore();
 
 const gridEl = ref<HTMLElement>();
@@ -49,8 +46,8 @@ function launch(packageName: string)
             v-show="drawer.isOpen"
             class="app-drawer"
             :style="{
-                'padding-top': px(insets.statusBars.top),
-                'padding-bottom': px(insets.navigationBars.bottom),
+                'padding-top': 'var(--status-bar-height)',
+                'padding-bottom': 'var(--nav-bar-height)',
             }">
 
             <div class="grid" ref="gridEl">

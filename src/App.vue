@@ -7,7 +7,6 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { autoGridRows, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
-import { px } from './utils/el-utils';
 import Workspace from './home/Workspace.vue';
 import HomeGrid from './home/HomeGrid.vue';
 import Dock from './home/Dock.vue';
@@ -17,7 +16,7 @@ import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
-import GridDialog from './menu/GridDialog.vue';
+import AppearanceDialog from './menu/AppearanceDialog.vue';
 import FolderPanel from './home/FolderPanel.vue';
 
 const DOCK_HEIGHT = 56;
@@ -33,7 +32,7 @@ const layout = useHomeLayoutStore();
 const windowSize = useWindowSize();
 watchEffect(() =>
 {
-    const gridHeight = windowSize.height.value - insets.statusBars.top - DOCK_HEIGHT - insets.navigationBars.bottom;
+    const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
     layout.autoRows = autoGridRows(windowSize.width.value - GRID_SIDE_PADDING, gridHeight);
 });
 
@@ -65,7 +64,13 @@ function onWorkspaceClick(e: MouseEvent)
 </script>
 
 <template>
-    <div class="launcher-root" :class="{ 'system-wallpaper': settings.wallpaper === 'system' }">
+    <div
+        class="launcher-root"
+        :class="{ 'system-wallpaper': settings.wallpaper === 'system' }"
+        :style="{
+            '--status-bar-height': insets.statusBarCss,
+            '--nav-bar-height': insets.navigationBarCss,
+        }">
 
         <NexusWallpaper v-if="settings.wallpaper === 'nexus'" ref="wallpaper" />
 
@@ -79,13 +84,13 @@ function onWorkspaceClick(e: MouseEvent)
             @contextmenu.prevent
             @click="onWorkspaceClick"
             :style="{
-                'padding-top': px(insets.statusBars.top),
+                'padding-top': 'var(--status-bar-height)',
             }">
             <template #default="{ page }">
                 <HomeGrid
                     :page="page"
                     :style="{
-                        'padding-bottom': px(DOCK_HEIGHT + insets.navigationBars.bottom),
+                        'padding-bottom': `calc(${DOCK_HEIGHT}px + var(--nav-bar-height))`,
                     }" />
             </template>
         </Workspace>
@@ -93,7 +98,7 @@ function onWorkspaceClick(e: MouseEvent)
         <Dock
             class="dock"
             :style="{
-                'bottom': px(insets.navigationBars.bottom),
+                'bottom': 'var(--nav-bar-height)',
             }" />
 
         <AppDrawer />
@@ -105,7 +110,14 @@ function onWorkspaceClick(e: MouseEvent)
         <OptionsMenu />
         <AddDialog />
         <WallpaperDialog />
-        <GridDialog />
+        <AppearanceDialog />
+
+        <!-- optional Gingerbread-style background behind the (translucent) system status bar -->
+        <div
+            v-if="settings.statusBarBackground !== 'none'"
+            class="status-bar-bg"
+            :class="settings.statusBarBackground"
+            :style="{ 'height': 'var(--status-bar-height)' }"></div>
 
     </div>
 </template>
@@ -131,6 +143,34 @@ function onWorkspaceClick(e: MouseEvent)
         position: absolute;
         left: 0;
         right: 0;
+    }
+
+    > .status-bar-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        pointer-events: none;
+
+        // Gingerbread's light gray status bar
+        &.gray {
+            background: linear-gradient(to bottom, #f2f2f2, #c4c4c4);
+            border-bottom: 1px solid #8a8a8a;
+        }
+
+        // Gingerbread's black status bar: dark gray fading to black, with a faint line underneath
+        &.blackGradient {
+            background: linear-gradient(to bottom, #3c3c3c, #0c0c0c 70%, #000);
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        &.white {
+            background-color: #fff;
+        }
+
+        &.black {
+            background-color: #000;
+        }
     }
 }
 </style>
