@@ -40,6 +40,9 @@ onBeforeUnmount(() => drag.trashEl = null);
 
 const isOverTrash = computed(() => drag.target?.kind === 'trash');
 
+// apps dragged out of the drawer get uninstalled; everything else is just removed from the home screen
+const trashLabel = computed(() => drag.active?.payload.source === 'drawer' ? 'Desinstalar' : 'Quitar');
+
 const dotsLeft = computed(() => workspace.currentPage);
 const dotsRight = computed(() => PAGE_COUNT - 1 - workspace.currentPage);
 
@@ -70,6 +73,7 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
             class="hotseat trash"
             :class="{ hover: isOverTrash }">
             <TrashIcon />
+            <span class="trash-label">{{ trashLabel }}</span>
         </div>
 
         <div v-else class="hotseat">
@@ -175,12 +179,20 @@ button {
             0 -2px 10px rgba(#000, 0.45);
 
         &.trash {
+            justify-content: center;
+            gap: 6px;
             transition: background 0.1s;
 
             > svg {
-                width: 40px;
-                height: 40px;
+                width: 36px;
+                height: 36px;
                 color: #e8e8e8;
+            }
+
+            > .trash-label {
+                color: #e8e8e8;
+                font-size: 15px;
+                text-shadow: 0 1px 2px #000;
             }
 
             // Gingerbread's delete zone turns red when an item is over it

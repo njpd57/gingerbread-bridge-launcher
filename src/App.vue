@@ -17,6 +17,7 @@ import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
 import AppearanceDialog from './menu/AppearanceDialog.vue';
+import ManageAppsDialog from './menu/ManageAppsDialog.vue';
 import FolderPanel from './home/FolderPanel.vue';
 import GingerbreadStatusBar from './statusbar/GingerbreadStatusBar.vue';
 
@@ -112,6 +113,7 @@ function onWorkspaceClick(e: MouseEvent)
         <AddDialog />
         <WallpaperDialog />
         <AppearanceDialog />
+        <ManageAppsDialog />
 
         <!-- our own Gingerbread status bar, replacing the system one (hidden through Bridge) -->
         <GingerbreadStatusBar

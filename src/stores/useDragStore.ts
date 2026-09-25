@@ -271,6 +271,10 @@ export const useDragStore = defineStore('drag', () =>
         {
             if (p.source === 'home')
                 layout.removeItem(p.itemId);
+            // like Gingerbread: dropping an app from the drawer on the trash uninstalls it
+            // (Android asks for confirmation; appRemoved then cleans up the home screen)
+            else if (p.source === 'drawer')
+                Bridge.requestAppUninstall(p.packageName, true);
             return;
         }
 

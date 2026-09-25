@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useDragStore } from '@/stores/useDragStore';
+import { useMenuStore } from '@/stores/useMenuStore';
 import { useLongPress } from '@/composables/useLongPress';
 import type { InstalledAppInfo } from '@/stores/useAppsStore';
 import HomeIcon from '@/home/icons/HomeIcon.vue';
@@ -10,6 +11,7 @@ import HomeIcon from '@/home/icons/HomeIcon.vue';
 const apps = useAppsStore();
 const drawer = useDrawerStore();
 const drag = useDragStore();
+const menu = useMenuStore();
 
 const gridEl = ref<HTMLElement>();
 
@@ -82,6 +84,19 @@ function launch(packageName: string)
             <div class="bottom-bar">
                 <button class="home" aria-label="Volver al inicio" @click="drawer.close()">
                     <HomeIcon />
+                </button>
+                <!-- Gingerbread put "Manage applications" in the drawer's menu -->
+                <button class="manage" aria-label="Administrar aplicaciones" @click="menu.showDialog('manageApps')">
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                        <g fill="currentColor">
+                            <rect x="4" y="6" width="5" height="5" rx="1" />
+                            <rect x="4" y="14" width="5" height="5" rx="1" />
+                            <rect x="4" y="22" width="5" height="5" rx="1" />
+                            <rect x="12" y="7.5" width="16" height="2" rx="1" />
+                            <rect x="12" y="15.5" width="16" height="2" rx="1" />
+                            <rect x="12" y="23.5" width="10" height="2" rx="1" />
+                        </g>
+                    </svg>
                 </button>
             </div>
 
@@ -173,6 +188,7 @@ button {
     }
 
     > .bottom-bar {
+        position: relative;
         display: flex;
         justify-content: center;
         height: $bar-height;
@@ -187,6 +203,27 @@ button {
             > svg {
                 width: 36px;
                 height: 36px;
+                transition: filter 0.1s;
+            }
+
+            &:active > svg {
+                filter: drop-shadow(0 0 4px $gingerbread-orange) drop-shadow(0 0 2px $gingerbread-orange);
+            }
+        }
+
+        > .manage {
+            position: absolute;
+            top: 0;
+            right: 8px;
+            bottom: 0;
+            display: grid;
+            place-items: center;
+            width: 56px;
+            color: #d8d8d8;
+
+            > svg {
+                width: 28px;
+                height: 28px;
                 transition: filter 0.1s;
             }
 
