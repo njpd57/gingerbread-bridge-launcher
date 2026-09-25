@@ -1,0 +1,208 @@
+<script setup lang="ts">
+import { useMenuStore } from '@/stores/useMenuStore';
+import { useSettingsStore, type Level, type NexusFps, type WallpaperKind } from '@/stores/useSettingsStore';
+import GbDialog from '@/components/GbDialog.vue';
+import GbButton from '@/components/GbButton.vue';
+
+const menu = useMenuStore();
+const settings = useSettingsStore();
+
+const wallpaperOptions: { value: WallpaperKind; label: string; hint: string }[] = [
+    { value: 'nexus', label: 'Nexus', hint: 'Fondo animado' },
+    { value: 'system', label: 'Fondo del sistema', hint: 'La imagen elegida en Android' },
+];
+
+const densityOptions: { value: Level; label: string }[] = [
+    { value: 'low', label: 'Pocos' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'high', label: 'Muchos' },
+];
+
+const speedOptions: { value: Level; label: string }[] = [
+    { value: 'low', label: 'Lenta' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'high', label: 'Rápida' },
+];
+
+const fpsOptions: NexusFps[] = [30, 60, 120];
+
+</script>
+
+<template>
+    <GbDialog
+        :open="menu.openDialog === 'wallpaper'"
+        title="Fondo de pantalla"
+        @close="menu.closeAll()">
+
+        <label
+            v-for="opt in wallpaperOptions"
+            :key="opt.value"
+            class="radio-row">
+            <span class="text">
+                <span class="label">{{ opt.label }}</span>
+                <span class="hint">{{ opt.hint }}</span>
+            </span>
+            <input
+                v-model="settings.wallpaper"
+                type="radio"
+                name="wallpaper"
+                :value="opt.value" />
+        </label>
+
+        <section v-if="settings.wallpaper === 'nexus'" class="options">
+            <div class="field-label">Cantidad de pulsos</div>
+            <div class="segmented">
+                <button
+                    v-for="opt in densityOptions"
+                    :key="opt.value"
+                    :class="{ selected: settings.nexusDensity === opt.value }"
+                    @click="settings.nexusDensity = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+
+            <div class="field-label">Velocidad</div>
+            <div class="segmented">
+                <button
+                    v-for="opt in speedOptions"
+                    :key="opt.value"
+                    :class="{ selected: settings.nexusSpeed === opt.value }"
+                    @click="settings.nexusSpeed = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+
+            <div class="field-label">Fluidez (fotogramas por segundo)</div>
+            <div class="segmented">
+                <button
+                    v-for="fps in fpsOptions"
+                    :key="fps"
+                    :class="{ selected: settings.nexusFps === fps }"
+                    @click="settings.nexusFps = fps">
+                    {{ fps }}
+                </button>
+            </div>
+            <div class="field-hint">
+                Más fluidez gasta más batería. 120 solo se nota en pantallas de 120 Hz.
+            </div>
+        </section>
+
+        <section v-else class="options">
+            <GbButton class="wide" @click="Bridge.requestChangeSystemWallpaper(true)">
+                Elegir imagen…
+            </GbButton>
+        </section>
+
+        <template #buttons>
+            <GbButton @click="menu.closeAll()">Listo</GbButton>
+        </template>
+
+    </GbDialog>
+</template>
+
+<style scoped lang="scss">
+$gingerbread-green: #8fd400;
+
+.radio-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 60px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(#fff, 0.1);
+    cursor: pointer;
+
+    &:active {
+        background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+        color: #111;
+    }
+
+    > .text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        > .label {
+            font-size: 17px;
+        }
+
+        > .hint {
+            font-size: 13px;
+            opacity: 0.65;
+        }
+    }
+
+    // Gingerbread radio: gray bezel with a green dot when checked
+    > input {
+        appearance: none;
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        margin: 0;
+        border: 2px solid #8a8a8a;
+        border-radius: 50%;
+        background: radial-gradient(circle, #555 0%, #2a2a2a 100%);
+
+        &:checked {
+            background: radial-gradient(circle, $gingerbread-green 0 42%, #2a2a2a 48% 100%);
+            border-color: #bdbdbd;
+        }
+    }
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 8px;
+
+    > .field-label {
+        font-size: 13px;
+        opacity: 0.75;
+    }
+
+    > .field-hint {
+        font-size: 12px;
+        opacity: 0.55;
+    }
+
+    > .segmented {
+        display: flex;
+        border: 1px solid #5a5a5a;
+        border-radius: 5px;
+        overflow: hidden;
+
+        > button {
+            appearance: none;
+            flex: 1;
+            min-height: 40px;
+            border: none;
+            border-right: 1px solid #5a5a5a;
+            background: linear-gradient(to bottom, #4a4a4a, #333);
+            color: #e8e8e8;
+            font: inherit;
+            font-size: 14px;
+            cursor: pointer;
+
+            &:last-child {
+                border-right: none;
+            }
+
+            &.selected {
+                background: linear-gradient(to bottom, #f4f4f4, #c9c9c9);
+                color: #111;
+            }
+
+            &:active {
+                background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+                color: #111;
+            }
+        }
+    }
+
+    > .wide {
+        width: 100%;
+    }
+}
+</style>

@@ -5,15 +5,16 @@ import type { BridgeEventListener } from '@bridgelauncher/api';
 import { useBridgeEventStore } from '@/stores/useBridgeEventStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { NEXUS_PULSES, NEXUS_SPEED, useSettingsStore } from '@/stores/useSettingsStore';
 
 // A recreation of the "Nexus" live wallpaper: glowing colored pulses
 // travelling along an invisible grid over a dark background.
 
 const GRID = 48;
 const PARALLAX_WIDTH = 1.5; // wallpaper width relative to the screen
-const MAX_PULSES = 9;
 const MAX_DPR = 2;
-const FRAME_MS = 1000 / 30;
+// rAF timestamps jitter slightly, so allow frames a bit early to avoid skipping every other one
+const FRAME_TOLERANCE_MS = 2;
 
 type RGB = [number, number, number];
 
@@ -41,6 +42,10 @@ interface Pulse
 const bridgeEvents = useBridgeEventStore();
 const drawer = useDrawerStore();
 const workspace = useWorkspaceStore();
+const settings = useSettingsStore();
+
+const maxPulses = () => NEXUS_PULSES[settings.nexusDensity];
+const frameMs = () => 1000 / settings.nexusFps;
 
 const visibility = useDocumentVisibility();
 const reducedMotion = usePreferredReducedMotion();
@@ -210,9 +215,10 @@ function draw()
 
 function step(dt: number)
 {
+    const speedFactor = NEXUS_SPEED[settings.nexusSpeed];
     for (const p of pulses)
     {
-        const d = p.speed * dt;
+        const d = p.speed * speedFactor * dt;
         p.x += p.dx * d;
         p.y += p.dy * d;
         p.travelled += d;
@@ -220,7 +226,7 @@ function step(dt: number)
 
     // replace pulses that left the screen, dropping extras left over from taps
     const alive = pulses.filter(p => !isGone(p));
-    while (alive.length < MAX_PULSES)
+    while (alive.length < maxPulses())
         alive.push(spawnFromEdge());
     pulses = alive;
 }
@@ -228,7 +234,7 @@ function step(dt: number)
 function loop(t: number)
 {
     rafId = requestAnimationFrame(loop);
-    if (t - lastFrame < FRAME_MS) return;
+    if (t - lastFrame < frameMs() - FRAME_TOLERANCE_MS) return;
     const dt = Math.min((t - lastFrame) / 1000, 0.1);
     lastFrame = t;
     step(dt);
@@ -272,7 +278,7 @@ function resize()
     renderBackground();
 
     if (pulses.length === 0)
-        pulses = Array.from({ length: MAX_PULSES }, spawnInside);
+        pulses = Array.from({ length: maxPulses() }, spawnInside);
 
     draw();
 }
