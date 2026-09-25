@@ -60,10 +60,13 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
   - A drag payload comes from one of three sources: `drawer`, `home` or `folder`. `applyDrop()` handles every combination of source and target (cell, folder or trash).
   - While a drag is active, the store listens to pointer events on `window` and cancels `touchmove` (non-passive) so the WebView doesn't scroll under the finger.
   - Click handlers call `drag.justDropped()` to ignore the click that follows a drop.
+- **Launch apps through `useAppLauncherStore().launch()`**, never `Bridge.requestLaunchApp` directly: it records recent apps (shown by the search panel when its field is empty).
+- **The search widget** opens `widgets/search/SearchPanel.vue` via `menu.showSearch()`; matching lives in `utils/search.ts` (accent- and case-insensitive, ranked). The panel pads itself above the keyboard with `useKeyboardInset()`, which combines Bridge's IME inset with how much the WebView already shrank.
 - **Long press is the `useLongPress` composable.** One instance can serve a whole `v-for`. Click handlers must call `consumeLongPress()`, so the click that ends a long press is ignored.
 - **`useMenuStore` is the single source of truth for overlays**: the options menu, the open dialog (`LauncherDialog`) and the open folder.
   - Long-pressing empty workspace opens the options menu. It records the pressed cell as `addAnchor`, which "Añadir" uses to place new items.
-  - The Android home button (Bridge's `newIntent` event) is handled in `useWorkspaceStore`. It closes the first open thing in this order: menus, then the drawer; if nothing is open, it returns to the default page.
+  - The Android home button (Bridge's `newIntent` event) is handled in `useWorkspaceStore`. It closes the first open thing in this order: menus (including the search panel), then the drawer; if nothing is open, it returns to the default page.
+  - The drawer and the search panel push a history entry when they open, so the back button (which Bridge forwards to the WebView history) closes them. This works on the test device.
 - **`useSettingsStore`** holds the wallpaper and status bar preferences.
   - Turning on `gingerbreadStatusBar` hides the system status bar through Bridge (remembering the previous appearance so it can be restored), and `App.vue` draws `statusbar/GingerbreadStatusBar.vue` instead.
   - That bar gets battery and connectivity from web APIs (`useDeviceStatus`), because Bridge exposes neither. Signal and Wi-Fi strength can't be read, so `useSimulatedSignal` fakes a slowly drifting level (narrowed by the browser's `effectiveType` estimate when available) plus data activity arrows.

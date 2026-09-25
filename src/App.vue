@@ -18,6 +18,7 @@ import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
 import AppearanceDialog from './menu/AppearanceDialog.vue';
 import ManageAppsDialog from './menu/ManageAppsDialog.vue';
+import SearchPanel from './widgets/search/SearchPanel.vue';
 import FolderPanel from './home/FolderPanel.vue';
 import GingerbreadStatusBar from './statusbar/GingerbreadStatusBar.vue';
 
@@ -114,6 +115,8 @@ function onWorkspaceClick(e: MouseEvent)
         <WallpaperDialog />
         <AppearanceDialog />
         <ManageAppsDialog />
+
+        <SearchPanel />
 
         <!-- our own Gingerbread status bar, replacing the system one (hidden through Bridge) -->
         <GingerbreadStatusBar

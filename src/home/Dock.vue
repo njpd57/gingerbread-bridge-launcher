@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
+import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { PAGE_COUNT, useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useDragStore } from '@/stores/useDragStore';
@@ -29,6 +30,7 @@ const BROWSER_PACKAGES = [
 ];
 
 const apps = useAppsStore();
+const launcher = useAppLauncherStore();
 const workspace = useWorkspaceStore();
 const drawer = useDrawerStore();
 const drag = useDragStore();
@@ -50,7 +52,7 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
 {
     const packageName = candidates.find(p => apps.apps.has(p));
     if (packageName)
-        Bridge.requestLaunchApp(packageName, true);
+        launcher.launch(packageName);
     else
         Bridge.showToast(notFoundMessage);
 }

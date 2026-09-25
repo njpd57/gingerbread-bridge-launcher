@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
+import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useMenuStore } from '@/stores/useMenuStore';
@@ -12,6 +13,7 @@ import type { InstalledAppInfo } from '@/stores/useAppsStore';
 import HomeIcon from '@/home/icons/HomeIcon.vue';
 
 const apps = useAppsStore();
+const launcher = useAppLauncherStore();
 const drawer = useDrawerStore();
 const drag = useDragStore();
 const menu = useMenuStore();
@@ -43,7 +45,7 @@ const longPress = useLongPress<InstalledAppInfo>((app, pos) =>
 function launch(packageName: string)
 {
     if (longPress.consumeLongPress()) return;
-    Bridge.requestLaunchApp(packageName, true);
+    launcher.launch(packageName);
 }
 
 </script>

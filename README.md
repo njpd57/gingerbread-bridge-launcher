@@ -22,7 +22,7 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Arrastra apps encima de una carpeta para meterlas.
   - Tócala para abrirla y toca su título para cambiarle el nombre.
   - Desde una carpeta abierta puedes sacar apps arrastrándolas.
-- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), y **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes.
+- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes, y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
 - **Fondo animado "Nexus"**: pulsos de luz de colores que recorren la pantalla. Al tocar un hueco vacío salen pulsos desde ese punto.
   - Se puede configurar la cantidad de pulsos, la velocidad y los fps (30, 60 o 120).
   - También puedes usar el fondo de pantalla del sistema.

@@ -4,6 +4,7 @@ import { computed, reactive } from "vue";
 import { useBridgeEventStore } from "./useBridgeEventStore";
 import { useTogglesStore } from "./useTogglesStore";
 import { useSettingsStore } from "./useSettingsStore";
+import { bridgeHas } from "@/utils/bridge-utils";
 
 // used when the status bar is shown but every inset Bridge reports is 0
 export const FALLBACK_STATUS_BAR_HEIGHT = 32;
@@ -40,6 +41,8 @@ const SOURCES = {
     navigationBarsIgnoringVisibility: () => Bridge.getNavigationBarsIgnoringVisibilityWindowInsets(),
     systemBars: () => Bridge.getSystemBarsWindowInsets(),
     displayCutout: () => Bridge.getDisplayCutoutWindowInsets(),
+    // the on-screen keyboard; guarded like other methods an older Bridge might lack
+    ime: () => bridgeHas('getImeWindowInsets') ? Bridge.getImeWindowInsets() : null,
 };
 
 type InsetsName = keyof typeof SOURCES;
@@ -51,6 +54,7 @@ const EVENTS: Record<string, InsetsName> = {
     navigationBarsIgnoringVisibilityWindowInsetsChanged: 'navigationBarsIgnoringVisibility',
     systemBarsWindowInsetsChanged: 'systemBars',
     displayCutoutWindowInsetsChanged: 'displayCutout',
+    imeWindowInsetsChanged: 'ime',
 };
 
 export const useWindowInsetsStore = defineStore('windowInsets', () =>
@@ -132,8 +136,12 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
         ? '0px'
         : `max(${navigationBarHeight.value}px, env(safe-area-inset-bottom, 0px))`);
 
+    /** How much of the bottom of the window the keyboard covers according to Bridge, in CSS px (0 when hidden). */
+    const imeBottom = computed(() => insets.ime.bottom);
+
     return {
         insets,
+        imeBottom,
         measuredStatusBarHeight,
         statusBarHeight,
         navigationBarHeight,

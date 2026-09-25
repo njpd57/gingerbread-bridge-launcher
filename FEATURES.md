@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 5 ya están implementadas (marcadas con ✅).
+**Estado:** las ideas 1 a 5 y la 7 ya están implementadas (marcadas con ✅).
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -58,7 +58,7 @@ Si el usuario elige como fondo del sistema un fondo **animado** (live wallpaper)
 - **API:** `sendWallpaperTap(x, y)` al tocar un hueco vacío cuando el fondo es "Fondo del sistema". Hoy esos toques solo generan pulsos en nuestro fondo Nexus.
 - **Esfuerzo:** muy bajo.
 
-### 7. Widget de búsqueda de aplicaciones
+### 7. Widget de búsqueda de aplicaciones ✅ Hecho
 Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 con el logo de Google, un campo de texto y el botón del micrófono. Nuestra versión tendría el mismo aspecto, pero buscaría **aplicaciones instaladas**, porque Bridge no puede abrir búsquedas web.
 - Al tocar la barra se abre un panel de búsqueda a pantalla completa, al estilo de la búsqueda rápida de Gingerbread: el campo arriba con el teclado abierto y, debajo, la lista de resultados con icono y nombre, que se filtra mientras se escribe.
 - La búsqueda ignora mayúsculas y tildes ("camara" encuentra "Cámara"), pone primero los nombres que empiezan por el texto y después los que lo contienen. Si hay una sola coincidencia, "Intro" en el teclado la abre.

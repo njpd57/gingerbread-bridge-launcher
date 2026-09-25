@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
+import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useHomeLayoutStore, type GridArea, type HomeItem } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
@@ -10,12 +11,14 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import AnalogClock from '@/widgets/clock/AnalogClock.vue';
 import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
 import PowerControlWidget from '@/widgets/power/PowerControlWidget.vue';
+import SearchWidget from '@/widgets/search/SearchWidget.vue';
 
 const props = defineProps<{
     page: number;
 }>();
 
 const apps = useAppsStore();
+const launcher = useAppLauncherStore();
 const drag = useDragStore();
 const layout = useHomeLayoutStore();
 const menu = useMenuStore();
@@ -73,7 +76,7 @@ function onItemClickCapture(e: MouseEvent)
 function onItemClick(item: HomeItem)
 {
     if (item.type === 'app')
-        Bridge.requestLaunchApp(item.packageName, true);
+        launcher.launch(item.packageName);
     else if (item.type === 'folder')
         menu.showFolder(item.id);
 }
@@ -111,6 +114,7 @@ function onItemClick(item: HomeItem)
             </div>
             <WeatherWidget v-else-if="item.widget === 'weather'" class="weather" />
             <PowerControlWidget v-else-if="item.widget === 'power'" />
+            <SearchWidget v-else-if="item.widget === 'search'" />
         </div>
 
         <div

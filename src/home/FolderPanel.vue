@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
+import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useHomeLayoutStore, type FolderApp, type FolderItem } from '@/stores/useHomeLayoutStore';
 import { useMenuStore } from '@/stores/useMenuStore';
@@ -11,6 +12,7 @@ import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
 import OverscrollGlow from '@/components/OverscrollGlow.vue';
 
 const apps = useAppsStore();
+const launcher = useAppLauncherStore();
 const drag = useDragStore();
 const layout = useHomeLayoutStore();
 const menu = useMenuStore();
@@ -62,7 +64,7 @@ function launch(app: FolderApp)
 {
     if (longPress.consumeLongPress()) return;
     menu.closeAll();
-    Bridge.requestLaunchApp(app.packageName, true);
+    launcher.launch(app.packageName);
 }
 
 </script>

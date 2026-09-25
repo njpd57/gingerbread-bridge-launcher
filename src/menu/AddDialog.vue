@@ -40,6 +40,7 @@ const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'clockLarge', label: 'Reloj analógico grande' },
     { kind: 'weather', label: 'Tiempo' },
     { kind: 'power', label: 'Control de energía' },
+    { kind: 'search', label: 'Búsqueda de aplicaciones' },
 ];
 
 /** Where a new item of this size goes: the long-pressed cell if it fits, otherwise the first free spot on that page. */
