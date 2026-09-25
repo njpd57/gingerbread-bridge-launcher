@@ -3,12 +3,16 @@ import { computed, ref, watch } from 'vue';
 import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
+import { useDragStore } from '@/stores/useDragStore';
+import { useLongPress } from '@/composables/useLongPress';
+import type { InstalledAppInfo } from '@/stores/useAppsStore';
 import { px } from '@/utils/el-utils';
 import HomeIcon from '@/home/icons/HomeIcon.vue';
 
 const apps = useAppsStore();
 const drawer = useDrawerStore();
 const insets = useWindowInsetsStore();
+const drag = useDragStore();
 
 const gridEl = ref<HTMLElement>();
 
@@ -24,8 +28,16 @@ watch(() => drawer.isOpen, isOpen =>
         gridEl.value.scrollTop = 0;
 });
 
+// long-pressing an app closes the drawer and picks the app up, to drop it on the home screen
+const longPress = useLongPress<InstalledAppInfo>((app, pos) =>
+{
+    drawer.close();
+    drag.start({ source: 'drawer', packageName: app.packageName, label: app.label }, pos.x, pos.y);
+});
+
 function launch(packageName: string)
 {
+    if (longPress.consumeLongPress()) return;
     Bridge.requestLaunchApp(packageName, true);
 }
 
@@ -46,10 +58,17 @@ function launch(packageName: string)
                     v-for="app in sortedApps"
                     :key="app.packageName"
                     class="app"
+                    @pointerdown="longPress.down(app, $event)"
+                    @pointermove="longPress.move"
+                    @pointerup="longPress.cancel"
+                    @pointercancel="longPress.cancel"
+                    @pointerleave="longPress.cancel"
+                    @contextmenu.prevent
                     @click="launch(app.packageName)">
                     <img
                         :src="Bridge.getDefaultAppIconURL(app.packageName)"
                         loading="lazy"
+                        draggable="false"
                         alt="" />
                     <span class="label">{{ app.label }}</span>
                 </button>

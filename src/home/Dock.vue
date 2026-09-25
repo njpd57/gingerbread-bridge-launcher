@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
 import { PAGE_COUNT, useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
+import { useDragStore } from '@/stores/useDragStore';
 import PhoneIcon from './icons/PhoneIcon.vue';
 import AllAppsIcon from './icons/AllAppsIcon.vue';
 import BrowserIcon from './icons/BrowserIcon.vue';
+import TrashIcon from './icons/TrashIcon.vue';
 
 // Bridge can't tell us the default dialer/browser, so launch the first installed candidate
 const PHONE_PACKAGES = [
@@ -29,6 +31,14 @@ const BROWSER_PACKAGES = [
 const apps = useAppsStore();
 const workspace = useWorkspaceStore();
 const drawer = useDrawerStore();
+const drag = useDragStore();
+
+// while dragging, the hotseat becomes the delete zone
+const hotseatEl = ref<HTMLElement>();
+watch(hotseatEl, el => drag.trashEl = el ?? null);
+onBeforeUnmount(() => drag.trashEl = null);
+
+const isOverTrash = computed(() => drag.target?.kind === 'trash');
 
 const dotsLeft = computed(() => workspace.currentPage);
 const dotsRight = computed(() => PAGE_COUNT - 1 - workspace.currentPage);
@@ -54,7 +64,15 @@ function launchFirstInstalled(candidates: string[], notFoundMessage: string)
             <span v-for="i in dotsLeft" :key="i" class="dot"></span>
         </button>
 
-        <div class="hotseat">
+        <div
+            v-if="drag.active"
+            ref="hotseatEl"
+            class="hotseat trash"
+            :class="{ hover: isOverTrash }">
+            <TrashIcon />
+        </div>
+
+        <div v-else class="hotseat">
             <button
                 class="hotseat-button"
                 aria-label="Teléfono"
@@ -148,6 +166,21 @@ button {
         border-radius: 6px 6px 0 0;
         border-top: 1px solid rgba(#fff, 0.18);
         background: linear-gradient(to bottom, rgba(#3a3a3a, 0.85), rgba(#111, 0.9));
+
+        &.trash {
+            transition: background 0.1s;
+
+            > svg {
+                width: 40px;
+                height: 40px;
+                color: #e8e8e8;
+            }
+
+            // Gingerbread's delete zone turns red when an item is over it
+            &.hover {
+                background: linear-gradient(to bottom, rgba(#c62828, 0.9), rgba(#7f0000, 0.95));
+            }
+        }
 
         > .hotseat-button {
             display: grid;

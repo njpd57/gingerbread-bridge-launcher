@@ -3,74 +3,45 @@ import { ref } from 'vue';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useDragStore } from '@/stores/useDragStore';
+import { useLongPress } from '@/composables/useLongPress';
 import { px } from './utils/el-utils';
 import Workspace from './home/Workspace.vue';
+import HomeGrid from './home/HomeGrid.vue';
 import Dock from './home/Dock.vue';
+import DragLayer from './home/DragLayer.vue';
 import AppDrawer from './drawer/AppDrawer.vue';
-import AnalogClock from './widgets/clock/AnalogClock.vue';
-import WeatherWidget from './widgets/weather/WeatherWidget.vue';
-import { DEFAULT_PAGE } from './stores/useWorkspaceStore';
 import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
 
-const LONG_PRESS_MS = 500;
-const LONG_PRESS_SLOP_PX = 10;
+const DOCK_HEIGHT = 56;
 
 const insets = useWindowInsetsStore();
 const menu = useMenuStore();
 const settings = useSettingsStore();
+const drag = useDragStore();
 
 const wallpaper = ref<InstanceType<typeof NexusWallpaper>>();
 
-// only taps on empty workspace space count, not taps on widgets
+// empty space = anywhere on the workspace that isn't an icon or widget
 function isEmptySpace(target: EventTarget | null)
 {
-    return target instanceof HTMLElement && target.classList.contains('page');
+    return target instanceof Element && !target.closest('.home-item');
 }
 
-let pressTimer = 0;
-let pressX = 0;
-let pressY = 0;
-let suppressNextClick = false;
-
-function cancelLongPress()
-{
-    clearTimeout(pressTimer);
-    pressTimer = 0;
-}
+const longPress = useLongPress<null>(() => menu.showOptionsMenu());
 
 function onPointerDown(e: PointerEvent)
 {
-    suppressNextClick = false;
-    if (!isEmptySpace(e.target)) return;
-
-    pressX = e.clientX;
-    pressY = e.clientY;
-    cancelLongPress();
-    pressTimer = window.setTimeout(() =>
-    {
-        pressTimer = 0;
-        suppressNextClick = true;
-        try { navigator.vibrate?.(30); } catch { /* no vibration permission */ }
-        menu.showOptionsMenu();
-    }, LONG_PRESS_MS);
-}
-
-function onPointerMove(e: PointerEvent)
-{
-    if (pressTimer && Math.hypot(e.clientX - pressX, e.clientY - pressY) > LONG_PRESS_SLOP_PX)
-        cancelLongPress();
+    if (isEmptySpace(e.target))
+        longPress.down(null, e);
 }
 
 // a tap on empty space sends pulses across the Nexus wallpaper
 function onWorkspaceClick(e: MouseEvent)
 {
-    if (suppressNextClick)
-    {
-        suppressNextClick = false;
-        return;
-    }
+    if (longPress.consumeLongPress() || drag.justDropped()) return;
     if (isEmptySpace(e.target))
         wallpaper.value?.burst(e.clientX, e.clientY);
 }
@@ -85,20 +56,21 @@ function onWorkspaceClick(e: MouseEvent)
         <Workspace
             class="workspace"
             @pointerdown="onPointerDown"
-            @pointermove="onPointerMove"
-            @pointerup="cancelLongPress"
-            @pointercancel="cancelLongPress"
-            @pointerleave="cancelLongPress"
+            @pointermove="longPress.move"
+            @pointerup="longPress.cancel"
+            @pointercancel="longPress.cancel"
+            @pointerleave="longPress.cancel"
             @contextmenu.prevent
             @click="onWorkspaceClick"
             :style="{
                 'padding-top': px(insets.statusBars.top),
             }">
             <template #default="{ page }">
-                <div v-if="page === DEFAULT_PAGE" class="widgets">
-                    <AnalogClock class="clock" />
-                    <WeatherWidget />
-                </div>
+                <HomeGrid
+                    :page="page"
+                    :style="{
+                        'padding-bottom': px(DOCK_HEIGHT + insets.navigationBars.bottom),
+                    }" />
             </template>
         </Workspace>
 
@@ -109,6 +81,8 @@ function onWorkspaceClick(e: MouseEvent)
             }" />
 
         <AppDrawer />
+
+        <DragLayer />
 
         <OptionsMenu />
         <WallpaperDialog />
@@ -131,22 +105,6 @@ function onWorkspaceClick(e: MouseEvent)
 
     > .workspace {
         position: relative;
-    }
-
-    .widgets {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        padding: 24px 12px 0;
-
-        > .clock {
-            width: min(55vw, 220px);
-        }
-
-        > :not(.clock) {
-            align-self: stretch;
-        }
     }
 
     > .dock {
