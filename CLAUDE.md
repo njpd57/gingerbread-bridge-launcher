@@ -54,7 +54,7 @@ State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `u
 - **The home screen model is `useHomeLayoutStore`.** It holds a flat list of items (`app` | `widget` | `folder`), each with `page, x, y, w, h`.
   - The grid has `GRID_COLS` (4) columns and a **variable** number of rows. `autoGridRows()` picks the row count from the screen size (Gingerbread's cell proportions, 4–7 rows), and the user can override it.
   - When the row count shrinks, `fitItemsToGrid()` moves items that no longer fit.
-  - Widget sizes are defined in `WIDGET_SIZES`. **Adding a widget kind touches four places:** `WidgetKind`/`WIDGET_SIZES`, the render branches in `HomeGrid.vue` and `DragLayer.vue`, and the list in `AddDialog.vue`.
+  - Widget sizes are defined in `WIDGET_SIZES`. **Adding a widget kind touches three places:** `WidgetKind`/`WIDGET_SIZES`, the render branch in `widgets/WidgetView.vue` (used by both `HomeGrid` and `DragLayer`), and the list in `AddDialog.vue`.
 - **Drag and drop runs through `useDragStore`.**
   - Each `HomeGrid` registers its element per page, and the `Dock` registers the trash zone, which replaces the hotseat while a drag is active. Drop targets are computed from those elements' on-screen rectangles.
   - A drag payload comes from one of three sources: `drawer`, `home` or `folder`. `applyDrop()` handles every combination of source and target (cell, folder or trash).

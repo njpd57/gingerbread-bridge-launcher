@@ -22,7 +22,7 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Arrastra apps encima de una carpeta para meterlas.
   - Tócala para abrirla y toca su título para cambiarle el nombre.
   - Desde una carpeta abierta puedes sacar apps arrastrándolas.
-- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes, y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
+- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), reloj digital (4×1, con la fuente del reloj de Android 2.x), calendario del mes (4×2), batería (1×1), frase del día (4×1), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes, y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
 - **Fondo animado "Nexus"**: pulsos de luz de colores que recorren la pantalla. Al tocar un hueco vacío salen pulsos desde ese punto.
   - Se puede configurar la cantidad de pulsos, la velocidad y los fps (30, 60 o 120).
   - También puedes usar el fondo de pantalla del sistema.
@@ -104,7 +104,7 @@ Vienen de lo que permite la API de Bridge (v0.1.0):
 
 Basado en [Bridge Launcher API Tester](https://github.com/bridgelauncher/api-tester) de Tored, bajo licencia MIT (ver [LICENSE](LICENSE)).
 
-La tipografía Droid Sans viene del Android Open Source Project (android-2.3.7_r1), bajo licencia Apache 2.0 (ver [src/assets/fonts/NOTICE](src/assets/fonts/NOTICE)).
+Las tipografías Droid Sans y Clockopia vienen del Android Open Source Project (android-2.3.7_r1), bajo licencia Apache 2.0 (ver [src/assets/fonts/NOTICE](src/assets/fonts/NOTICE)).
 
 - [Bridge Launcher](https://github.com/bridgelauncher)
 - [Tipos de la API y mock de desarrollo](https://github.com/bridgelauncher/api)

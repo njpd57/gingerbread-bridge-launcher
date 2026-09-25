@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 5 y la 7 ya están implementadas (marcadas con ✅).
+**Estado:** las ideas 1 a 5, 7, 15, 16, 20 y 28 ya están implementadas (marcadas con ✅).
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -116,14 +116,14 @@ Hoy, cuando algo falla, Bridge muestra su propio aviso (`showToastIfFailed`). Se
 
 ## Widgets nuevos
 
-Todos son HTML y usan solo APIs web, localStorage o servicios gratuitos sin clave, así que no dependen de Bridge. Cada uno se añade en los cuatro sitios de siempre: `WidgetKind`/`WIDGET_SIZES`, `HomeGrid.vue`, `DragLayer.vue` y `AddDialog.vue`. El widget de búsqueda está en la idea 7.
+Todos son HTML y usan solo APIs web, localStorage o servicios gratuitos sin clave, así que no dependen de Bridge. Cada uno se añade en tres sitios: `WidgetKind`/`WIDGET_SIZES`, `WidgetView.vue` y `AddDialog.vue`. El widget de búsqueda está en la idea 7.
 
-### 15. Reloj digital
+### 15. Reloj digital ✅ Hecho
 Hora grande con la fecha debajo, con la tipografía y el estilo de la pantalla de bloqueo de Gingerbread. Complementa al reloj analógico que ya existe.
 - **Tamaño:** 4×1 (y quizá una versión 2×1).
 - **Esfuerzo:** muy bajo.
 
-### 16. Calendario del mes
+### 16. Calendario del mes ✅ Hecho
 La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas para cambiar de mes. No muestra eventos, porque la API no puede leer el calendario del teléfono.
 - **Tamaño:** 4×2 o 4×3.
 - **Esfuerzo:** bajo. Los nombres de meses y días salen de `Intl.DateTimeFormat('es')`.
@@ -145,7 +145,7 @@ La hora de salida y puesta del sol y la fase lunar, con un dibujo de la luna.
 - **Tamaño:** 2×1.
 - **Esfuerzo:** bajo.
 
-### 20. Batería
+### 20. Batería ✅ Hecho
 El porcentaje y un icono de batería al estilo Gingerbread (verde, amarillo o rojo, y el rayo cuando está cargando).
 - **API:** la Battery API, a través de `useDeviceStatus`, que ya usa la barra de estado.
 - **Tamaño:** 1×1.
@@ -190,7 +190,7 @@ Los últimos titulares de un feed RSS configurable, en una lista que se desplaza
 - **Tamaño:** 4×2.
 - **Esfuerzo:** medio.
 
-### 28. Frase del día
+### 28. Frase del día ✅ Hecho
 Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin red), con su autor.
 - **Tamaño:** 4×1.
 - **Esfuerzo:** muy bajo.

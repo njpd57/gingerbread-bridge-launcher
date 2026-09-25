@@ -38,6 +38,10 @@ const sortedApps = computed(() =>
 const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'clock', label: 'Reloj analógico' },
     { kind: 'clockLarge', label: 'Reloj analógico grande' },
+    { kind: 'digitalClock', label: 'Reloj digital' },
+    { kind: 'calendar', label: 'Calendario' },
+    { kind: 'battery', label: 'Batería' },
+    { kind: 'quote', label: 'Frase del día' },
     { kind: 'weather', label: 'Tiempo' },
     { kind: 'power', label: 'Control de energía' },
     { kind: 'search', label: 'Búsqueda de aplicaciones' },

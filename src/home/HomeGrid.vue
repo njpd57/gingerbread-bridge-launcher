@@ -8,10 +8,7 @@ import { useLongPress } from '@/composables/useLongPress';
 import Shortcut from './Shortcut.vue';
 import FolderIcon from './icons/FolderIcon.vue';
 import { useMenuStore } from '@/stores/useMenuStore';
-import AnalogClock from '@/widgets/clock/AnalogClock.vue';
-import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
-import PowerControlWidget from '@/widgets/power/PowerControlWidget.vue';
-import SearchWidget from '@/widgets/search/SearchWidget.vue';
+import WidgetView from '@/widgets/WidgetView.vue';
 
 const props = defineProps<{
     page: number;
@@ -109,12 +106,7 @@ function onItemClick(item: HomeItem)
             <Shortcut v-else-if="item.type === 'folder'" :label="item.name">
                 <FolderIcon :open="menu.openFolderId === item.id" />
             </Shortcut>
-            <div v-else-if="item.widget === 'clock' || item.widget === 'clockLarge'" class="clock-container">
-                <AnalogClock class="clock" />
-            </div>
-            <WeatherWidget v-else-if="item.widget === 'weather'" class="weather" />
-            <PowerControlWidget v-else-if="item.widget === 'power'" />
-            <SearchWidget v-else-if="item.widget === 'search'" />
+            <WidgetView v-else :kind="item.widget" />
         </div>
 
         <div
@@ -159,22 +151,6 @@ $gingerbread-orange: #ffa800;
             &:active :deep(:is(img, svg)) {
                 filter: drop-shadow(0 0 4px $gingerbread-orange) drop-shadow(0 0 2px $gingerbread-orange);
             }
-        }
-
-        > .clock-container {
-            width: 100%;
-            height: 100%;
-            display: grid;
-            place-items: center;
-            container-type: size;
-
-            > .clock {
-                width: min(100cqw, 100cqh);
-            }
-        }
-
-        > .weather {
-            width: 100%;
         }
     }
 
