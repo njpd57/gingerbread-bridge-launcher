@@ -6,11 +6,18 @@ import { useHomeLayoutStore, type FolderApp, type FolderItem } from '@/stores/us
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useLongPress } from '@/composables/useLongPress';
 import Shortcut from './Shortcut.vue';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
+import OverscrollGlow from '@/components/OverscrollGlow.vue';
 
 const apps = useAppsStore();
 const drag = useDragStore();
 const layout = useHomeLayoutStore();
 const menu = useMenuStore();
+const settings = useSettingsStore();
+
+const gridEl = ref<HTMLElement>();
+const glow = useOverscrollGlow(gridEl, 'y', () => settings.gingerbreadOverscroll);
 
 const folder = computed(() =>
     layout.items.find((i): i is FolderItem => i.type === 'folder' && i.id === menu.openFolderId) ?? null);
@@ -78,25 +85,29 @@ function launch(app: FolderApp)
                     <button v-else class="name" @click="startRenaming">{{ folder.name }}</button>
                 </header>
 
-                <div class="grid">
-                    <button
-                        v-for="(app, index) in visibleApps"
-                        :key="`${app.packageName}-${index}`"
-                        class="app"
-                        @pointerdown="longPress.down(app, $event)"
-                        @pointermove="longPress.move"
-                        @pointerup="longPress.cancel"
-                        @pointercancel="longPress.cancel"
-                        @pointerleave="longPress.cancel"
-                        @contextmenu.prevent
-                        @click="launch(app)">
-                        <Shortcut
-                            :package-name="app.packageName"
-                            :label="apps.apps.get(app.packageName)?.label ?? app.label" />
-                    </button>
+                <div class="grid-wrap">
+                    <OverscrollGlow edge="top" :intensity="glow.start.value" :pulling="glow.pulling.value" />
+                    <OverscrollGlow edge="bottom" :intensity="glow.end.value" :pulling="glow.pulling.value" />
+                    <div class="grid" ref="gridEl">
+                        <button
+                            v-for="(app, index) in visibleApps"
+                            :key="`${app.packageName}-${index}`"
+                            class="app"
+                            @pointerdown="longPress.down(app, $event)"
+                            @pointermove="longPress.move"
+                            @pointerup="longPress.cancel"
+                            @pointercancel="longPress.cancel"
+                            @pointerleave="longPress.cancel"
+                            @contextmenu.prevent
+                            @click="launch(app)">
+                            <Shortcut
+                                :package-name="app.packageName"
+                                :label="apps.apps.get(app.packageName)?.label ?? app.label" />
+                        </button>
 
-                    <div v-if="visibleApps.length === 0" class="empty">
-                        Carpeta vacía. Arrastra aplicaciones hasta aquí.
+                        <div v-if="visibleApps.length === 0" class="empty">
+                            Carpeta vacía. Arrastra aplicaciones hasta aquí.
+                        </div>
                     </div>
                 </div>
 
@@ -162,8 +173,16 @@ $gingerbread-orange: #ffa800;
         }
     }
 
-    > .grid {
+    > .grid-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    > .grid-wrap > .grid {
         display: grid;
+        overscroll-behavior: contain;
         grid-template-columns: repeat(4, 1fr);
         grid-auto-rows: 96px;
         padding: 8px 4px;

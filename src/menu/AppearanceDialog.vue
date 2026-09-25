@@ -21,6 +21,11 @@ const statusBarKindOptions: { value: boolean; label: string }[] = [
     { value: true, label: 'Gingerbread' },
 ];
 
+const overscrollOptions: { value: boolean; label: string }[] = [
+    { value: true, label: 'Brillo naranja' },
+    { value: false, label: 'Efecto de Android' },
+];
+
 const bridgeButtonOptions: { value: BridgeButtonVisibility; label: string }[] = [
     { value: 'shown', label: 'Visible' },
     { value: 'hidden', label: 'Oculto' },
@@ -132,6 +137,23 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 «Auto» elige las filas según el alto de tu pantalla.
                 Si reduces las filas, lo que no quepa se mueve a un hueco libre.
+            </div>
+        </section>
+
+        <section class="options">
+            <div class="field-label">Al llegar al final de una lista</div>
+            <div class="segmented">
+                <button
+                    v-for="opt in overscrollOptions"
+                    :key="opt.label"
+                    :class="{ selected: settings.gingerbreadOverscroll === opt.value }"
+                    @click="settings.gingerbreadOverscroll = opt.value">
+                    {{ opt.label }}
+                </button>
+            </div>
+            <div class="field-hint">
+                «Brillo naranja» es el efecto de Gingerbread: aparece en el cajón, las carpetas, los diálogos
+                y en los extremos del escritorio. Desactiva el efecto de Android mientras está elegido.
             </div>
         </section>
 

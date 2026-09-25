@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import type { SystemBarAppearance } from "@bridgelauncher/api";
+import type { OverscrollEffects, SystemBarAppearance } from "@bridgelauncher/api";
 import { useTogglesStore } from "./useTogglesStore";
 import { PAGE_COUNT, useWorkspaceStore } from "./useWorkspaceStore";
 
@@ -31,6 +31,10 @@ export const useSettingsStore = defineStore('settings', () =>
     const gingerbreadStatusBar = useLocalStorage<boolean>('settings.gingerbreadStatusBar', false);
     // the Bridge status bar appearance to restore when turning the Gingerbread bar off
     const savedStatusBarAppearance = useLocalStorage<SystemBarAppearance>('settings.savedStatusBarAppearance', 'light-fg');
+    // Gingerbread's orange glow at the end of lists, instead of Android's own overscroll effect
+    const gingerbreadOverscroll = useLocalStorage<boolean>('settings.gingerbreadOverscroll', true);
+    // Bridge's overscroll setting to restore when turning the Gingerbread glow off
+    const savedOverscrollEffects = useLocalStorage<OverscrollEffects>('settings.savedOverscrollEffects', 'default');
 
     // Bridge only needs to draw the system wallpaper when the Nexus canvas isn't covering it
     watch(wallpaper, kind =>
@@ -58,6 +62,23 @@ export const useSettingsStore = defineStore('settings', () =>
         }
     }, { immediate: true });
 
+    // same idea for overscroll: turn off Bridge's effect while our glow is on, restore it when turned off
+    watch(gingerbreadOverscroll, (on, wasOn) =>
+    {
+        if (on)
+        {
+            if (toggles.overscrollEffects !== 'none')
+            {
+                savedOverscrollEffects.value = toggles.overscrollEffects;
+                toggles.overscrollEffects = 'none';
+            }
+        }
+        else if (wasOn)
+        {
+            toggles.overscrollEffects = savedOverscrollEffects.value;
+        }
+    }, { immediate: true });
+
     // scroll the system wallpaper along with the pages, like a regular launcher
     Bridge.setWallpaperOffsetSteps(1 / (PAGE_COUNT - 1), 0);
     watch(() => workspace.scrollProgress, progress =>
@@ -74,5 +95,6 @@ export const useSettingsStore = defineStore('settings', () =>
         statusBarBackground,
         statusBarHeight,
         gingerbreadStatusBar,
+        gingerbreadOverscroll,
     };
 });

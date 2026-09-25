@@ -5,6 +5,9 @@ import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useLongPress } from '@/composables/useLongPress';
+import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import OverscrollGlow from '@/components/OverscrollGlow.vue';
 import type { InstalledAppInfo } from '@/stores/useAppsStore';
 import HomeIcon from '@/home/icons/HomeIcon.vue';
 
@@ -14,6 +17,9 @@ const drag = useDragStore();
 const menu = useMenuStore();
 
 const gridEl = ref<HTMLElement>();
+
+const settings = useSettingsStore();
+const glow = useOverscrollGlow(gridEl, 'y', () => settings.gingerbreadOverscroll);
 
 const sortedApps = computed(() =>
     Array.from(apps.apps.values())
@@ -52,32 +58,36 @@ function launch(packageName: string)
                 'padding-bottom': 'var(--nav-bar-height)',
             }">
 
-            <div class="grid" ref="gridEl">
-                <button
-                    v-for="app in sortedApps"
-                    :key="app.packageName"
-                    class="app"
-                    @pointerdown="longPress.down(app, $event)"
-                    @pointermove="longPress.move"
-                    @pointerup="longPress.cancel"
-                    @pointercancel="longPress.cancel"
-                    @pointerleave="longPress.cancel"
-                    @contextmenu.prevent
-                    @click="launch(app.packageName)">
-                    <img
-                        :src="Bridge.getDefaultAppIconURL(app.packageName)"
-                        loading="lazy"
-                        draggable="false"
-                        alt="" />
-                    <span class="label">{{ app.label }}</span>
-                </button>
+            <div class="grid-wrap">
+                <OverscrollGlow edge="top" :intensity="glow.start.value" :pulling="glow.pulling.value" />
+                <OverscrollGlow edge="bottom" :intensity="glow.end.value" :pulling="glow.pulling.value" />
+                <div class="grid" ref="gridEl">
+                    <button
+                        v-for="app in sortedApps"
+                        :key="app.packageName"
+                        class="app"
+                        @pointerdown="longPress.down(app, $event)"
+                        @pointermove="longPress.move"
+                        @pointerup="longPress.cancel"
+                        @pointercancel="longPress.cancel"
+                        @pointerleave="longPress.cancel"
+                        @contextmenu.prevent
+                        @click="launch(app.packageName)">
+                        <img
+                            :src="Bridge.getDefaultAppIconURL(app.packageName)"
+                            loading="lazy"
+                            draggable="false"
+                            alt="" />
+                        <span class="label">{{ app.label }}</span>
+                    </button>
 
-                <div v-if="sortedApps.length === 0" class="message">
-                    <template v-if="apps.requestStatus === RequestStatus.Error">
-                        No se pudieron cargar las aplicaciones.
-                        <button class="retry" @click="apps.requestAppsAsync()">Reintentar</button>
-                    </template>
-                    <template v-else>Cargando…</template>
+                    <div v-if="sortedApps.length === 0" class="message">
+                        <template v-if="apps.requestStatus === RequestStatus.Error">
+                            No se pudieron cargar las aplicaciones.
+                            <button class="retry" @click="apps.requestAppsAsync()">Reintentar</button>
+                        </template>
+                        <template v-else>Cargando…</template>
+                    </div>
                 </div>
             </div>
 
@@ -125,7 +135,14 @@ button {
     flex-direction: column;
     background-color: #000;
 
-    > .grid {
+    > .grid-wrap {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+    }
+
+    > .grid-wrap > .grid {
         flex: 1;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
