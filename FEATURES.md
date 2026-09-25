@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 5, 7, 15, 16, 20 y 28 ya están implementadas (marcadas con ✅). La 9 y la 26 están hechas en parte (marcadas con ◐). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha; la 7 y los widgets 15, 16, 20 y 28 todavía no se han probado en el teléfono.
+**Estado:** las ideas 1 a 5, 7, 15, 16, 20, 25 y 28 ya están implementadas (marcadas con ✅). La 9 y la 26 están hechas en parte (marcadas con ◐). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25 y 28 todavía no se han probado en el teléfono. La 25 necesita nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -15,8 +15,11 @@ Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publica
 | Sistema | `requestExpandNotificationShade`, `requestOpenAndroidSettings`, `requestOpenBridgeSettings`, `requestLockScreen` / `getCanLockScreen`, `showToast` | `requestOpenDeveloperConsole`, `requestOpenBridgeAppDrawer`, `getLastErrorMessage` |
 | Información | — | `getAndroidAPILevel`, `getBridgeVersionName`, `getBridgeVersionCode`, `getProjectURL` |
 | Ciclo de vida | `newIntent` (botón de inicio), `beforePause`, `afterResume` | — |
+| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web) | `getScreenOrientation`, evento `screenOrientationChanged` |
 
 Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la API como borrador, comentados: todavía no existen en Bridge.
+
+Nuestro [fork de Bridge](https://github.com/njpd57/bridge-launcher) añade métodos que la API publicada no tiene. Se declaran en `src/types/bridge-fork.d.ts` y el launcher los usa solo si existen, así que sigue funcionando con el Bridge original.
 
 **Ojo:** el Bridge instalado puede no tener todos los métodos de la API. Bridge 0.1.0alpha no tiene `getCanRequestSystemNightMode()`; por eso los métodos opcionales se comprueban con `bridgeHas()` antes de llamarlos.
 
@@ -61,13 +64,14 @@ Si el usuario elige como fondo del sistema un fondo **animado** (live wallpaper)
 - **Esfuerzo:** muy bajo.
 
 ### 7. Widget de búsqueda de aplicaciones ✅ Hecho
-Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 con el logo de Google, un campo de texto y el botón del micrófono. Nuestra versión tendría el mismo aspecto, pero buscaría **aplicaciones instaladas**, porque Bridge no puede abrir búsquedas web.
+Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 con el logo de Google, un campo de texto y el botón del micrófono. Nuestra versión tiene el mismo aspecto, pero busca **aplicaciones instaladas**; con nuestro fork de Bridge también ofrece la búsqueda web.
 - Al tocar la barra se abre un panel de búsqueda a pantalla completa, al estilo de la búsqueda rápida de Gingerbread: el campo arriba con el teclado abierto y, debajo, la lista de resultados con icono y nombre, que se filtra mientras se escribe.
 - La búsqueda ignora mayúsculas y tildes ("camara" encuentra "Cámara"), pone primero los nombres que empiezan por el texto y después los que lo contienen. Si hay una sola coincidencia, "Intro" en el teclado la abre.
 - Se podrían mostrar las **apps usadas hace poco** cuando el campo está vacío, guardadas en localStorage, como hacía la búsqueda rápida.
 - El logo de Google se sustituye por una lupa o un texto propio ("Buscar aplicaciones"), para no usar la marca.
 - **API:** la lista de apps que ya carga el cajón (`getAppsURL`) y `requestLaunchApp(packageName)`. El panel se cierra con el botón de inicio (`newIntent`, a través de `useMenuStore`) y con el truco de `history.pushState` que ya usa el cajón para el botón Atrás.
-- **Limitaciones:** no hay búsqueda web (Bridge no abre URLs ni intents) ni búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
+- **Búsqueda web (solo con nuestro fork):** al final de los resultados aparece "Buscar «…» en la web", que abre Google con `requestOpenUrl`. "Intro" también busca en la web cuando no hay exactamente una coincidencia.
+- **Limitaciones:** con el Bridge original no hay búsqueda web (no abre URLs). Tampoco hay búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
 - **Esfuerzo:** medio. Está hecho en `src/widgets/search/`, con la búsqueda en `src/utils/search.ts`. Las apps recientes salen de `useAppLauncherStore`, por donde pasan todos los lanzamientos, y el panel usa `useKeyboardInset()` para que el teclado no tape los resultados.
 
 ---
@@ -177,10 +181,10 @@ Una lista corta de tareas que se marcan al tocarlas; se añaden desde un campo a
 - **Tamaño:** 2×2 o 4×2.
 - **Esfuerzo:** bajo. Tiene los mismos problemas con el teclado que la nota (idea 9).
 
-### 25. Marco de fotos
-El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente girada. La foto se elige con `<input type="file">` y se guarda en IndexedDB, porque localStorage se queda corto. Opcionalmente, puede ir rotando entre varias fotos.
+### 25. Marco de fotos ✅ Hecho
+El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente girada. Al tocarlo se elige la foto con `<input type="file">`; el Bridge original no abre el selector de archivos, nuestro fork sí (mejora 1.2). La foto se reduce a 800 px con un canvas y se guarda en IndexedDB, porque localStorage se queda corto. Cada marco tiene su propia foto. Más adelante podría ir rotando entre varias fotos.
 - **Tamaño:** 2×2.
-- **Esfuerzo:** medio. Conviene reducir las fotos (con un canvas) antes de guardarlas.
+- **Esfuerzo:** medio. Está en `src/widgets/photo/`.
 
 ### 26. Apps más usadas ◐ En parte
 Una fila con las 4 apps que más se abren. El launcher cuenta los lanzamientos al llamar a `requestLaunchApp` (desde el cajón, el escritorio, las carpetas y la búsqueda) y los guarda en localStorage. Ese mismo contador serviría para las "apps recientes" de la búsqueda (idea 7).
@@ -191,7 +195,7 @@ Una fila con las 4 apps que más se abren. El launcher cuenta los lanzamientos a
 
 ### 27. Titulares RSS
 Los últimos titulares de un feed RSS configurable, en una lista que se desplaza.
-- **Limitaciones:** los titulares no se pueden abrir, porque Bridge no abre URLs. Como mucho, al tocar uno se abre la app del navegador sin la noticia. Además, muchos feeds no permiten CORS; habría que elegir feeds que lo permitan o pasar por un proxy público.
+- **Limitaciones:** con el Bridge original los titulares no se pueden abrir, porque no abre URLs; con nuestro fork se abren con `requestOpenUrl`. Además, muchos feeds no permiten CORS; habría que elegir feeds que lo permitan o pasar por un proxy público.
 - **Tamaño:** 4×2.
 - **Esfuerzo:** medio.
 
@@ -206,10 +210,8 @@ Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin
 
 - Widgets nativos de Android.
 - Leer notificaciones, controlar la música o leer la señal móvil y el Wi-Fi reales.
-- Saber qué apps son las predeterminadas (teléfono, navegador…).
-- Abrir URLs, búsquedas o intents que no sean "abrir una app".
+- Abrir intents que no sean "abrir una app" o una URL.
 - Detectar el botón Atrás. Hay un truco que sí funciona: `history.pushState` al abrir el cajón o la búsqueda, porque Bridge pasa el "atrás" al historial del WebView.
-- Bloquear la orientación en vertical. `screen.orientation.lock()` probablemente no funciona en el WebView; el launcher conserva el diseño en horizontal, pero no puede impedir que la pantalla gire.
 - Packs de iconos: están en la API como borrador, pero todavía no los ofrece Bridge.
 
-Todo esto requeriría ampliar Bridge en Kotlin, en un fork del [launcher](https://github.com/bridgelauncher/launcher).
+Todo esto requeriría ampliar Bridge en Kotlin. Nuestro [fork](https://github.com/njpd57/bridge-launcher) ya resolvió saber las apps predeterminadas, abrir URLs y bloquear la orientación en vertical; el plan para el resto está en la página de Confluence "Mejoras propuestas a Bridge (fork)".
