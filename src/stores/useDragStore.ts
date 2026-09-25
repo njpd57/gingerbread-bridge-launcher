@@ -14,7 +14,7 @@ export type DragPayload =
 
 export type DragGhost =
     | { type: 'app'; packageName: string; label: string }
-    | { type: 'widget'; widget: WidgetKind }
+    | { type: 'widget'; widget: WidgetKind; id: string }
     | { type: 'folder'; name: string };
 
 export type DropTarget =
@@ -206,7 +206,7 @@ export const useDragStore = defineStore('drag', () =>
             if (!item) return;
             ghost = item.type === 'app' ? { type: 'app', packageName: item.packageName, label: item.label }
                 : item.type === 'folder' ? { type: 'folder', name: item.name }
-                    : { type: 'widget', widget: item.widget };
+                    : { type: 'widget', widget: item.widget, id: item.id };
             w = item.w;
             h = item.h;
         }

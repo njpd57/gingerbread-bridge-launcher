@@ -32,7 +32,7 @@ const ghostStyle = computed(() =>
             <Shortcut v-else-if="drag.active.ghost.type === 'folder'" :label="drag.active.ghost.name">
                 <FolderIcon />
             </Shortcut>
-            <WidgetView v-else :kind="drag.active.ghost.widget" />
+            <WidgetView v-else :kind="drag.active.ghost.widget" :widget-id="drag.active.ghost.id" />
         </div>
     </div>
 </template>

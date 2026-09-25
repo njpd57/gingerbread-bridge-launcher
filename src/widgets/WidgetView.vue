@@ -8,12 +8,15 @@ import SearchWidget from './search/SearchWidget.vue';
 import BatteryWidget from './battery/BatteryWidget.vue';
 import CalendarWidget from './calendar/CalendarWidget.vue';
 import QuoteWidget from './quote/QuoteWidget.vue';
+import PhotoFrameWidget from './photo/PhotoFrameWidget.vue';
 
 // Renders any widget by kind, filling the grid area it's placed in.
 // Used both on the home screen (HomeGrid) and for the item being dragged (DragLayer).
 
 defineProps<{
     kind: WidgetKind;
+    // the home item id, for widgets that keep per-instance data (the photo frame)
+    widgetId?: string;
 }>();
 </script>
 
@@ -30,6 +33,7 @@ defineProps<{
         <BatteryWidget v-else-if="kind === 'battery'" />
         <CalendarWidget v-else-if="kind === 'calendar'" />
         <QuoteWidget v-else-if="kind === 'quote'" />
+        <PhotoFrameWidget v-else-if="kind === 'photo'" :widget-id="widgetId" />
     </div>
 </template>
 

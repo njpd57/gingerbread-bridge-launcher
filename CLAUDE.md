@@ -59,7 +59,7 @@ Development happens on the **`dev`** branch. Keep `.claude/` (other agents' work
 
 State lives in Pinia stores under `src/stores/`. Persistent state uses VueUse `useLocalStorage`: `home.items`, `home.gridRows`, `home.autoRows`, `launcher.recentApps`, `settings.*` and `weather.*`.
 
-Widgets live in `src/widgets/<name>/`; `widgets/WidgetView.vue` maps each `WidgetKind` to its component.
+Widgets live in `src/widgets/<name>/`; `widgets/WidgetView.vue` maps each `WidgetKind` to its component. `WidgetView` also receives the home item id (`widgetId`) for widgets with per-instance data: the photo frame keeps each frame's photo in IndexedDB under that id (`widgets/photo/photo-storage.ts`) and prunes photos of removed frames when a frame mounts.
 
 - **The home screen model is `useHomeLayoutStore`.** It holds a flat list of items (`app` | `widget` | `folder`), each with `page, x, y, w, h`.
   - The grid has `GRID_COLS` (4) columns and a **variable** number of rows. `autoGridRows()` picks the row count from the screen size (Gingerbread's cell proportions, 4–7 rows), and the user can override it.

@@ -106,7 +106,7 @@ function onItemClick(item: HomeItem)
             <Shortcut v-else-if="item.type === 'folder'" :label="item.name">
                 <FolderIcon :open="menu.openFolderId === item.id" />
             </Shortcut>
-            <WidgetView v-else :kind="item.widget" />
+            <WidgetView v-else :kind="item.widget" :widget-id="item.id" />
         </div>
 
         <div
