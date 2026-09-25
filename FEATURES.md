@@ -58,26 +58,36 @@ Si el usuario elige como fondo del sistema un fondo **animado** (live wallpaper)
 - **API:** `sendWallpaperTap(x, y)` al tocar un hueco vacío cuando el fondo es "Fondo del sistema". Hoy esos toques solo generan pulsos en nuestro fondo Nexus.
 - **Esfuerzo:** muy bajo.
 
+### 7. Widget de búsqueda de aplicaciones
+Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 con el logo de Google, un campo de texto y el botón del micrófono. Nuestra versión tendría el mismo aspecto, pero buscaría **aplicaciones instaladas**, porque Bridge no puede abrir búsquedas web.
+- Al tocar la barra se abre un panel de búsqueda a pantalla completa, al estilo de la búsqueda rápida de Gingerbread: el campo arriba con el teclado abierto y, debajo, la lista de resultados con icono y nombre, que se filtra mientras se escribe.
+- La búsqueda ignora mayúsculas y tildes ("camara" encuentra "Cámara"), pone primero los nombres que empiezan por el texto y después los que lo contienen. Si hay una sola coincidencia, "Intro" en el teclado la abre.
+- Se podrían mostrar las **apps usadas hace poco** cuando el campo está vacío, guardadas en localStorage, como hacía la búsqueda rápida.
+- El logo de Google se sustituye por una lupa o un texto propio ("Buscar aplicaciones"), para no usar la marca.
+- **API:** la lista de apps que ya carga el cajón (`getAppsURL`) y `requestLaunchApp(packageName)`. El panel se cierra con el botón de inicio (`newIntent`, a través de `useMenuStore`) y con el truco de `history.pushState` que ya usa el cajón para el botón Atrás.
+- **Limitaciones:** no hay búsqueda web (Bridge no abre URLs ni intents) ni búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
+- **Esfuerzo:** medio. Hay que añadir el tipo de widget (`WidgetKind`/`WIDGET_SIZES`, `HomeGrid.vue`, `DragLayer.vue` y `AddDialog.vue`) y el panel de búsqueda. Además, el teclado puede tapar los resultados, por lo que conviene hacerlo junto con la idea 9.
+
 ---
 
 ## Mejoras de uso
 
-### 7. Doble toque para bloquear la pantalla
+### 8. Doble toque para bloquear la pantalla
 No existía en Gingerbread, pero es muy práctico. Sería opcional en Apariencia.
 - **API:** `requestLockScreen()` y `getCanLockScreen()`. Requiere activar el servicio de accesibilidad de Bridge y permitir el bloqueo en sus ajustes. En Android 9 y posteriores, después de bloquear así hay que desbloquear con el PIN, no con la huella; Bridge lo advierte en su documentación.
 - **Esfuerzo:** bajo.
 
-### 8. Que el teclado no tape los campos
+### 9. Que el teclado no tape los campos
 Al escribir la ciudad del tiempo o renombrar una carpeta, el teclado puede tapar el campo.
 - **API:** `getImeWindowInsets()` y el evento `imeWindowInsetsChanged`, para subir el contenido lo que ocupa el teclado.
 - **Esfuerzo:** bajo.
 
-### 9. Cambio de página por el borde sin chocar con el gesto "Atrás"
+### 10. Cambio de página por el borde sin chocar con el gesto "Atrás"
 Al arrastrar un icono al borde para pasar de página, esa zona coincide con el gesto de volver atrás de Android.
 - **API:** `getSystemGesturesWindowInsets()` y `getMandatorySystemGesturesWindowInsets()`, para usar esa zona como referencia en `EDGE_PX` (`useDragStore`).
 - **Esfuerzo:** bajo.
 
-### 10. Esquivar la cámara con precisión
+### 11. Esquivar la cámara con precisión
 La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del recorte se puede reservar justo ese espacio y colocar las notificaciones y los iconos a su alrededor.
 - **API:** `getDisplayCutoutPath()` (Android 12+) y `getDisplayShapePath()` (Android 14+, esquinas redondeadas de la pantalla). Ambas devuelven un path SVG.
 - **Esfuerzo:** medio.
@@ -86,7 +96,7 @@ La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del reco
 
 ## Herramientas y mantenimiento
 
-### 11. Pantalla "Acerca de" y diagnóstico
+### 12. Pantalla "Acerca de" y diagnóstico
 Una opción en el menú (o una pulsación larga en "Bridge") que muestre:
 - La versión de Bridge (`getBridgeVersionName` / `getBridgeVersionCode`) y de Android (`getAndroidAPILevel`).
 - **Los insets que reporta Bridge en ese momento.** Nos habría ahorrado adivinar cuando la barra de estado medía 0.
@@ -94,11 +104,11 @@ Una opción en el menú (o una pulsación larga en "Bridge") que muestre:
 - Un botón para abrir la **consola de desarrollo** de Bridge (`requestOpenDeveloperConsole`).
 - **Esfuerzo:** bajo.
 
-### 12. Detectar funciones según la versión
+### 13. Detectar funciones según la versión
 Usar `getAndroidAPILevel()` para ocultar las opciones que el teléfono no soporta. Por ejemplo, la forma del recorte solo existe desde Android 12, y el modo noche "personalizado" desde Android 11.
 - **Esfuerzo:** bajo, y se hace junto con las funciones que lo necesiten.
 
-### 13. Errores con el estilo del launcher
+### 14. Errores con el estilo del launcher
 Hoy, cuando algo falla, Bridge muestra su propio aviso (`showToastIfFailed`). Se podría pasar `false` y mostrar el error con un aviso al estilo Gingerbread, usando `getLastErrorMessage()` para el texto.
 - **Esfuerzo:** bajo.
 
