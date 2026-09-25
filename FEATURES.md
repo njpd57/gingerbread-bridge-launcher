@@ -114,6 +114,89 @@ Hoy, cuando algo falla, Bridge muestra su propio aviso (`showToastIfFailed`). Se
 
 ---
 
+## Widgets nuevos
+
+Todos son HTML y usan solo APIs web, localStorage o servicios gratuitos sin clave, así que no dependen de Bridge. Cada uno se añade en los cuatro sitios de siempre: `WidgetKind`/`WIDGET_SIZES`, `HomeGrid.vue`, `DragLayer.vue` y `AddDialog.vue`. El widget de búsqueda está en la idea 7.
+
+### 15. Reloj digital
+Hora grande con la fecha debajo, con la tipografía y el estilo de la pantalla de bloqueo de Gingerbread. Complementa al reloj analógico que ya existe.
+- **Tamaño:** 4×1 (y quizá una versión 2×1).
+- **Esfuerzo:** muy bajo.
+
+### 16. Calendario del mes
+La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas para cambiar de mes. No muestra eventos, porque la API no puede leer el calendario del teléfono.
+- **Tamaño:** 4×2 o 4×3.
+- **Esfuerzo:** bajo. Los nombres de meses y días salen de `Intl.DateTimeFormat('es')`.
+
+### 17. Cuenta regresiva
+Los días que faltan para una fecha elegida (un cumpleaños, un viaje), con un título. Se configura al añadirlo, con un diálogo `GbDialog`.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo. Cada instancia necesita guardar su propia configuración, lo que sirve de base para otros widgets configurables.
+
+### 18. Pronóstico extendido
+El tiempo de los próximos 4 o 5 días (icono, máxima y mínima), con la misma ciudad que el widget del tiempo.
+- **API:** Open-Meteo, pidiendo `forecast_days` > 1 en `useWeatherStore` (hoy pide 1).
+- **Tamaño:** 4×2.
+- **Esfuerzo:** bajo.
+
+### 19. Sol y luna
+La hora de salida y puesta del sol y la fase lunar, con un dibujo de la luna.
+- **API:** `sunrise`/`sunset` de Open-Meteo, en la misma petición del tiempo. La fase lunar se calcula localmente a partir de la fecha.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo.
+
+### 20. Batería
+El porcentaje y un icono de batería al estilo Gingerbread (verde, amarillo o rojo, y el rayo cuando está cargando).
+- **API:** la Battery API, a través de `useDeviceStatus`, que ya usa la barra de estado.
+- **Tamaño:** 1×1.
+- **Esfuerzo:** muy bajo.
+
+### 21. Nota adhesiva
+Una nota amarilla con texto que se edita al tocarla y se guarda en localStorage.
+- **Tamaño:** 2×2.
+- **Esfuerzo:** bajo. Conviene hacerlo junto con la idea 9, porque el teclado puede tapar la nota.
+
+### 22. Cronómetro y temporizador
+Un cronómetro con vueltas y un temporizador que avisa con un sonido.
+- **API:** Web Audio para el sonido y la vibración web (`navigator.vibrate`), si el WebView lo permite.
+- **Limitación:** el aviso solo suena mientras el launcher está visible. Al abrir otra app, el WebView se pausa y no hay notificaciones. Hay que avisarlo en la interfaz, y al volver (`afterResume`) mostrar si el tiempo ya terminó.
+- **Tamaño:** 2×1.
+- **Esfuerzo:** bajo.
+
+### 23. Calculadora
+Una calculadora básica en el escritorio, con teclas al estilo de la calculadora de Gingerbread (fondo negro y pulsación naranja).
+- **Tamaño:** 4×3.
+- **Esfuerzo:** bajo. Hay que evaluar las expresiones sin `eval`.
+
+### 24. Lista de tareas
+Una lista corta de tareas que se marcan al tocarlas; se añaden desde un campo al pie. Se guarda en localStorage.
+- **Tamaño:** 2×2 o 4×2.
+- **Esfuerzo:** bajo. Tiene los mismos problemas con el teclado que la nota (idea 9).
+
+### 25. Marco de fotos
+El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente girada. La foto se elige con `<input type="file">` y se guarda en IndexedDB, porque localStorage se queda corto. Opcionalmente, puede ir rotando entre varias fotos.
+- **Tamaño:** 2×2.
+- **Esfuerzo:** medio. Conviene reducir las fotos (con un canvas) antes de guardarlas.
+
+### 26. Apps más usadas
+Una fila con las 4 apps que más se abren. El launcher cuenta los lanzamientos al llamar a `requestLaunchApp` (desde el cajón, el escritorio, las carpetas y la búsqueda) y los guarda en localStorage. Ese mismo contador serviría para las "apps recientes" de la búsqueda (idea 7).
+- **API:** `requestLaunchApp` y el evento `appRemoved`, para quitar las apps desinstaladas.
+- **Tamaño:** 4×1.
+- **Esfuerzo:** bajo.
+
+### 27. Titulares RSS
+Los últimos titulares de un feed RSS configurable, en una lista que se desplaza.
+- **Limitaciones:** los titulares no se pueden abrir, porque Bridge no abre URLs. Como mucho, al tocar uno se abre la app del navegador sin la noticia. Además, muchos feeds no permiten CORS; habría que elegir feeds que lo permitan o pasar por un proxy público.
+- **Tamaño:** 4×2.
+- **Esfuerzo:** medio.
+
+### 28. Frase del día
+Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin red), con su autor.
+- **Tamaño:** 4×1.
+- **Esfuerzo:** muy bajo.
+
+---
+
 ## Lo que la API no permite (sin ampliar Bridge)
 
 - Widgets nativos de Android.
