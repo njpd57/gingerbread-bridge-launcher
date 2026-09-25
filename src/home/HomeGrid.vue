@@ -4,7 +4,9 @@ import { useAppsStore } from '@/stores/useAppsStore';
 import { useDragStore } from '@/stores/useDragStore';
 import { useHomeLayoutStore, type GridArea, type HomeItem } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
-import AppShortcut from './AppShortcut.vue';
+import Shortcut from './Shortcut.vue';
+import FolderIcon from './icons/FolderIcon.vue';
+import { useMenuStore } from '@/stores/useMenuStore';
 import AnalogClock from '@/widgets/clock/AnalogClock.vue';
 import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
 
@@ -15,6 +17,7 @@ const props = defineProps<{
 const apps = useAppsStore();
 const drag = useDragStore();
 const layout = useHomeLayoutStore();
+const menu = useMenuStore();
 
 const el = ref<HTMLElement>();
 
@@ -31,8 +34,10 @@ const dropOutline = computed(() =>
 {
     const a = drag.active;
     const t = drag.target;
-    if (!a || !t || t.kind !== 'cell' || t.page !== props.page) return null;
-    return { page: t.page, x: t.x, y: t.y, w: a.w, h: a.h, valid: t.valid };
+    if (!a || !t || t.kind === 'trash' || t.page !== props.page) return null;
+    if (t.kind === 'folder')
+        return { page: t.page, x: t.x, y: t.y, w: 1, h: 1, state: 'folder' };
+    return { page: t.page, x: t.x, y: t.y, w: a.w, h: a.h, state: t.valid ? 'valid' : 'invalid' };
 });
 
 function gridArea(area: GridArea)
@@ -67,6 +72,8 @@ function onItemClick(item: HomeItem)
 {
     if (item.type === 'app')
         Bridge.requestLaunchApp(item.packageName, true);
+    else if (item.type === 'folder')
+        menu.showFolder(item.id);
 }
 
 </script>
@@ -87,10 +94,13 @@ function onItemClick(item: HomeItem)
             @click.capture="onItemClickCapture"
             @click="onItemClick(item)">
 
-            <AppShortcut
+            <Shortcut
                 v-if="item.type === 'app'"
                 :package-name="item.packageName"
                 :label="apps.apps.get(item.packageName)?.label ?? item.label" />
+            <Shortcut v-else-if="item.type === 'folder'" :label="item.name">
+                <FolderIcon :open="menu.openFolderId === item.id" />
+            </Shortcut>
             <div v-else-if="item.widget === 'clock'" class="clock-container">
                 <AnalogClock class="clock" />
             </div>
@@ -100,7 +110,7 @@ function onItemClick(item: HomeItem)
         <div
             v-if="dropOutline"
             class="drop-outline"
-            :class="{ invalid: !dropOutline.valid }"
+            :class="dropOutline.state"
             :style="gridArea(dropOutline)"></div>
     </div>
 </template>
@@ -127,10 +137,11 @@ $gingerbread-orange: #ffa800;
             visibility: hidden;
         }
 
-        &.app {
+        &.app,
+        &.folder {
             cursor: pointer;
 
-            &:active :deep(img) {
+            &:active :deep(:is(img, svg)) {
                 filter: drop-shadow(0 0 4px $gingerbread-orange) drop-shadow(0 0 2px $gingerbread-orange);
             }
         }
@@ -162,6 +173,12 @@ $gingerbread-orange: #ffa800;
         &.invalid {
             border-color: rgba(#ff4040, 0.85);
             background-color: rgba(#ff4040, 0.15);
+        }
+
+        // dropping onto a folder: highlight it in Gingerbread orange
+        &.folder {
+            border-color: $gingerbread-orange;
+            background-color: rgba($gingerbread-orange, 0.25);
         }
     }
 }

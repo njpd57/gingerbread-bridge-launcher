@@ -1,21 +1,22 @@
 <script setup lang="ts">
+// An icon with its label, as shown on the home screen and in folders.
+// Pass `packageName` for an app icon, or put a custom icon in the default slot.
 defineProps<{
-    packageName: string;
     label: string;
+    packageName?: string;
 }>();
 </script>
 
 <template>
-    <div class="app-shortcut">
-        <img :src="Bridge.getDefaultAppIconURL(packageName)" alt="" draggable="false" />
+    <div class="shortcut">
+        <img v-if="packageName" :src="Bridge.getDefaultAppIconURL(packageName)" alt="" draggable="false" />
+        <slot v-else></slot>
         <span class="label">{{ label }}</span>
     </div>
 </template>
 
 <style scoped lang="scss">
-$gingerbread-orange: #ffa800;
-
-.app-shortcut {
+.shortcut {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -24,9 +25,11 @@ $gingerbread-orange: #ffa800;
     width: 100%;
     height: 100%;
 
-    > img {
+    > img,
+    > :deep(svg) {
         width: 48px;
         height: 48px;
+        flex-shrink: 0;
         transition: filter 0.1s;
     }
 

@@ -14,6 +14,8 @@ import AppDrawer from './drawer/AppDrawer.vue';
 import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
+import AddDialog from './menu/AddDialog.vue';
+import FolderPanel from './home/FolderPanel.vue';
 
 const DOCK_HEIGHT = 56;
 
@@ -30,7 +32,8 @@ function isEmptySpace(target: EventTarget | null)
     return target instanceof Element && !target.closest('.home-item');
 }
 
-const longPress = useLongPress<null>(() => menu.showOptionsMenu());
+// long-pressing empty space opens the options menu, remembering the cell for "Añadir"
+const longPress = useLongPress<null>((_, pos) => menu.showOptionsMenu(drag.cellAt(pos.x, pos.y)));
 
 function onPointerDown(e: PointerEvent)
 {
@@ -82,9 +85,12 @@ function onWorkspaceClick(e: MouseEvent)
 
         <AppDrawer />
 
+        <FolderPanel />
+
         <DragLayer />
 
         <OptionsMenu />
+        <AddDialog />
         <WallpaperDialog />
 
     </div>

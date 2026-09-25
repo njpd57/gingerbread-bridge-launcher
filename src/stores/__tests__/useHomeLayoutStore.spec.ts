@@ -51,16 +51,49 @@ describe('useHomeLayoutStore', () =>
         expect(layout.items.some(i => i.id === app.id)).toBe(false);
     });
 
-    it('removes shortcuts when their app is uninstalled', () =>
+    it('finds the preferred spot, then the first free one, then gives up', () =>
+    {
+        const layout = useHomeLayoutStore();
+        expect(layout.findFreeSpot(0, 1, 1, { x: 2, y: 3 })).toEqual({ page: 0, x: 2, y: 3 });
+        // (1, 0) is under the clock, so fall back to the first free cell
+        expect(layout.findFreeSpot(DEFAULT_PAGE, 1, 1, { x: 1, y: 0 })).toEqual({ page: DEFAULT_PAGE, x: 0, y: 0 });
+        // clock + weather leave no room for another 4x1 except the last row
+        expect(layout.findFreeSpot(DEFAULT_PAGE, 4, 1)).toEqual({ page: DEFAULT_PAGE, x: 0, y: 3 });
+        layout.addWidget('weather', DEFAULT_PAGE, 0, 3);
+        expect(layout.findFreeSpot(DEFAULT_PAGE, 4, 1)).toBeNull();
+    });
+
+    it('creates, fills, renames and empties folders', () =>
+    {
+        const layout = useHomeLayoutStore();
+        const id = layout.addFolder(0, 0, 0);
+        expect(layout.folderAt(0, 0, 0)?.id).toBe(id);
+
+        layout.addToFolder(id, { packageName: 'com.android.chrome', label: 'Chrome' });
+        layout.addToFolder(id, { packageName: 'com.android.chrome', label: 'Chrome' });
+        layout.removeFromFolder(id, 'com.android.chrome');
+        expect(layout.folderAt(0, 0, 0)?.apps).toHaveLength(1);
+
+        layout.renameFolder(id, '  Juegos ');
+        expect(layout.folderAt(0, 0, 0)?.name).toBe('Juegos');
+        layout.renameFolder(id, '   ');
+        expect(layout.folderAt(0, 0, 0)?.name).toBe('Carpeta');
+    });
+
+    it('removes shortcuts and folder entries when their app is uninstalled', () =>
     {
         const layout = useHomeLayoutStore();
         useBridgeEventStore();
         layout.addApp('com.android.chrome', 'Chrome', 0, 0, 0);
         layout.addApp('com.google.android.gm', 'Gmail', 0, 1, 0);
 
+        const folderId = layout.addFolder(0, 2, 0);
+        layout.addToFolder(folderId, { packageName: 'com.android.chrome', label: 'Chrome' });
+
         window.onBridgeEvent!({ name: 'appRemoved', packageName: 'com.android.chrome' });
 
         expect(layout.items.filter(i => i.type === 'app').map(i => i.type === 'app' && i.packageName))
             .toEqual(['com.google.android.gm']);
+        expect(layout.folderAt(0, 2, 0)?.apps).toEqual([]);
     });
 });

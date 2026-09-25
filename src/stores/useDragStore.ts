@@ -9,14 +9,17 @@ const CLICK_GUARD_MS = 400;
 
 export type DragPayload =
     | { source: 'drawer'; packageName: string; label: string }
-    | { source: 'home'; itemId: string };
+    | { source: 'home'; itemId: string }
+    | { source: 'folder'; folderId: string; packageName: string; label: string };
 
 export type DragGhost =
     | { type: 'app'; packageName: string; label: string }
-    | { type: 'widget'; widget: WidgetKind };
+    | { type: 'widget'; widget: WidgetKind }
+    | { type: 'folder'; name: string };
 
 export type DropTarget =
     | { kind: 'cell'; page: number; x: number; y: number; valid: boolean }
+    | { kind: 'folder'; page: number; x: number; y: number; folderId: string }
     | { kind: 'trash' };
 
 interface ActiveDrag
@@ -67,6 +70,23 @@ export const useDragStore = defineStore('drag', () =>
         return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
     }
 
+    /** The grid cell under a point on the current page, or null if the point isn't over the grid. */
+    function cellAt(clientX: number, clientY: number)
+    {
+        const rect = currentGridRect();
+        if (!rect || !isInside(rect, clientX, clientY)) return null;
+        return {
+            page: workspace.currentPage,
+            x: Math.min(GRID_COLS - 1, Math.floor((clientX - rect.left) / (rect.width / GRID_COLS))),
+            y: Math.min(GRID_ROWS - 1, Math.floor((clientY - rect.top) / (rect.height / GRID_ROWS))),
+        };
+    }
+
+    function isDraggingApp(a: ActiveDrag)
+    {
+        return a.ghost.type === 'app';
+    }
+
     function updateTarget()
     {
         const a = active.value;
@@ -84,6 +104,15 @@ export const useDragStore = defineStore('drag', () =>
         if (!rect)
         {
             target.value = null;
+            return;
+        }
+
+        // apps dropped onto a folder go inside it
+        const under = cellAt(x, y);
+        const folder = under && layout.folderAt(under.page, under.x, under.y);
+        if (under && folder && isDraggingApp(a))
+        {
+            target.value = { kind: 'folder', ...under, folderId: folder.id };
             return;
         }
 
@@ -171,19 +200,19 @@ export const useDragStore = defineStore('drag', () =>
         let w = 1;
         let h = 1;
 
-        if (payload.source === 'drawer')
-        {
-            ghost = { type: 'app', packageName: payload.packageName, label: payload.label };
-        }
-        else
+        if (payload.source === 'home')
         {
             const item = layout.items.find(i => i.id === payload.itemId);
             if (!item) return;
-            ghost = item.type === 'app'
-                ? { type: 'app', packageName: item.packageName, label: item.label }
-                : { type: 'widget', widget: item.widget };
+            ghost = item.type === 'app' ? { type: 'app', packageName: item.packageName, label: item.label }
+                : item.type === 'folder' ? { type: 'folder', name: item.name }
+                    : { type: 'widget', widget: item.widget };
             w = item.w;
             h = item.h;
+        }
+        else
+        {
+            ghost = { type: 'app', packageName: payload.packageName, label: payload.label };
         }
 
         const rect = currentGridRect();
@@ -222,22 +251,51 @@ export const useDragStore = defineStore('drag', () =>
         const t = target.value;
 
         if (a && t)
-        {
-            if (t.kind === 'trash')
-            {
-                if (a.payload.source === 'home')
-                    layout.removeItem(a.payload.itemId);
-            }
-            else if (t.valid)
-            {
-                if (a.payload.source === 'drawer')
-                    layout.addApp(a.payload.packageName, a.payload.label, t.page, t.x, t.y);
-                else
-                    layout.moveItem(a.payload.itemId, t.page, t.x, t.y);
-            }
-        }
+            applyDrop(a, t);
 
         finish();
+    }
+
+    function applyDrop(a: ActiveDrag, t: DropTarget)
+    {
+        const p = a.payload;
+
+        if (t.kind === 'cell' && !t.valid) return;
+        if (t.kind === 'folder' && p.source === 'home' && p.itemId === t.folderId) return;
+
+        // take the item out of where it came from...
+        if (p.source === 'folder')
+            layout.removeFromFolder(p.folderId, p.packageName);
+
+        if (t.kind === 'trash')
+        {
+            if (p.source === 'home')
+                layout.removeItem(p.itemId);
+            return;
+        }
+
+        if (t.kind === 'cell' && p.source === 'home')
+        {
+            layout.moveItem(p.itemId, t.page, t.x, t.y);
+            return;
+        }
+
+        // ...and put it where it was dropped
+        const app = p.source === 'home'
+            ? layout.items.find(i => i.id === p.itemId)
+            : p;
+        if (!app || !('packageName' in app)) return;
+
+        if (t.kind === 'folder')
+        {
+            layout.addToFolder(t.folderId, { packageName: app.packageName, label: app.label });
+            if (p.source === 'home')
+                layout.removeItem(p.itemId);
+        }
+        else
+        {
+            layout.addApp(app.packageName, app.label, t.page, t.x, t.y);
+        }
     }
 
     function cancel()
@@ -261,6 +319,7 @@ export const useDragStore = defineStore('drag', () =>
         draggedItemId,
         trashEl,
         registerGrid,
+        cellAt,
         start,
         cancel,
         justDropped,

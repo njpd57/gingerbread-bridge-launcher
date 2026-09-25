@@ -21,6 +21,13 @@ function run(action: () => void)
                 class="options-menu"
                 :style="{ 'padding-bottom': px(insets.navigationBars.bottom) }">
 
+                <button class="item" @click="menu.showDialog('add')">
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                        <path d="M16 5v22M5 16h22" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                    <span>Añadir</span>
+                </button>
+
                 <button class="item" @click="menu.showDialog('wallpaper')">
                     <svg viewBox="0 0 32 32" aria-hidden="true">
                         <rect x="3" y="6" width="26" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
@@ -79,10 +86,11 @@ $gingerbread-orange: #ffa800;
     justify-content: flex-end;
 }
 
-// Gingerbread's options menu: a dark panel of icon + label cells with thin dividers
+// Gingerbread's options menu: a dark panel of icon + label cells with thin dividers.
+// With 5 items it shows 3 on the first row and 2 wider ones on the second.
 .options-menu {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     border-top: 1px solid #8a8a8a;
     background: linear-gradient(to bottom, #3a3a3a, #1c1c1c);
     box-shadow: 0 -4px 16px rgba(#000, 0.6);
@@ -105,7 +113,14 @@ $gingerbread-orange: #ffa800;
         font-size: 13px;
         cursor: pointer;
 
-        &:nth-child(2n) {
+        grid-column: span 2;
+
+        &:nth-child(n + 4) {
+            grid-column: span 3;
+        }
+
+        &:nth-child(3),
+        &:nth-child(5) {
             border-right: none;
         }
 

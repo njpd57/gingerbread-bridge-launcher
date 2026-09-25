@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useDragStore } from '@/stores/useDragStore';
-import AppShortcut from './AppShortcut.vue';
+import Shortcut from './Shortcut.vue';
+import FolderIcon from './icons/FolderIcon.vue';
 import AnalogClock from '@/widgets/clock/AnalogClock.vue';
 import WeatherWidget from '@/widgets/weather/WeatherWidget.vue';
 
@@ -25,10 +26,13 @@ const ghostStyle = computed(() =>
 <template>
     <div v-if="drag.active" class="drag-layer">
         <div class="ghost" :style="ghostStyle">
-            <AppShortcut
+            <Shortcut
                 v-if="drag.active.ghost.type === 'app'"
                 :package-name="drag.active.ghost.packageName"
                 :label="drag.active.ghost.label" />
+            <Shortcut v-else-if="drag.active.ghost.type === 'folder'" :label="drag.active.ghost.name">
+                <FolderIcon />
+            </Shortcut>
             <div v-else-if="drag.active.ghost.widget === 'clock'" class="clock-container">
                 <AnalogClock class="clock" />
             </div>
