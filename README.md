@@ -4,6 +4,10 @@ Una recreación del launcher de **Android 2.3 Gingerbread** para teléfonos actu
 
 Bridge es una app de Android que usa una página web como pantalla de inicio y le da acceso a funciones del sistema (lista de apps, abrir apps, fondo de pantalla, barras del sistema…). Este repositorio es esa página web: está hecho con Vue 3, TypeScript y Vite, y no contiene código nativo de Android.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Pantalla de inicio: barra de estado de Gingerbread, reloj analógico grande, widget del tiempo, fondo Nexus y el dock" width="300">
+</p>
+
 ## Funciones
 
 - **5 pantallas de inicio** que se recorren deslizando. Arranca en la del centro, y el botón de inicio de Android vuelve a ella.
