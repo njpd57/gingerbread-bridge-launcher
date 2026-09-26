@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue';
-import { useWindowSize } from '@vueuse/core';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useDragStore } from '@/stores/useDragStore';
-import { autoGridRows, GRID_COLS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
+import { autoGridRows, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
+import { DOCK_HEIGHT, useHomeGridSize } from '@/composables/useHomeGridSize';
 import { useLongPress } from '@/composables/useLongPress';
 import { fittedIconSize, scaledIconSize } from '@/utils/iconSize';
 import Workspace from './home/Workspace.vue';
@@ -24,8 +24,6 @@ import FolderPanel from './home/FolderPanel.vue';
 import GingerbreadStatusBar from './statusbar/GingerbreadStatusBar.vue';
 import NotificationPanel from './notifications/NotificationPanel.vue';
 
-const DOCK_HEIGHT = 56;
-const GRID_SIDE_PADDING = 8;
 
 const insets = useWindowInsetsStore();
 const menu = useMenuStore();
@@ -36,23 +34,17 @@ const layout = useHomeLayoutStore();
 // fit as many Gingerbread-shaped rows as the screen allows (tall phones get more).
 // Only measured in portrait: in landscape the rows stay as they were, because fewer rows would
 // move items that no longer fit, and rotating back wouldn't put them back.
-const windowSize = useWindowSize();
+const { windowSize, gridWidth, gridHeight, cellWidth, cellHeight } = useHomeGridSize();
 watchEffect(() =>
 {
     if (windowSize.width.value > windowSize.height.value) return;
     // nor while typing: if the keyboard shrinks the WebView, fewer rows would move icons for good
     if (isTyping()) return;
-    const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
-    layout.autoRows = autoGridRows(windowSize.width.value - GRID_SIDE_PADDING, gridHeight);
+    layout.autoRows = autoGridRows(gridWidth.value, gridHeight.value);
 });
 
 // the home screen icons follow the user's scale but must fit their cell (the drawer's needn't)
-const homeIconSize = computed(() =>
-{
-    const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
-    const cellWidth = (windowSize.width.value - GRID_SIDE_PADDING) / GRID_COLS;
-    return fittedIconSize(settings.iconScale, cellWidth, gridHeight / layout.rows);
-});
+const homeIconSize = computed(() => fittedIconSize(settings.iconScale, cellWidth.value, cellHeight.value));
 
 function isTyping()
 {
@@ -78,11 +70,15 @@ function onPointerDown(e: PointerEvent)
         longPress.down(null, e);
 }
 
-// a tap on empty space sends pulses across the Nexus wallpaper
+// a tap on empty space sends pulses across the Nexus wallpaper, or is passed on to the system
+// wallpaper (live wallpapers react to it, like Gingerbread's own Nexus did)
 function onWorkspaceClick(e: MouseEvent)
 {
     if (longPress.consumeLongPress() || drag.justDropped()) return;
-    if (isEmptySpace(e.target))
+    if (!isEmptySpace(e.target)) return;
+    if (settings.wallpaper === 'system')
+        Bridge.sendWallpaperTap(e.clientX, e.clientY);
+    else
         wallpaper.value?.burst(e.clientX, e.clientY);
 }
 

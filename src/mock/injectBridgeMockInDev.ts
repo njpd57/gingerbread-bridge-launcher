@@ -178,6 +178,31 @@ class ForkBridgeMock extends BridgeMock
         return true;
     }
 
+    getCanAccessAppShortcuts()
+    {
+        return true;
+    }
+
+    getAppShortcutsURL(packageName: string)
+    {
+        const shortcuts = [
+            { id: 'new', shortLabel: 'Nuevo', longLabel: `Nuevo en ${packageName}` },
+            { id: 'search', shortLabel: 'Buscar', longLabel: null },
+        ];
+        return 'data:application/json,' + encodeURIComponent(JSON.stringify({ shortcuts }));
+    }
+
+    getAppShortcutIconURL()
+    {
+        return MOCK_NOTIFICATION_ICON;
+    }
+
+    requestStartAppShortcut(packageName: string, shortcutId: string)
+    {
+        alert(`Would start shortcut ${shortcutId} of ${packageName}.`);
+        return true;
+    }
+
     getConnectivity()
     {
         return JSON.stringify({ type: 'wifi', wifiLevel: 3, cellularLevel: 2, cellularDataActivity: 'none', dataActivity: 'in' });

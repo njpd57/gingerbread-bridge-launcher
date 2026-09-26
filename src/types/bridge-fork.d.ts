@@ -35,6 +35,19 @@ export interface BridgeConnectivity
     dataActivity: BridgeDataActivity;
 }
 
+/** One of an app's shortcuts ("New message", "Navigate home"...), from `getAppShortcutsURL()`. */
+export interface BridgeAppShortcut
+{
+    id: string;
+    shortLabel: string;
+    longLabel: string | null;
+}
+
+export interface BridgeGetAppShortcutsResponse
+{
+    shortcuts: BridgeAppShortcut[];
+}
+
 export type BridgeMediaPlaybackState = 'playing' | 'paused' | 'buffering' | 'stopped' | 'none';
 export type BridgeMediaAction = 'play' | 'pause' | 'playPause' | 'next' | 'previous';
 
@@ -159,6 +172,13 @@ declare module '@bridgelauncher/api'
         getBluetoothEnabled(): boolean;
         /** Whether location (GPS) is on. Fires `locationEnabledChanged`. */
         getLocationEnabled(): boolean;
+
+        /** Whether Bridge can read apps' shortcuts: only the default launcher can, on Android 7.1+. */
+        getCanAccessAppShortcuts(): boolean;
+        /** URL of a {@link BridgeGetAppShortcutsResponse} JSON, in the order launchers show them. */
+        getAppShortcutsURL(packageName: string): string;
+        getAppShortcutIconURL(packageName: string, shortcutId: string): string;
+        requestStartAppShortcut(packageName: string, shortcutId: string, showToastIfFailed?: boolean): boolean;
 
         /** A {@link BridgeConnectivity} as JSON. Fires `connectivityChanged`. */
         getConnectivity(): string;

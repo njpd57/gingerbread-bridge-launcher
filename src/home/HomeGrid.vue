@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
 import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { useDragStore } from '@/stores/useDragStore';
+import { useAppShortcutsStore } from '@/stores/useAppShortcutsStore';
 import { useHomeLayoutStore, type GridArea, type HomeItem } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
 import Shortcut from './Shortcut.vue';
@@ -17,6 +18,7 @@ const props = defineProps<{
 const apps = useAppsStore();
 const launcher = useAppLauncherStore();
 const drag = useDragStore();
+const appShortcuts = useAppShortcutsStore();
 const layout = useHomeLayoutStore();
 const menu = useMenuStore();
 
@@ -50,9 +52,14 @@ function gridArea(area: GridArea)
     };
 }
 
+// long-pressing picks the item up; for apps it also opens their shortcuts menu (Bridge fork), which
+// closes as soon as the finger moves on to drag
 const longPress = useLongPress<{ item: HomeItem; el: HTMLElement }>(({ item, el }, pos) =>
 {
-    drag.start({ source: 'home', itemId: item.id }, pos.x, pos.y, el.getBoundingClientRect());
+    const rect = el.getBoundingClientRect();
+    drag.start({ source: 'home', itemId: item.id }, pos.x, pos.y, rect);
+    if (item.type === 'app')
+        appShortcuts.open(item.packageName, apps.apps.get(item.packageName)?.label ?? item.label, rect);
 });
 
 function onItemPointerDown(item: HomeItem, e: PointerEvent)

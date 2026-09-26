@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 5, 7, 9, 15, 16, 20, 25, 28 y 29 ya están implementadas (marcadas con ✅). La 26 está hecha en parte (marcada con ◐). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25 y 28 y la 9 todavía no se han probado en el teléfono; la 29 sí. La 25 necesita nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 15, 16, 20, 25, 26, 28 y 29 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25, 26 y 28 y las ideas 6 y 9 todavía no se han probado en el teléfono; la 29 sí. La 25 necesita nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -15,7 +15,7 @@ Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publica
 | Sistema | `requestExpandNotificationShade`, `requestOpenAndroidSettings`, `requestOpenBridgeSettings`, `requestLockScreen` / `getCanLockScreen`, `showToast` | `requestOpenDeveloperConsole`, `requestOpenBridgeAppDrawer`, `getLastErrorMessage` |
 | Información | — | `getAndroidAPILevel`, `getBridgeVersionName`, `getBridgeVersionCode`, `getProjectURL` |
 | Ciclo de vida | `newIntent` (botón de inicio), `beforePause`, `afterResume` | — |
-| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización y `requestOpenSystemPanel` para Wi-Fi, Bluetooth y GPS; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel) | `getScreenOrientation`, evento `screenOrientationChanged`. **Faltan en el fork:** leer si Wi-Fi, Bluetooth y GPS están encendidos (ver la idea 5) |
+| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización y `requestOpenSystemPanel` para Wi-Fi, Bluetooth y GPS; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel) | `getScreenOrientation`, evento `screenOrientationChanged` |
 
 Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la API como borrador, comentados: todavía no existen en Bridge.
 
@@ -59,9 +59,9 @@ Imitar el widget clásico de 4×1 con lo que Bridge **sí** puede hacer:
 
 > Para el botón del modo noche hay que conceder el permiso una vez con `npm run grant-permissions` (ver "Permisos opcionales" en el README). Bridge 0.1.0alpha no tiene `getCanRequestSystemNightMode()`, así que el launcher intenta el cambio sin poder comprobar el permiso antes. Los permisos se vuelven a leer al volver al launcher, porque darlos por adb no genera ningún evento.
 
-### 6. Toques al fondo animado del sistema
+### 6. Toques al fondo animado del sistema ✅ Hecho
 Si el usuario elige como fondo del sistema un fondo **animado** (live wallpaper), esos fondos reaccionan a los toques. Eso también era típico de Gingerbread, por ejemplo con el fondo "Nexus" real.
-- **API:** `sendWallpaperTap(x, y)` al tocar un hueco vacío cuando el fondo es "Fondo del sistema". Hoy esos toques solo generan pulsos en nuestro fondo Nexus.
+- **API:** `sendWallpaperTap(x, y)` al tocar un hueco vacío cuando el fondo es "Fondo del sistema" (`onWorkspaceClick` en `App.vue`); con nuestro fondo Nexus, el toque sigue generando pulsos. Bridge convierte las coordenadas CSS a píxeles de pantalla.
 - **Esfuerzo:** muy bajo.
 
 ### 7. Widget de búsqueda de aplicaciones ✅ Hecho
@@ -80,7 +80,7 @@ Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 
 
 ## Mejoras de uso
 
-### 8. Doble toque para bloquear la pantalla
+### 8. Doble toque para bloquear la pantalla ⏬ Baja prioridad
 No existía en Gingerbread, pero es muy práctico. Sería opcional en Apariencia.
 - **API:** `requestLockScreen()` y `getCanLockScreen()`. Requiere activar el servicio de accesibilidad de Bridge y permitir el bloqueo en sus ajustes. En Android 9 y posteriores, después de bloquear así hay que desbloquear con el PIN, no con la huella; Bridge lo advierte en su documentación.
 - **Esfuerzo:** bajo.
@@ -94,12 +94,12 @@ Al escribir la ciudad del tiempo o renombrar una carpeta, el teclado puede tapar
 - Las futuras nota adhesiva (21) y lista de tareas (24) pueden escribir en un `GbDialog` para aprovecharlo.
 - **Esfuerzo:** bajo.
 
-### 10. Cambio de página por el borde sin chocar con el gesto "Atrás"
+### 10. Cambio de página por el borde sin chocar con el gesto "Atrás" ⏬ Baja prioridad
 Al arrastrar un icono al borde para pasar de página, esa zona coincide con el gesto de volver atrás de Android.
 - **API:** `getSystemGesturesWindowInsets()` y `getMandatorySystemGesturesWindowInsets()`, para usar esa zona como referencia en `EDGE_PX` (`useDragStore`).
 - **Esfuerzo:** bajo.
 
-### 11. Esquivar la cámara con precisión
+### 11. Esquivar la cámara con precisión ⏬ Baja prioridad
 La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del recorte se puede reservar justo ese espacio y colocar las notificaciones y los iconos a su alrededor.
 - **API:** `getDisplayCutoutPath()` (Android 12+) y `getDisplayShapePath()` (Android 14+, esquinas redondeadas de la pantalla). Ambas devuelven un path SVG.
 - **Esfuerzo:** medio.
@@ -198,9 +198,11 @@ El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente gi
 - **Tamaño:** 2×2.
 - **Esfuerzo:** medio. Está en `src/widgets/photo/`.
 
-### 26. Apps más usadas ◐ En parte
-Una fila con las 4 apps que más se abren. El launcher cuenta los lanzamientos al llamar a `requestLaunchApp` (desde el cajón, el escritorio, las carpetas y la búsqueda) y los guarda en localStorage. Ese mismo contador serviría para las "apps recientes" de la búsqueda (idea 7).
-- **Hecho:** todos los lanzamientos ya pasan por `useAppLauncherStore`, que guarda las **recientes** (`launcher.recentApps`). **Falta** contar cuántas veces se abre cada app y el widget.
+### 26. Apps más usadas ✅ Hecho
+Una fila con las 4 apps que más se abren, cada una en su columna para que queden alineadas con los iconos del escritorio. Está en `src/widgets/mostUsed/`.
+- Todos los lanzamientos pasan por `useAppLauncherStore`, que guarda las **recientes** (`launcher.recentApps`) y cuántas veces se abrió cada app (`launcher.launchCounts`).
+- El orden sale de `mostUsedApps()` en `src/utils/mostUsed.ts`: primero las más abiertas; a igual cantidad, la usada más recientemente. Al principio, cuando todavía no hay cuentas, se completa con las recientes para que el widget no quede vacío.
+- Las apps desinstaladas desaparecen del contador.
 - **API:** `requestLaunchApp` y el evento `appRemoved`, para quitar las apps desinstaladas.
 - **Tamaño:** 4×1.
 - **Esfuerzo:** bajo.

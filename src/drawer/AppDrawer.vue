@@ -4,6 +4,7 @@ import { RequestStatus, useAppsStore } from '@/stores/useAppsStore';
 import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useDragStore } from '@/stores/useDragStore';
+import { useAppShortcutsStore } from '@/stores/useAppShortcutsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useLongPress } from '@/composables/useLongPress';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
@@ -16,6 +17,7 @@ const apps = useAppsStore();
 const launcher = useAppLauncherStore();
 const drawer = useDrawerStore();
 const drag = useDragStore();
+const appShortcuts = useAppShortcutsStore();
 const menu = useMenuStore();
 
 const gridEl = ref<HTMLElement>();
@@ -35,11 +37,18 @@ watch(() => drawer.isOpen, isOpen =>
         gridEl.value.scrollTop = 0;
 });
 
-// long-pressing an app closes the drawer and picks the app up, to drop it on the home screen
-const longPress = useLongPress<InstalledAppInfo>((app, pos) =>
+// long-pressing an app picks it up, to drop it on the home screen, and (Bridge fork) opens its shortcuts
+// menu; the drawer only closes once the finger moves, so the menu can show over it
+const longPress = useLongPress<{ app: InstalledAppInfo; el: HTMLElement }>(({ app, el }, pos) =>
 {
-    drawer.close();
     drag.start({ source: 'drawer', packageName: app.packageName, label: app.label }, pos.x, pos.y);
+    appShortcuts.open(app.packageName, app.label, el.getBoundingClientRect());
+});
+
+watch(() => drag.hasMoved, moved =>
+{
+    if (moved && drag.active?.payload.source === 'drawer')
+        drawer.close();
 });
 
 function launch(packageName: string)
@@ -68,7 +77,7 @@ function launch(packageName: string)
                         v-for="app in sortedApps"
                         :key="app.packageName"
                         class="app"
-                        @pointerdown="longPress.down(app, $event)"
+                        @pointerdown="longPress.down({ app, el: $event.currentTarget as HTMLElement }, $event)"
                         @pointermove="longPress.move"
                         @pointerup="longPress.cancel"
                         @pointercancel="longPress.cancel"
