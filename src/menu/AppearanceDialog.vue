@@ -261,6 +261,14 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             </div>
         </section>
 
+        <section class="options">
+            <GbButton @click="menu.showDialog('about')">Acerca de y diagnóstico</GbButton>
+            <div class="field-hint">
+                Versiones, insets que informa Bridge, permisos, el último error y los últimos eventos.
+                Sirve para encontrar fallos sin conectar el teléfono al ordenador.
+            </div>
+        </section>
+
         <template #buttons>
             <GbButton @click="menu.closeAll()">Listo</GbButton>
         </template>
