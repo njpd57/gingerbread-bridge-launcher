@@ -206,6 +206,12 @@ declare module '@bridgelauncher/api'
 {
     interface JSToBridgeAPI
     {
+        /**
+         * True on forks where `top`/`left` in window insets are reported correctly. Absent (check with
+         * `bridgeHas`) on every earlier build, including stock Bridge, which swap them.
+         */
+        getWindowInsetsSwapFixed(): boolean;
+
         /** Whether the home screen is locked to portrait (`'portrait'`) or follows the device (`'unspecified'`). */
         getScreenOrientation(): BridgeScreenOrientation;
 

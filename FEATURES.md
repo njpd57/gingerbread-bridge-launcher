@@ -286,10 +286,10 @@ El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda r
 
 ## Fallos de Bridge
 
-Fallos del propio Bridge (también del original, no solo de nuestro fork) que el launcher esquiva. Conviene arreglarlos en el fork y reportarlos a Bridge.
+Fallos del propio Bridge (también del original, no solo de nuestro fork) que el launcher esquivaba.
 
-- **Arriba e izquierda intercambiados en todos los insets.** `WindowInsetsSnapshot` declara `(top, left, right, bottom)`, pero `getSnapshot()` en `WindowInsetsSnapshot.kt` le pasa por posición `(left, top, right, bottom)`. En un Z Flip5 en vertical, el recorte de la cámara (33 px, arriba) llega como `left: 33, top: 0`, y lo mismo `statusBarsIgnoringVisibility`. (Que `statusBars` dé 0 con la barra oculta es normal: aparece al hacerla visible.) **Arreglo en el fork:** pasar los argumentos por nombre (`top = getTop(...)`, `left = getLeft(...)`). Afecta a los getters y a los eventos. Cuando el fork esté arreglado, el launcher podrá fiarse de `top` (y habrá que distinguir un Bridge arreglado de uno sin arreglar, por ejemplo con un método nuevo del fork).
-- **Los eventos de insets no siguen los tipos de la API:** se llaman `ImeWindowInsetsChanged` (con mayúscula) y traen el valor en `insets`, no `imeWindowInsetsChanged` con `newValue`. El launcher ya acepta las dos formas (`parseInsetsEvent()`); en el fork habría que enviar el nombre en minúscula inicial y `newValue`.
+- ✅ **Arreglado en el fork: arriba e izquierda intercambiados en todos los insets.** `WindowInsetsSnapshot` declaraba `(top, left, right, bottom)`, pero `getSnapshot()` en `WindowInsetsSnapshot.kt` le pasaba por posición `(left, top, right, bottom)`. En un Z Flip5 en vertical, el recorte de la cámara (33 px, arriba) llegaba como `left: 33, top: 0`. Corregido pasando los argumentos por nombre; afecta a los getters y a los eventos. Los builds anteriores (incluido el Bridge original) siguen con el bug: `getWindowInsetsSwapFixed()` (nuevo, comprobar con `bridgeHas`) dice si el Bridge instalado ya lo trae arreglado.
+- ✅ **Arreglado en el fork: los eventos de insets no seguían los tipos de la API.** Se llamaban `ImeWindowInsetsChanged` (con mayúscula) y traían el valor en `insets`. Ahora usan el nombre en minúscula inicial (`imeWindowInsetsChanged`) y `newValue`, como documenta la API. El launcher sigue aceptando las dos formas (`parseInsetsEvent()`) por si corre sobre un Bridge sin el fix.
 
 ## Lo que la API no permite (sin ampliar Bridge)
 

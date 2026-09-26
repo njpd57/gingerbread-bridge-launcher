@@ -57,6 +57,11 @@ class ForkBridgeMock extends BridgeMock
         (window.onBridgeEvent as ((ev: object) => void) | undefined)?.(event);
     }
 
+    getWindowInsetsSwapFixed()
+    {
+        return true;
+    }
+
     getScreenOrientation()
     {
         return this.screenOrientation;
