@@ -4,6 +4,8 @@ Una recreación del launcher de **Android 2.3 Gingerbread** para teléfonos actu
 
 Bridge es una app de Android que usa una página web como pantalla de inicio y le da acceso a funciones del sistema (lista de apps, abrir apps, fondo de pantalla, barras del sistema…). Este repositorio es esa página web: está hecho con Vue 3, TypeScript y Vite, y no contiene código nativo de Android.
 
+Funciona con el Bridge original, y con **[nuestro fork de Bridge](https://github.com/njpd57/bridge-launcher)** gana funciones que la API original no permite: notificaciones reales, música, calendario, ajustes rápidos, señal real, accesos directos de apps, búsqueda web y más. En esta página, lo que solo funciona con el fork dice **"con nuestro fork"**.
+
 <p align="center">
   <img src="docs/screenshot.png" alt="Pantalla de inicio: barra de estado de Gingerbread, reloj analógico grande, widget del tiempo, fondo Nexus y el dock" width="300">
 </p>
@@ -11,24 +13,27 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
 ## Funciones
 
 - **5 pantallas de inicio** que se recorren deslizando. Arranca en la del centro, y el botón de inicio de Android vuelve a ella.
-- **Dock de Gingerbread**: Teléfono · Cajón de apps · Navegador. A los lados, los puntos indican cuántas pantallas quedan hacia cada lado; al tocarlos cambias de pantalla.
+- **Dock de Gingerbread**: Teléfono · Cajón de apps · Navegador (con nuestro fork, tus apps predeterminadas). A los lados, los puntos indican cuántas pantallas quedan hacia cada lado; al tocarlos cambias de pantalla.
 - **Cajón de apps**: cuadrícula de 4 columnas sobre fondo negro, con animación de zoom y botón de inicio para cerrarlo. Su botón de lista abre **Administrar aplicaciones**, que lleva a la ficha de cada app en Android.
 - **Escritorio editable**:
   - Mantén pulsada una app del cajón para arrastrarla al escritorio.
   - Mantén pulsado un icono o widget para moverlo. Si lo llevas al borde, pasa a la pantalla siguiente.
+  - **Accesos directos** (con nuestro fork): al mantener pulsada una app, en el escritorio o en el cajón, aparece un menú con sus accesos ("Nuevo mensaje", "Ir a casa"…) e "Información de la app". Si en vez de soltar mueves el dedo, el menú se cierra y arrastras la app.
   - Durante el arrastre, el dock se convierte en una papelera: quita elementos del escritorio, y si la app viene del cajón, la **desinstala** (Android pide confirmación).
   - Al instalar una app, su icono se añade solo al escritorio, como hacía el Market (se puede desactivar).
 - **Carpetas**:
   - Arrastra apps encima de una carpeta para meterlas.
   - Tócala para abrirla y toca su título para cambiarle el nombre.
   - Desde una carpeta abierta puedes sacar apps arrastrándolas.
-- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), reloj digital (4×1, con la fuente del reloj de Android 2.x), calendario del mes (4×2), batería (1×1), frase del día (4×1), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes (con nuestro fork de Bridge: Wi-Fi, Bluetooth, GPS, sincronización y brillo, como el original; mantén pulsado el brillo para el modo noche y la sincronización para bloquear), **Apps más usadas** (4×1), y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
+- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), reloj digital (4×1, con la fuente del reloj de Android 2.x), calendario del mes (4×2; con nuestro fork de Bridge, marca los días con eventos), **Agenda** (4×2, con nuestro fork: los próximos eventos de tu calendario), batería (1×1), frase del día (4×1), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes (con nuestro fork de Bridge: Wi-Fi, Bluetooth, GPS, sincronización y brillo, como el original; mantén pulsado el brillo para el modo noche y la sincronización para bloquear), **Apps más usadas** (4×1), **Marco de fotos** (2×2, con nuestro fork: una foto con marco blanco, elegida de la galería), **Música** (4×1) y **Música estilo Songbird** (4×1), los dos con nuestro fork: carátula, título y controles de lo que suena, y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes; con nuestro fork, también busca en la web).
 - **Fondo animado "Nexus"**: pulsos de luz de colores que recorren la pantalla. Al tocar un hueco vacío salen pulsos desde ese punto.
   - Se puede configurar la cantidad de pulsos, la velocidad y los fps (30, 60 o 120).
   - También puedes usar el fondo de pantalla del sistema. Si es un fondo animado, al tocar un hueco vacío reacciona como en Gingerbread.
 - **Menú de opciones** (mantén pulsado un hueco vacío): Añadir, Fondo de pantalla, Apariencia, Notificaciones, Ajustes y Bridge.
 - **Apariencia**:
-  - Barra de estado de Samsung o una **barra propia de Gingerbread**. La barra de Gingerbread muestra la hora y la batería reales. La señal y el Wi-Fi son simulados: suben y bajan poco a poco y tienen flechas de actividad, pero no reflejan la intensidad real. No muestra notificaciones; se toca la barra para abrirlas.
+  - Barra de estado de Samsung o una **barra propia de Gingerbread**, que muestra la hora y la batería reales.
+    - **Con nuestro fork**, también son reales la señal móvil, el Wi-Fi, las flechas de datos y los iconos de notificaciones (con el acceso a notificaciones), y al tocarla se abre el **panel de notificaciones** del launcher (ver abajo).
+    - Con el Bridge original, la señal y el Wi-Fi son simulados (suben y bajan poco a poco), los iconos de notificaciones son decorativos y al tocarla se abre la cortina de Android.
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.
   - Altura de la barra de estado: automática o manual.
   - Número de filas de la cuadrícula: automático según el alto de la pantalla, o de 4 a 7.
@@ -36,13 +41,18 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Mostrar u ocultar el botón flotante de Bridge.
   - **Brillo naranja** de Gingerbread al llegar al final de una lista, o el efecto de Android.
   - Añadir o no el icono de las apps que instalas.
+- **Panel de notificaciones** (con nuestro fork): baja al tocar la barra de estado Gingerbread o el botón de notificaciones del Control de energía.
+  - Arriba, **ajustes rápidos**: linterna, brillo (automático, bajo, medio, alto), rotación y sincronización cambian de verdad. Wi-Fi, Bluetooth y GPS muestran si están encendidos y abren el panel de Android, porque las apps ya no pueden cambiarlos.
+  - Debajo, el **reproductor** de lo que suena y las notificaciones en "En curso" y "Notificaciones", como en Gingerbread. Al tocar una se abre, y "Borrar" descarta las que se pueden descartar.
+  - Se cierra con la barra de abajo, con Atrás o con el botón de inicio.
+- **Pantalla fija en vertical** con nuestro fork (el launcher se lo pide a Bridge al arrancar).
 - **Aspecto de Gingerbread**: tipografía Droid Sans (y Clockopia en el reloj digital), dock de cristal, sombra bajo los iconos y el naranja de Gingerbread al pulsar.
 
 La configuración y el diseño del escritorio se guardan en el propio teléfono.
 
 ## Instalación en el teléfono
 
-1. Instala [Bridge Launcher](https://github.com/bridgelauncher/launcher) y ponlo como launcher predeterminado.
+1. Instala [Bridge Launcher](https://github.com/bridgelauncher/launcher), o [nuestro fork](https://github.com/njpd57/bridge-launcher) para tener todas las funciones, y ponlo como launcher predeterminado. El fork se compila con `./gradlew assembleDebug` y se instala con `adb install`. Tiene otra firma que el Bridge publicado, así que antes hay que desinstalar el original.
 2. Descarga el proyecto y genera el build:
    ```bash
    git clone https://github.com/njpd57/gingerbread-bridge-launcher
@@ -71,6 +81,7 @@ Algunas funciones necesitan permisos que Bridge no pide por sí solo. Sin ellos 
 | Función | Qué hace falta | Cómo |
 |---|---|---|
 | **Modo noche** (botón de la luna) | Permiso `WRITE_SECURE_SETTINGS` para Bridge | Con el teléfono conectado por adb (depuración USB activada): `npm run grant-permissions`, o a mano: `adb shell pm grant com.tored.bridgelauncher android.permission.WRITE_SECURE_SETTINGS` |
+| **Agenda** y eventos en el calendario del mes | Nuestro fork de Bridge y el permiso de calendario | En el widget Agenda, toca "Toca para permitir el acceso al calendario" y acepta el diálogo de Android. Si lo rechazaste para siempre, se abren los ajustes de Bridge para darlo a mano |
 | **Música** (widget y panel de notificaciones) | Nuestro fork de Bridge y el acceso a notificaciones | El mismo acceso que las notificaciones reales: Android solo muestra qué suena a las apps con ese acceso |
 | **Notificaciones reales** en la barra de estado Gingerbread | Nuestro [fork de Bridge](https://github.com/njpd57/bridge-launcher) y el acceso a notificaciones | En **Apariencia**, con la barra Gingerbread elegida, toca "Mostrar notificaciones reales" y activa Bridge en la pantalla que se abre. Sin el acceso, los iconos de notificaciones son decorativos |
 | **Brillo y rotación** en el panel de notificaciones (el brillo también en el widget Control de energía) | Nuestro fork de Bridge y el permiso "Modificar ajustes del sistema" | Al tocar esos botones por primera vez se abre la pantalla del permiso: activa Bridge. Linterna y sincronización no necesitan permiso. Wi-Fi, Bluetooth y GPS solo abren el panel de Android, porque las apps ya no pueden cambiarlos |
@@ -100,14 +111,19 @@ Las notas de arquitectura para trabajar en el código están en [CLAUDE.md](CLAU
 
 ## Limitaciones
 
-Vienen de lo que permite la API de Bridge (v0.1.0):
+Vienen de lo que permite la API de Bridge (v0.1.0). Nuestro fork resuelve varias; estas quedan:
 
 - **No hay widgets nativos de Android**: todos los widgets están hechos en HTML.
-- **No se puede leer la música que suena** ni controlar otras apps (por eso no hay widget de música).
+- **Botón Atrás**: Bridge no avisa cuando se pulsa. El cajón, la búsqueda y el panel de notificaciones se cierran con Atrás gracias al historial del WebView (comprobado en un Galaxy Z Flip5), y también con su botón de casa o el botón de inicio de Android. El menú de accesos directos todavía no se cierra con Atrás.
+- **Wi-Fi, Bluetooth, GPS y datos móviles** no se pueden encender ni apagar desde el launcher (Android no se lo permite a ninguna app): sus botones abren el panel de Android.
+
+Y solo con el **Bridge original**:
+
+- No se leen las notificaciones ni la música, y no hay accesos directos de apps.
 - **Teléfono y Navegador** abren la primera app instalada de una lista de apps conocidas, porque Bridge no indica cuáles son las predeterminadas.
-- **Botón Atrás**: Bridge no avisa cuando se pulsa. El cajón y la búsqueda se cierran con Atrás gracias al historial del WebView (comprobado en un Galaxy Z Flip5), y también con su botón de casa o el botón de inicio de Android.
-- **Modo horizontal**: el launcher no puede impedir que la pantalla gire; eso lo decide Bridge. Intenta bloquearse en vertical, aunque es probable que el WebView no lo permita. Aun así, al girar **no se desordenan los iconos**: en horizontal se mantienen las filas de vertical. Si no quieres que gire nunca, desactiva la rotación automática en el panel rápido de Android.
-- **Barra de estado**: en algunos teléfonos Bridge informa mal su altura. Si el contenido queda debajo de ella, ajústala a mano en **Apariencia**.
+- **Modo horizontal**: el launcher no puede impedir que la pantalla gire. Aun así, al girar **no se desordenan los iconos**: en horizontal se mantienen las filas de vertical. Si no quieres que gire, desactiva la rotación automática en el panel rápido de Android.
+
+**Altura de la barra de estado:** Bridge (también el original) intercambia arriba e izquierda en los márgenes que informa, así que en vertical la altura de la barra le llega al launcher como 0. El launcher la calcula por otros medios; si alguna vez el contenido queda debajo de la barra, ajusta su altura a mano en **Apariencia**.
 
 ## Créditos
 

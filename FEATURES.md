@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 7, 9, 15, 16, 20, 25, 26, 28 y 29 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25, 26 y 28 y las ideas 6 y 9 todavía no se han probado en el teléfono; la 29 sí. La 25 necesita nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 12, 15, 16, 20, 25, 26 y 28 a 33 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Los widgets 15, 20, 26 y 28 y las ideas 6 y 9 todavía no se han probado en el teléfono; la 12 y la 29 sí. La 25 y de la 30 a la 33 necesitan nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -15,7 +15,7 @@ Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publica
 | Sistema | `requestExpandNotificationShade`, `requestOpenAndroidSettings`, `requestOpenBridgeSettings`, `requestLockScreen` / `getCanLockScreen`, `showToast` | `requestOpenDeveloperConsole`, `requestOpenBridgeAppDrawer`, `getLastErrorMessage` |
 | Información | — | `getAndroidAPILevel`, `getBridgeVersionName`, `getBridgeVersionCode`, `getProjectURL` |
 | Ciclo de vida | `newIntent` (botón de inicio), `beforePause`, `afterResume` | — |
-| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización y `requestOpenSystemPanel` para Wi-Fi, Bluetooth y GPS; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel) | `getScreenOrientation`, evento `screenOrientationChanged` |
+| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización y `requestOpenSystemPanel` para Wi-Fi, Bluetooth y GPS; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel), calendario (`getCalendarEventsURL`, `requestOpenCalendarEvent`, `requestOpenCalendarAt`: widget Agenda y eventos en el calendario del mes), estado de Wi-Fi, Bluetooth y GPS (`getWifiEnabled`, `getBluetoothEnabled`, `getLocationEnabled`), señal real (`getConnectivity`: barras, Wi-Fi y flechas de datos en la barra Gingerbread), accesos directos de apps (`getAppShortcutsURL`, `requestStartAppShortcut`), selector de archivos para `<input type="file">` (marco de fotos) | `getScreenOrientation`, evento `screenOrientationChanged` |
 
 Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la API como borrador, comentados: todavía no existen en Bridge.
 
@@ -116,13 +116,15 @@ Un deslizante en **Apariencia → Tamaño de los iconos**, de 75 % a 130 % del t
 
 ## Herramientas y mantenimiento
 
-### 12. Pantalla "Acerca de" y diagnóstico
-Una opción en el menú (o una pulsación larga en "Bridge") que muestre:
-- La versión de Bridge (`getBridgeVersionName` / `getBridgeVersionCode`) y de Android (`getAndroidAPILevel`).
-- **Los insets que reporta Bridge en ese momento.** Nos habría ahorrado adivinar cuando la barra de estado medía 0.
-- El último error de la API (`getLastErrorMessage`).
+### 12. Pantalla "Acerca de" y diagnóstico ✅ Hecho
+Un botón al final de **Apariencia** abre "Acerca de y diagnóstico" (`src/menu/AboutDialog.vue`), que muestra:
+- **Versiones:** la compilación del launcher (commit y si tenía cambios sin commit, inyectados por `vite.config.ts` como `__BUILD_INFO__`), la de Bridge (`getBridgeVersionName` / `getBridgeVersionCode`, y si es nuestro fork) y la de Android (`getAndroidAPILevel`).
+- **Pantalla:** tamaño de la ventana, densidad, filas y tamaño de celda.
+- **Los insets que informa Bridge, en vivo,** y las alturas que el launcher usa de verdad para las barras y el teclado.
+- **Permisos:** bloqueo, modo noche, notificaciones, calendario y ajustes del sistema.
+- El **último error** de la API (`getLastErrorMessage`) y los **últimos 30 eventos** de Bridge (los guarda `useBridgeEventStore`).
 - Un botón para abrir la **consola de desarrollo** de Bridge (`requestOpenDeveloperConsole`).
-- **Esfuerzo:** bajo.
+- **Ya sirvió:** al abrirla por primera vez mostró que Bridge intercambia arriba e izquierda en todos los insets (ver "Fallos de Bridge" más abajo).
 
 ### 13. Detectar funciones según la versión
 Usar `getAndroidAPILevel()` para ocultar las opciones que el teléfono no soporta. Por ejemplo, la forma del recorte solo existe desde Android 12, y el modo noche "personalizado" desde Android 11.
@@ -144,7 +146,8 @@ Hora grande con la fecha debajo, con la tipografía y el estilo de la pantalla d
 - **Esfuerzo:** muy bajo.
 
 ### 16. Calendario del mes ✅ Hecho
-La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas para cambiar de mes. No muestra eventos, porque la API no puede leer el calendario del teléfono.
+La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas para cambiar de mes.
+- **Con nuestro fork de Bridge** y el permiso de calendario, los días con eventos llevan puntos del color de su calendario (hasta 3), y al tocar un día se abre la app de calendario en esa fecha (`requestOpenCalendarAt`). Con el Bridge original no muestra eventos, porque su API no puede leer el calendario.
 - **Tamaño:** 4×2 o 4×3.
 - **Esfuerzo:** bajo. Los nombres de meses y días salen de `Intl.DateTimeFormat('es')`.
 
@@ -218,7 +221,41 @@ Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin
 - **Tamaño:** 4×1.
 - **Esfuerzo:** muy bajo.
 
+### 30. Agenda ✅ Hecho
+Los próximos eventos del calendario, como el widget de calendario de Android 2.x: a la izquierda el día de la semana y la fecha de hoy, y a la derecha los eventos de los próximos 14 días agrupados por día, cada uno con el color de su calendario, la hora y el título. Está en `src/widgets/agenda/`.
+- **Solo con nuestro fork de Bridge:** `getCanReadCalendar`, `requestCalendarPermission`, `getCalendarEventsURL(from, to)`, `requestOpenCalendarEvent`, `requestOpenCalendarAt` y los eventos `canReadCalendarChanged` / `calendarChanged`. `useCalendarStore` lleva el permiso y vuelve a pedir los eventos cuando cambian; la agrupación por día está en `src/utils/calendar-events.ts`.
+- Sin permiso, el widget dice "Toca para permitir el acceso al calendario" y al tocarlo aparece el diálogo de Android. Tocar un evento lo abre en la app de calendario, y tocar la fecha abre el calendario en hoy.
+- **Tamaño:** 4×2 (caben unas 5 filas).
+- **Esfuerzo:** medio, contando lo que hubo que añadir al fork.
+
+### 31. Accesos directos de apps ✅ Hecho
+Al mantener pulsada una app, en el escritorio o en el cajón, aparece un menú junto al icono con sus accesos directos ("Nuevo mensaje", "Ir a casa", "Nueva pestaña de incógnito"…) y, al final, "Información de la app". Gingerbread no los tenía (llegaron en Android 7.1), así que el menú imita sus menús contextuales: franja gris con el nombre de la app y filas claras que se ponen naranjas al pulsar.
+- **Solo con nuestro fork de Bridge:** `getCanAccessAppShortcuts`, `getAppShortcutsURL`, `getAppShortcutIconURL` y `requestStartAppShortcut`. Android solo le da los accesos al launcher predeterminado.
+- La misma pulsación larga inicia el arrastre: si el dedo se mueve, el menú se cierra y se arrastra la app (el cajón se cierra recién entonces); si se suelta sin moverlo, el arrastre se cancela y el menú queda abierto (`useDragStore.hasMoved`).
+- Está en `src/shortcuts/` y `useAppShortcutsStore`.
+- **Pendiente:** el menú en las apps de las carpetas, y cerrarlo con Atrás.
+
+### 32. Panel de notificaciones y ajustes rápidos ✅ Hecho
+Un panel propio al estilo de la cortina de Gingerbread 2.3, que baja al tocar la barra de estado Gingerbread (o el botón de notificaciones del Control de energía) en vez de abrir la de Android.
+- Arriba, **ajustes rápidos** con el estilo del Control de energía: linterna, brillo (automático / bajo / medio / alto), rotación y sincronización cambian de verdad; Wi-Fi, Bluetooth y GPS muestran su estado y abren el panel de Android.
+- Debajo, el reproductor de música (idea 33) y las notificaciones en "En curso" y "Notificaciones", con su icono, título, texto y hora. Al tocar una se abre; "Borrar" descarta las que se pueden descartar. Las notificaciones de los reproductores se ocultan mientras se muestra el reproductor (`isMedia`).
+- **Solo con nuestro fork de Bridge:** acceso a notificaciones (`getNotificationsURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos) y ajustes rápidos (`requestSetFlashlightOn`, `requestSetScreenBrightnessAuto` / `Level`, `requestSetAutoRotateOn`, `requestSetMasterSyncOn`, `requestOpenSystemPanel`). Brillo y rotación necesitan el permiso "Modificar ajustes del sistema".
+- Está en `src/notifications/`.
+
+### 33. Música ✅ Hecho
+Lo que suena en cualquier app (Spotify, YouTube Music…), con carátula, título, artista y los botones anterior / reproducir-pausa / siguiente.
+- **Widget "Música"** (4×1) y el reproductor de arriba del panel de notificaciones: `widgets/music/MusicPlayer.vue`, con una barra de progreso que avanza sola.
+- **Widget "Música (estilo Songbird)"** (4×1), más de Gingerbread: la carátula en un marco claro y, al lado, "Artista - Título" sobre tres botones grandes grises (`widgets/music/SongbirdPlayer.vue`).
+- **Solo con nuestro fork de Bridge** y el acceso a notificaciones: `getMediaSession`, `getMediaArtURL`, `requestMediaAction`, `requestOpenMediaApp` y el evento `mediaSessionChanged`.
+
 ---
+
+## Fallos de Bridge
+
+Fallos del propio Bridge (también del original, no solo de nuestro fork) que el launcher esquiva. Conviene arreglarlos en el fork y reportarlos a Bridge.
+
+- **Arriba e izquierda intercambiados en todos los insets.** `WindowInsetsSnapshot` declara `(top, left, right, bottom)`, pero `getSnapshot()` en `WindowInsetsSnapshot.kt` le pasa por posición `(left, top, right, bottom)`. En un Z Flip5 en vertical, el recorte de la cámara (33 px, arriba) llega como `left: 33, top: 0`, y lo mismo `statusBarsIgnoringVisibility`. (Que `statusBars` dé 0 con la barra oculta es normal: aparece al hacerla visible.) **Arreglo en el fork:** pasar los argumentos por nombre (`top = getTop(...)`, `left = getLeft(...)`). Afecta a los getters y a los eventos. Cuando el fork esté arreglado, el launcher podrá fiarse de `top` (y habrá que distinguir un Bridge arreglado de uno sin arreglar, por ejemplo con un método nuevo del fork).
+- **Los eventos de insets no siguen los tipos de la API:** se llaman `ImeWindowInsetsChanged` (con mayúscula) y traen el valor en `insets`, no `imeWindowInsetsChanged` con `newValue`. El launcher ya acepta las dos formas (`parseInsetsEvent()`); en el fork habría que enviar el nombre en minúscula inicial y `newValue`.
 
 ## Lo que la API no permite (sin ampliar Bridge)
 
@@ -227,4 +264,4 @@ Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin
 - Detectar el botón Atrás. Hay un truco que sí funciona: `history.pushState` al abrir el cajón o la búsqueda, porque Bridge pasa el "atrás" al historial del WebView.
 - Packs de iconos: están en la API como borrador, pero todavía no los ofrece Bridge.
 
-Todo esto requeriría ampliar Bridge en Kotlin. Nuestro [fork](https://github.com/njpd57/bridge-launcher) ya resolvió saber las apps predeterminadas, abrir URLs y bloquear la orientación en vertical; el plan para el resto está en la página de Confluence "Mejoras propuestas a Bridge (fork)".
+Todo esto requeriría ampliar Bridge en Kotlin. Nuestro [fork](https://github.com/njpd57/bridge-launcher) ya resolvió, entre otras cosas, saber las apps predeterminadas, abrir URLs, bloquear la orientación en vertical, leer notificaciones, música, calendario y la señal real, los ajustes rápidos y los accesos directos de apps (ver la tabla del principio); el plan para el resto está en la página de Confluence "Mejoras propuestas a Bridge (fork)".
