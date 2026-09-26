@@ -111,6 +111,17 @@ export interface BridgeNotification
     /** A media player's notification (it carries a media session); the launcher shows a player instead. */
     isMedia: boolean;
     hasLargeIcon: boolean;
+    /** The notification's buttons ("Reply", "Mark as read"…). */
+    actions: BridgeNotificationAction[];
+}
+
+export interface BridgeNotificationAction
+{
+    /** What `requestNotificationAction` / `requestReplyToNotification` take. */
+    index: number;
+    title: string;
+    /** A "Reply" action: it takes typed text, sent with `requestReplyToNotification`. */
+    acceptsText: boolean;
 }
 
 export interface BridgeGetNotificationsResponse
@@ -173,6 +184,11 @@ declare module '@bridgelauncher/api'
 
         /** Dismisses a clearable notification. */
         requestDismissNotification(key: string, showToastIfFailed?: boolean): boolean;
+        /** Presses one of the notification's buttons. */
+        requestNotificationAction(key: string, actionIndex: number, showToastIfFailed?: boolean): boolean;
+        /** Sends text through a notification's "Reply" action. */
+        requestReplyToNotification(key: string, actionIndex: number, text: string, showToastIfFailed?: boolean): boolean;
+
 
         /** A {@link BridgeMediaSession} as JSON, or `"null"`. Needs notification access. Fires `mediaSessionChanged`. */
         getMediaSession(): string;

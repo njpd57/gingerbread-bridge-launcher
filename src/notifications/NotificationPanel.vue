@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { useNow } from '@vueuse/core';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
@@ -8,7 +8,10 @@ import { useAppsStore } from '@/stores/useAppsStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
 import { formatNotificationTime, notificationPanelSections } from '@/utils/notifications';
-import type { BridgeNotification } from '@/types/bridge-fork';
+import type { BridgeNotification, BridgeNotificationAction } from '@/types/bridge-fork';
+import { useLongPress } from '@/composables/useLongPress';
+import { bridgeHas } from '@/utils/bridge-utils';
+import GbDialog from '@/components/GbDialog.vue';
 import OverscrollGlow from '@/components/OverscrollGlow.vue';
 import QuickToggles from './QuickToggles.vue';
 import MusicPlayer from '@/widgets/music/MusicPlayer.vue';
@@ -17,6 +20,8 @@ import { useMediaStore } from '@/stores/useMediaStore';
 // Our own notification panel, in the style of Gingerbread's (2.3's dark one): "Borrar" at the top,
 // "En curso" and "Notificaciones" sections, and a handle at the bottom to close it. On top, a row of
 // quick settings. Only with our Bridge fork; it covers the launcher, not other apps.
+// Long-pressing a notification opens a menu (open / dismiss / app info), and notifications show their
+// buttons ("Marcar como leído"…); a "Reply" button opens a text field right under the notification.
 
 const menu = useMenuStore();
 const notifications = useNotificationsStore();
@@ -65,10 +70,71 @@ function smallIconStyle(n: BridgeNotification)
     return { maskImage: url, webkitMaskImage: url };
 }
 
+// older fork builds send notifications without actions
+const supportsActions = bridgeHas('requestNotificationAction');
+
+// the notification whose long-press menu is open
+const menuFor = ref<BridgeNotification | null>(null);
+const longPress = useLongPress<BridgeNotification>(n => menuFor.value = n);
+
 function open(n: BridgeNotification)
 {
+    if (longPress.consumeLongPress()) return;
     if (Bridge.requestOpenNotification(n.key, true))
         menu.closeAll();
+}
+
+function openFromMenu()
+{
+    const n = menuFor.value;
+    menuFor.value = null;
+    if (n && Bridge.requestOpenNotification(n.key, true))
+        menu.closeAll();
+}
+
+function dismissFromMenu()
+{
+    const n = menuFor.value;
+    menuFor.value = null;
+    if (n) Bridge.requestDismissNotification(n.key, true);
+}
+
+function appInfoFromMenu()
+{
+    const n = menuFor.value;
+    menuFor.value = null;
+    if (n && Bridge.requestOpenAppInfo(n.packageName, true))
+        menu.closeAll();
+}
+
+// the "Reply" field that is open, if any
+const replyTo = ref<{ key: string; action: BridgeNotificationAction } | null>(null);
+const replyText = ref('');
+const replyInput = ref<HTMLInputElement[]>([]);
+
+async function runAction(n: BridgeNotification, action: BridgeNotificationAction)
+{
+    if (action.acceptsText)
+    {
+        replyTo.value = { key: n.key, action };
+        replyText.value = '';
+        await nextTick();
+        replyInput.value[0]?.focus();
+        return;
+    }
+    Bridge.requestNotificationAction(n.key, action.index, true);
+}
+
+function sendReply()
+{
+    const r = replyTo.value;
+    const text = replyText.value.trim();
+    if (!r || !text) return;
+    if (Bridge.requestReplyToNotification(r.key, r.action.index, text, true))
+    {
+        replyTo.value = null;
+        replyText.value = '';
+    }
 }
 
 // like Gingerbread's "Clear" button: dismisses everything that can be dismissed
@@ -115,23 +181,53 @@ function openSystemShade()
                         ]" :key="section.label">
                             <template v-if="section.items.length > 0">
                                 <div class="section">{{ section.label }}</div>
-                                <button
-                                    v-for="n in section.items"
-                                    :key="n.key"
-                                    class="row"
-                                    @click="open(n)">
-                                    <span
-                                        v-if="usesSmallIcon(n)"
-                                        class="small-icon"
-                                        :style="smallIconStyle(n)"
-                                        aria-hidden="true"></span>
-                                    <img v-else :src="iconUrl(n)" alt="" draggable="false" />
-                                    <span class="texts">
-                                        <span class="title">{{ title(n) }}</span>
-                                        <span v-if="n.text" class="text">{{ n.text }}</span>
-                                    </span>
-                                    <span class="time">{{ formatNotificationTime(n.postTime, now) }}</span>
-                                </button>
+                                <div v-for="n in section.items" :key="n.key" class="item">
+                                    <button
+                                        class="row"
+                                        @pointerdown="longPress.down(n, $event)"
+                                        @pointermove="longPress.move"
+                                        @pointerup="longPress.cancel"
+                                        @pointercancel="longPress.cancel"
+                                        @pointerleave="longPress.cancel"
+                                        @contextmenu.prevent
+                                        @click="open(n)">
+                                        <span
+                                            v-if="usesSmallIcon(n)"
+                                            class="small-icon"
+                                            :style="smallIconStyle(n)"
+                                            aria-hidden="true"></span>
+                                        <img v-else :src="iconUrl(n)" alt="" draggable="false" />
+                                        <span class="texts">
+                                            <span class="title">{{ title(n) }}</span>
+                                            <span v-if="n.text" class="text">{{ n.text }}</span>
+                                        </span>
+                                        <span class="time">{{ formatNotificationTime(n.postTime, now) }}</span>
+                                    </button>
+
+                                    <div v-if="supportsActions && n.actions?.length" class="actions">
+                                        <button
+                                            v-for="a in n.actions"
+                                            :key="a.index"
+                                            @click="runAction(n, a)">
+                                            {{ a.title }}
+                                        </button>
+                                    </div>
+
+                                    <form
+                                        v-if="replyTo?.key === n.key"
+                                        class="reply"
+                                        @submit.prevent="sendReply">
+                                        <input
+                                            ref="replyInput"
+                                            v-model="replyText"
+                                            type="text"
+                                            enterkeyhint="send"
+                                            :placeholder="replyTo.action.title"
+                                            :aria-label="replyTo.action.title" />
+                                        <button type="submit" :disabled="!replyText.trim()">Enviar</button>
+                                        <button type="button" class="cancel" aria-label="Cancelar" @click="replyTo = null">×</button>
+                                    </form>
+                                </div>
                             </template>
                         </template>
 
@@ -143,6 +239,18 @@ function openSystemShade()
                 <OverscrollGlow edge="top" :intensity="glow.start.value" :pulling="glow.pulling.value" />
                 <OverscrollGlow edge="bottom" :intensity="glow.end.value" :pulling="glow.pulling.value" />
             </div>
+
+            <!-- the long-press menu, like Gingerbread's context menus -->
+            <GbDialog
+                :open="!!menuFor"
+                :title="menuFor ? title(menuFor) : ''"
+                @close="menuFor = null">
+                <div class="notification-menu">
+                    <button @click="openFromMenu">Abrir</button>
+                    <button v-if="menuFor?.isClearable" @click="dismissFromMenu">Descartar</button>
+                    <button @click="appInfoFromMenu">Información de la app</button>
+                </div>
+            </GbDialog>
 
             <!-- Gingerbread's grip at the bottom of the shade -->
             <button class="handle" aria-label="Cerrar notificaciones" @click="menu.closeAll()">
@@ -222,84 +330,160 @@ $gingerbread-orange: #ffa800;
                 font-weight: bold;
             }
 
-            > .row {
-                appearance: none;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                width: 100%;
-                min-height: 64px;
-                padding: 8px 12px;
-                border: none;
+            > .item {
                 border-bottom: 1px solid #2a2a2a;
-                background: none;
-                color: inherit;
-                font: inherit;
-                text-align: left;
-                cursor: pointer;
 
-                > img {
-                    flex-shrink: 0;
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 3px;
-                    object-fit: cover;
-                }
-
-                // a silhouette, centered in the same 40px box as the images
-                > .small-icon {
-                    flex-shrink: 0;
-                    width: 40px;
-                    height: 40px;
-                    background-color: #e6e6e6;
-                    mask-size: 28px;
-                    mask-repeat: no-repeat;
-                    mask-position: center;
-                    -webkit-mask-size: 28px;
-                    -webkit-mask-repeat: no-repeat;
-                    -webkit-mask-position: center;
-                }
-
-                > .texts {
-                    flex: 1;
-                    min-width: 0;
+                > .row {
+                    appearance: none;
                     display: flex;
-                    flex-direction: column;
-                    gap: 2px;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    min-height: 64px;
+                    padding: 8px 12px;
+                    border: none;
+                    border-bottom: none;
+                    background: none;
+                    color: inherit;
+                    font: inherit;
+                    text-align: left;
+                    cursor: pointer;
 
-                    > .title {
-                        overflow: hidden;
-                        font-size: 16px;
-                        font-weight: bold;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
+                    > img {
+                        flex-shrink: 0;
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 3px;
+                        object-fit: cover;
                     }
 
-                    > .text {
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                        color: #aaa;
-                        font-size: 14px;
-                        line-height: 1.3;
+                    // a silhouette, centered in the same 40px box as the images
+                    > .small-icon {
+                        flex-shrink: 0;
+                        width: 40px;
+                        height: 40px;
+                        background-color: #e6e6e6;
+                        mask-size: 28px;
+                        mask-repeat: no-repeat;
+                        mask-position: center;
+                        -webkit-mask-size: 28px;
+                        -webkit-mask-repeat: no-repeat;
+                        -webkit-mask-position: center;
                     }
-                }
 
-                > .time {
-                    flex-shrink: 0;
-                    align-self: flex-start;
-                    color: #aaa;
-                    font-size: 12px;
-                }
+                    > .texts {
+                        flex: 1;
+                        min-width: 0;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
 
-                &:active {
-                    background: linear-gradient(to bottom, #ffc64d, #ff8a00);
-                    color: #111;
+                        > .title {
+                            overflow: hidden;
+                            font-size: 16px;
+                            font-weight: bold;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
 
-                    > .texts > .text,
+                        > .text {
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                            color: #aaa;
+                            font-size: 14px;
+                            line-height: 1.3;
+                        }
+                    }
+
                     > .time {
-                        color: #333;
+                        flex-shrink: 0;
+                        align-self: flex-start;
+                        color: #aaa;
+                        font-size: 12px;
+                    }
+
+                    &:active {
+                        background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+                        color: #111;
+
+                        > .texts > .text,
+                        > .time {
+                            color: #333;
+                        }
+                    }
+                }
+
+                // the notification's buttons, in a row under it
+                > .actions {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    padding: 0 12px 8px 64px;
+
+                    > button {
+                        appearance: none;
+                        min-height: 32px;
+                        padding: 4px 12px;
+                        border: 1px solid #5a5a5a;
+                        border-radius: 4px;
+                        background: linear-gradient(to bottom, #4a4a4a, #2c2c2c);
+                        color: #e8e8e8;
+                        font: inherit;
+                        font-size: 13px;
+                        cursor: pointer;
+
+                        &:active {
+                            background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+                            color: #111;
+                        }
+                    }
+                }
+
+                // the "Reply" field
+                > .reply {
+                    display: flex;
+                    gap: 6px;
+                    padding: 0 12px 10px 64px;
+
+                    > input {
+                        flex: 1;
+                        min-width: 0;
+                        padding: 6px 10px;
+                        border: 1px solid #ffa800;
+                        border-radius: 3px;
+                        background: #fff;
+                        color: #111;
+                        font: inherit;
+                        font-size: 15px;
+                        outline: none;
+                    }
+
+                    > button {
+                        appearance: none;
+                        padding: 4px 12px;
+                        border: 1px solid #5a5a5a;
+                        border-radius: 4px;
+                        background: linear-gradient(to bottom, #f4f4f4, #c9c9c9);
+                        color: #111;
+                        font: inherit;
+                        font-size: 14px;
+                        cursor: pointer;
+
+                        &:disabled {
+                            opacity: 0.5;
+                        }
+
+                        &.cancel {
+                            padding: 4px 10px;
+                            font-size: 18px;
+                            line-height: 1;
+                        }
+
+                        &:active:not(:disabled) {
+                            background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+                        }
                     }
                 }
             }
@@ -371,6 +555,34 @@ $gingerbread-orange: #ffa800;
 
         &:active {
             background: linear-gradient(to bottom, rgba($gingerbread-orange, 0.9), #ff8a00);
+        }
+    }
+}
+
+// the long-press menu's rows, like the other Gingerbread lists
+.notification-menu {
+    display: flex;
+    flex-direction: column;
+
+    > button {
+        appearance: none;
+        min-height: 52px;
+        padding: 8px 16px;
+        border: none;
+        border-bottom: 1px solid rgba(#000, 0.15);
+        background: none;
+        color: inherit;
+        font: inherit;
+        font-size: 17px;
+        text-align: left;
+        cursor: pointer;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:active {
+            background: linear-gradient(to bottom, #ffc64d, #ff8a00);
         }
     }
 }

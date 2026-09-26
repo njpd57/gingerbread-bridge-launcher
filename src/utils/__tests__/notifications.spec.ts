@@ -7,7 +7,7 @@ function notification(key: string, packageName: string, postTime: number, extra:
     return {
         key, packageName, postTime,
         title: null, text: null, subText: null, category: null,
-        isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false,
+        isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false, actions: [],
         ...extra,
     };
 }

@@ -7,12 +7,13 @@ const MOCK_NOTIFICATIONS: BridgeGetNotificationsResponse = {
         {
             key: '0|com.google.android.gm|1|null|10001', packageName: 'com.google.android.gm', postTime: Date.now() - 60_000,
             title: 'Nuevo correo', text: 'Hola, ¿cómo va el launcher?', subText: null, category: 'email',
-            isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false,
+            isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false, actions: [],
         },
         {
             key: '0|com.whatsapp|1|null|10002', packageName: 'com.whatsapp', postTime: Date.now() - 300_000,
             title: 'Ana', text: '¿Nos vemos mañana?', subText: null, category: 'msg',
             isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false,
+            actions: [{ index: 0, title: 'Responder', acceptsText: true }, { index: 1, title: 'Marcar como leído', acceptsText: false }],
         },
     ],
 };
@@ -175,6 +176,18 @@ class ForkBridgeMock extends BridgeMock
 
     getLocationEnabled()
     {
+        return true;
+    }
+
+    requestNotificationAction(key: string, actionIndex: number)
+    {
+        alert(`Would press action ${actionIndex} of ${key}.`);
+        return true;
+    }
+
+    requestReplyToNotification(key: string, actionIndex: number, text: string)
+    {
+        alert(`Would reply "${text}" to ${key} (action ${actionIndex}).`);
         return true;
     }
 
