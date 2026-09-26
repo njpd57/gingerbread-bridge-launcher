@@ -22,7 +22,7 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Arrastra apps encima de una carpeta para meterlas.
   - Tócala para abrirla y toca su título para cambiarle el nombre.
   - Desde una carpeta abierta puedes sacar apps arrastrándolas.
-- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), reloj digital (4×1, con la fuente del reloj de Android 2.x), calendario del mes (4×2), batería (1×1), frase del día (4×1), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes, y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
+- **Widgets**: reloj analógico (2×2), reloj analógico grande (4×2), reloj digital (4×1, con la fuente del reloj de Android 2.x), calendario del mes (4×2), batería (1×1), frase del día (4×1), el tiempo (4×1) con datos de [Open-Meteo](https://open-meteo.com/), **Control de energía** (4×1) con bloquear pantalla, modo noche, notificaciones y ajustes (con nuestro fork de Bridge: Wi-Fi, Bluetooth, GPS, sincronización y brillo, como el original; mantén pulsado el brillo para el modo noche y la sincronización para bloquear), y **Búsqueda de aplicaciones** (4×1): la barra de búsqueda de Gingerbread, que abre un buscador de apps instaladas (sin tildes ni mayúsculas, con las apps recientes).
 - **Fondo animado "Nexus"**: pulsos de luz de colores que recorren la pantalla. Al tocar un hueco vacío salen pulsos desde ese punto.
   - Se puede configurar la cantidad de pulsos, la velocidad y los fps (30, 60 o 120).
   - También puedes usar el fondo de pantalla del sistema.
@@ -65,14 +65,14 @@ Para activar el botón del modo noche, mira [Permisos opcionales](#permisos-opci
 
 ## Permisos opcionales
 
-Algunas funciones necesitan permisos que Bridge no pide por sí solo. Sin ellos el launcher funciona igual, pero esos botones del widget **Control de energía** se ven apagados y, al tocarlos, explican qué falta.
+Algunas funciones necesitan permisos que Bridge no pide por sí solo. Sin ellos el launcher funciona igual, pero esos botones del widget **Control de energía** o del panel de notificaciones se ven apagados y, al tocarlos, explican qué falta.
 
 | Función | Qué hace falta | Cómo |
 |---|---|---|
 | **Modo noche** (botón de la luna) | Permiso `WRITE_SECURE_SETTINGS` para Bridge | Con el teléfono conectado por adb (depuración USB activada): `npm run grant-permissions`, o a mano: `adb shell pm grant com.tored.bridgelauncher android.permission.WRITE_SECURE_SETTINGS` |
 | **Música** (widget y panel de notificaciones) | Nuestro fork de Bridge y el acceso a notificaciones | El mismo acceso que las notificaciones reales: Android solo muestra qué suena a las apps con ese acceso |
 | **Notificaciones reales** en la barra de estado Gingerbread | Nuestro [fork de Bridge](https://github.com/njpd57/bridge-launcher) y el acceso a notificaciones | En **Apariencia**, con la barra Gingerbread elegida, toca "Mostrar notificaciones reales" y activa Bridge en la pantalla que se abre. Sin el acceso, los iconos de notificaciones son decorativos |
-| **Brillo y rotación** en el panel de notificaciones | Nuestro fork de Bridge y el permiso "Modificar ajustes del sistema" | Al tocar esos botones por primera vez se abre la pantalla del permiso: activa Bridge. Linterna y sincronización no necesitan permiso. Wi-Fi y Bluetooth solo abren el panel de Android, porque las apps ya no pueden cambiarlos |
+| **Brillo y rotación** en el panel de notificaciones (el brillo también en el widget Control de energía) | Nuestro fork de Bridge y el permiso "Modificar ajustes del sistema" | Al tocar esos botones por primera vez se abre la pantalla del permiso: activa Bridge. Linterna y sincronización no necesitan permiso. Wi-Fi, Bluetooth y GPS solo abren el panel de Android, porque las apps ya no pueden cambiarlos |
 | **Bloquear pantalla** (botón del candado) | El servicio de accesibilidad de Bridge y permitir el bloqueo | En Android: *Ajustes → Accesibilidad → Bridge* (activar), y en los ajustes de Bridge, permitir que el proyecto bloquee la pantalla. Después de bloquear así, se desbloquea con PIN o patrón, no con huella |
 
 Sobre el permiso del modo noche:

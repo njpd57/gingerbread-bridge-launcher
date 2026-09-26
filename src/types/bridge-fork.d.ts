@@ -56,6 +56,8 @@ export interface BridgeNotification
     isClearable: boolean;
     /** Summary of a group of notifications from the same app; the group's notifications are also listed. */
     isGroupSummary: boolean;
+    /** A media player's notification (it carries a media session); the launcher shows a player instead. */
+    isMedia: boolean;
     hasLargeIcon: boolean;
 }
 

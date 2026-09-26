@@ -36,6 +36,38 @@ export const useTogglesStore = defineStore('toggles', () =>
 
     readPermissions();
 
+    // explain what's missing instead of failing silently
+    function lockScreen()
+    {
+        if (!supportsLockScreen)
+        {
+            Bridge.showToast('Tu versión de Bridge no permite bloquear la pantalla.');
+            return false;
+        }
+        if (!canLockScreen.value)
+        {
+            Bridge.showToast('Para bloquear, activa el servicio de accesibilidad de Bridge y permite bloquear la pantalla en sus ajustes.', true);
+            Bridge.requestOpenBridgeSettings(true);
+            return false;
+        }
+        return Bridge.requestLockScreen(true);
+    }
+
+    function toggleNightMode()
+    {
+        if (!supportsNightMode)
+        {
+            Bridge.showToast('Tu versión de Bridge no permite cambiar el modo noche.');
+            return;
+        }
+        if (!canRequestSystemNightMode.value)
+        {
+            Bridge.showToast('Bridge necesita el permiso WRITE_SECURE_SETTINGS para cambiar el modo noche (se concede una vez por adb).', true);
+            return;
+        }
+        Bridge.requestSetSystemNightMode(systemNightMode.value === 'yes' ? 'no' : 'yes');
+    }
+
     bridgeEvents.addEventListener(ev =>
     {
         if (ev.name === 'bridgeButtonVisibilityChanged')
@@ -98,5 +130,7 @@ export const useTogglesStore = defineStore('toggles', () =>
         supportsNightMode,
         canLockScreen: readonly(canLockScreen),
         canRequestSystemNightMode: readonly(canRequestSystemNightMode),
+        lockScreen,
+        toggleNightMode,
     };
 });

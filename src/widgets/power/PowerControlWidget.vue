@@ -2,17 +2,62 @@
 import { computed } from 'vue';
 import { useTogglesStore } from '@/stores/useTogglesStore';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
+import { useQuickSettingsStore } from '@/stores/useQuickSettingsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
+import { useDeviceStatus } from '@/statusbar/useDeviceStatus';
+import { useLongPress } from '@/composables/useLongPress';
+import { brightnessStep, nextBrightnessStep } from '@/utils/brightness';
+import { brightnessIndicator, nightModeIndicator, onOffIndicator, type Indicator } from '@/utils/indicators';
+import WifiIcon from '@/home/icons/WifiIcon.vue';
+import BluetoothIcon from '@/home/icons/BluetoothIcon.vue';
+import LocationIcon from '@/home/icons/LocationIcon.vue';
+import SyncIcon from '@/home/icons/SyncIcon.vue';
+import BrightnessIcon from '@/home/icons/BrightnessIcon.vue';
+import LockIcon from '@/home/icons/LockIcon.vue';
+import NightModeIcon from '@/home/icons/NightModeIcon.vue';
+import NotificationsIcon from '@/home/icons/NotificationsIcon.vue';
+import SettingsIcon from '@/home/icons/SettingsIcon.vue';
 
-// A take on Android 2.x's "Power control" widget: a row of buttons, each with an indicator bar
-// underneath (green = on, amber = in between, gray = off). Bridge can't toggle Wi-Fi, Bluetooth,
-// GPS or brightness, so these are the actions it can do.
-
-type Indicator = 'on' | 'mid' | 'off' | 'none';
+// Android 2.x's "Power control" widget: a row of buttons, each with an indicator bar underneath.
+// With our Bridge fork it's the original set (Wi-Fi, Bluetooth, GPS, sync, brightness); Wi-Fi,
+// Bluetooth and GPS only open Android's panels, and their state can't be read yet (see FEATURES.md).
+// Stock Bridge can toggle none of those, so it gets the actions it can do instead. With the fork,
+// long-pressing brightness toggles night mode and long-pressing sync locks the screen.
 
 const toggles = useTogglesStore();
 const notifications = useNotificationsStore();
+const qs = useQuickSettingsStore();
 const menu = useMenuStore();
+const device = useDeviceStatus();
+
+const step = computed(() => brightnessStep(qs.brightness));
+
+// the fork can't tell whether Wi-Fi is on, but a Wi-Fi connection means it is (hidden when the
+// WebView doesn't report the connection type)
+const wifiIndicator = computed<Indicator>(() =>
+    device.connectionType.value === null ? 'none' : onOffIndicator(device.connectionType.value === 'wifi'));
+
+// these buttons stop the press from reaching HomeGrid, whose long press would start dragging the widget
+// (the other buttons still move it)
+const press = useLongPress<'night' | 'lock'>(action =>
+{
+    if (action === 'night')
+        toggles.toggleNightMode();
+    else
+        toggles.lockScreen();
+});
+
+function onSyncClick()
+{
+    if (!press.consumeLongPress())
+        qs.toggleMasterSync();
+}
+
+function onBrightnessClick()
+{
+    if (!press.consumeLongPress())
+        qs.setBrightness(nextBrightnessStep(step.value));
+}
 
 // our own notification panel with the Bridge fork, Android's shade otherwise
 function openNotifications()
@@ -23,93 +68,73 @@ function openNotifications()
         Bridge.requestExpandNotificationShade(true);
 }
 
-const lockIndicator = computed<Indicator>(() => toggles.canLockScreen ? 'on' : 'off');
-
-const nightIndicator = computed<Indicator>(() =>
-{
-    if (!toggles.canRequestSystemNightMode) return 'off';
-    switch (toggles.systemNightMode)
-    {
-        case 'yes': return 'on';
-        case 'auto':
-        case 'custom': return 'mid';
-        default: return 'off';
-    }
-});
-
-function lockScreen()
-{
-    if (!toggles.supportsLockScreen)
-    {
-        Bridge.showToast('Tu versión de Bridge no permite bloquear la pantalla.');
-        return;
-    }
-    if (!toggles.canLockScreen)
-    {
-        Bridge.showToast('Para bloquear, activa el servicio de accesibilidad de Bridge y permite bloquear la pantalla en sus ajustes.', true);
-        Bridge.requestOpenBridgeSettings(true);
-        return;
-    }
-    Bridge.requestLockScreen(true);
-}
-
-function toggleNightMode()
-{
-    if (!toggles.supportsNightMode)
-    {
-        Bridge.showToast('Tu versión de Bridge no permite cambiar el modo noche.');
-        return;
-    }
-    if (!toggles.canRequestSystemNightMode)
-    {
-        Bridge.showToast('Bridge necesita el permiso WRITE_SECURE_SETTINGS para cambiar el modo noche (se concede una vez por adb).', true);
-        return;
-    }
-    toggles.systemNightMode = toggles.systemNightMode === 'yes' ? 'no' : 'yes';
-}
-
 </script>
 
 <template>
-    <div class="power-control">
-        <button class="toggle" :class="{ unavailable: !toggles.canLockScreen }" aria-label="Bloquear pantalla" @click="lockScreen">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M10 14v-4a6 6 0 0 1 12 0v4" fill="none" stroke="currentColor" stroke-width="3" />
-                <rect x="7" y="14" width="18" height="14" rx="2" fill="currentColor" />
-                <circle cx="16" cy="20" r="2" fill="#1a1a1a" />
-                <rect x="15" y="21" width="2" height="4" fill="#1a1a1a" />
-            </svg>
-            <span class="indicator" :class="lockIndicator"></span>
+    <div v-if="qs.isSupported" class="power-control">
+        <button class="toggle" aria-label="Wi-Fi" @click="qs.openPanel('wifi')">
+            <WifiIcon />
+            <span class="indicator" :class="wifiIndicator"></span>
         </button>
 
-        <button class="toggle" :class="{ unavailable: !toggles.canRequestSystemNightMode }" aria-label="Modo noche" @click="toggleNightMode">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M20 4a12 12 0 1 0 8 19 10 10 0 0 1-8-19z" fill="currentColor" />
-            </svg>
-            <span class="indicator" :class="nightIndicator"></span>
+        <button class="toggle" aria-label="Bluetooth" @click="qs.openPanel('bluetooth')">
+            <BluetoothIcon />
+            <span class="indicator none"></span>
+        </button>
+
+        <button class="toggle" aria-label="Ubicación" @click="qs.openPanel('location')">
+            <LocationIcon />
+            <span class="indicator none"></span>
+        </button>
+
+        <button
+            class="toggle"
+            aria-label="Sincronización (mantén pulsado para bloquear la pantalla)"
+            @pointerdown.stop="press.down('lock', $event)"
+            @pointermove="press.move"
+            @pointerup="press.cancel"
+            @pointercancel="press.cancel"
+            @pointerleave="press.cancel"
+            @contextmenu.prevent
+            @click="onSyncClick">
+            <SyncIcon />
+            <span class="indicator" :class="onOffIndicator(qs.masterSyncOn)"></span>
+        </button>
+
+        <button
+            class="toggle"
+            :class="{ unavailable: !qs.canWriteSystemSettings }"
+            aria-label="Brillo (mantén pulsado para el modo noche)"
+            @pointerdown.stop="press.down('night', $event)"
+            @pointermove="press.move"
+            @pointerup="press.cancel"
+            @pointercancel="press.cancel"
+            @pointerleave="press.cancel"
+            @contextmenu.prevent
+            @click="onBrightnessClick">
+            <BrightnessIcon :step="step" />
+            <span class="indicator" :class="brightnessIndicator(step)"></span>
+        </button>
+    </div>
+
+    <div v-else class="power-control">
+        <button class="toggle" :class="{ unavailable: !toggles.canLockScreen }" aria-label="Bloquear pantalla" @click="toggles.lockScreen()">
+            <LockIcon />
+            <span class="indicator" :class="onOffIndicator(toggles.canLockScreen)"></span>
+        </button>
+
+        <button class="toggle" :class="{ unavailable: !toggles.canRequestSystemNightMode }" aria-label="Modo noche" @click="toggles.toggleNightMode()">
+            <NightModeIcon />
+            <span class="indicator" :class="nightModeIndicator(toggles.systemNightMode, toggles.canRequestSystemNightMode)"></span>
         </button>
 
         <button class="toggle" aria-label="Notificaciones" @click="openNotifications">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-                <rect x="5" y="4" width="22" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2.5" />
-                <path d="M9 9h14M9 13h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                <path d="M11 22l5 5 5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <NotificationsIcon />
             <span class="indicator none"></span>
         </button>
 
         <button class="toggle" aria-label="Ajustes" @click="Bridge.requestOpenAndroidSettings(true)">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-                <g fill="currentColor">
-                    <rect
-                        v-for="a in 8"
-                        :key="a"
-                        x="14" y="3" width="4" height="7" rx="1"
-                        :transform="`rotate(${a * 45} 16 16)`" />
-                </g>
-                <circle cx="16" cy="16" r="8.5" fill="currentColor" />
-                <circle cx="16" cy="16" r="3.5" fill="#1a1a1a" />
-            </svg>
+            <SettingsIcon />
             <span class="indicator none"></span>
         </button>
     </div>

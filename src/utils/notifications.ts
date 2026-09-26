@@ -26,11 +26,14 @@ export interface NotificationPanelSections
     others: BridgeNotification[];
 }
 
-/** Gingerbread's notification panel: "ongoing" ones first, then the rest, each newest first. */
-export function notificationPanelSections(notifications: Iterable<BridgeNotification>): NotificationPanelSections
+/**
+ * Gingerbread's notification panel: "ongoing" ones first, then the rest, each newest first.
+ * With `hideMedia`, media players' notifications are left out, because the panel shows its own player.
+ */
+export function notificationPanelSections(notifications: Iterable<BridgeNotification>, hideMedia = false): NotificationPanelSections
 {
     const shown = [...notifications]
-        .filter(n => !n.isGroupSummary)
+        .filter(n => !n.isGroupSummary && !(hideMedia && n.isMedia))
         .sort((a, b) => b.postTime - a.postTime);
 
     return {

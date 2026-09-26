@@ -7,7 +7,7 @@ function notification(key: string, packageName: string, postTime: number, extra:
     return {
         key, packageName, postTime,
         title: null, text: null, subText: null, category: null,
-        isOngoing: false, isClearable: true, isGroupSummary: false, hasLargeIcon: false,
+        isOngoing: false, isClearable: true, isGroupSummary: false, isMedia: false, hasLargeIcon: false,
         ...extra,
     };
 }
@@ -52,6 +52,16 @@ describe('notificationPanelSections', () =>
         ]);
         expect(sections.ongoing.map(n => n.key)).toEqual(['usb']);
         expect(sections.others.map(n => n.key)).toEqual(['new', 'old']);
+    });
+
+    it('leaves out media notifications when the panel shows its own player', () =>
+    {
+        const list = [
+            notification('player', 'com.spotify.music', 100, { isOngoing: true, isMedia: true }),
+            notification('download', 'com.spotify.music', 50, { isOngoing: true }),
+        ];
+        expect(notificationPanelSections(list, true).ongoing.map(n => n.key)).toEqual(['download']);
+        expect(notificationPanelSections(list, false).ongoing.map(n => n.key)).toEqual(['player', 'download']);
     });
 });
 

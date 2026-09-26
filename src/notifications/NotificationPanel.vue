@@ -32,7 +32,8 @@ const now = useNow({ interval: 60_000 });
 const dateLabel = computed(() =>
     new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' }).format(now.value));
 
-const sections = computed(() => notificationPanelSections(notifications.notifications));
+// the player above the list already stands for the media app's notification
+const sections = computed(() => notificationPanelSections(notifications.notifications, !!media.session));
 const isEmpty = computed(() => sections.value.ongoing.length === 0 && sections.value.others.length === 0);
 const hasClearable = computed(() => [...sections.value.ongoing, ...sections.value.others].some(n => n.isClearable));
 
