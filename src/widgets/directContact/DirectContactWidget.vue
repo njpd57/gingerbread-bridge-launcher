@@ -69,6 +69,10 @@ function pick(row: NumberRow)
         hasPhoto: row.contact.hasPhoto,
     };
     isPicking.value = false;
+    // ask for CALL_PHONE right away, so the icon can call directly from the first tap on;
+    // without it requestCallPhoneNumber() just opens the dialer, silently, forever
+    if (props.mode === 'call' && !contacts.canCall)
+        contacts.requestCallAccess();
 }
 
 const message = computed(() =>
