@@ -34,10 +34,17 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
     const isBluetoothAvailable = supportsRadioStates && Bridge.getIsBluetoothAvailable();
     const wifiOn = ref(supportsRadioStates && Bridge.getWifiEnabled());
     const bluetoothOn = ref(supportsRadioStates && Bridge.getBluetoothEnabled());
+    // location has no button (it could only open a panel), but the status bar shows the GPS icon
+    const supportsLocationState = bridgeHas('getLocationEnabled');
+    const locationOn = ref(supportsLocationState && Bridge.getLocationEnabled());
 
     const supportsRingerMode = bridgeHas('getRingerMode') && bridgeHas('requestSetRingerMode');
     const canAccessNotificationPolicy = ref(supportsRingerMode && bridgeHas('getCanAccessNotificationPolicy') && Bridge.getCanAccessNotificationPolicy());
     const ringerMode = ref<BridgeRingerMode>(supportsRingerMode ? Bridge.getRingerMode() : 'normal');
+
+    // media volume, 0 to 1; no special permission
+    const supportsMusicVolume = bridgeHas('getMusicVolume') && bridgeHas('requestSetMusicVolume');
+    const musicVolume = ref(supportsMusicVolume ? Bridge.getMusicVolume() : 0);
 
     if (isSupported)
     {
@@ -57,6 +64,10 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
                 wifiOn.value = ev.newValue;
             else if (ev.name === 'bluetoothEnabledChanged')
                 bluetoothOn.value = ev.newValue;
+            else if (ev.name === 'locationEnabledChanged')
+                locationOn.value = ev.newValue;
+            else if (ev.name === 'musicVolumeChanged')
+                musicVolume.value = ev.newValue;
             else if (ev.name === 'ringerModeChanged')
                 ringerMode.value = ev.newValue;
             else if (ev.name === 'canAccessNotificationPolicyChanged')
@@ -92,9 +103,13 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
         isBluetoothAvailable,
         wifiOn,
         bluetoothOn,
+        supportsLocationState,
+        locationOn,
         supportsRingerMode,
         canAccessNotificationPolicy,
         ringerMode,
+        supportsMusicVolume,
+        musicVolume,
 
         openPanel: (panel: BridgeSystemPanel) => Bridge.requestOpenSystemPanel(panel, true),
         toggleFlashlight: () => Bridge.requestSetFlashlightOn(!flashlightOn.value, true),
@@ -111,6 +126,11 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
                 Bridge.requestSetScreenBrightnessAuto(true, true);
             else
                 Bridge.requestSetScreenBrightnessLevel(BRIGHTNESS_LEVELS[step], true);
+        },
+        setMusicVolume(level: number)
+        {
+            musicVolume.value = level;
+            Bridge.requestSetMusicVolume(Math.min(1, Math.max(0, level)), true);
         },
         cycleRingerMode()
         {

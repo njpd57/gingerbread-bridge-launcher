@@ -9,6 +9,9 @@ import LiveNotificationIcons from './LiveNotificationIcons.vue';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useConnectivityStore } from '@/stores/useConnectivityStore';
+import { useBatteryStore } from '@/stores/useBatteryStore';
+import { useQuickSettingsStore } from '@/stores/useQuickSettingsStore';
+import { useAlarmStore } from '@/stores/useAlarmStore';
 import { dataActivityArrows, wifiArcs } from '@/utils/connectivity';
 
 const props = defineProps<{
@@ -68,10 +71,20 @@ const activity = computed(() =>
     return { in: simulated.activityIn.value, out: simulated.activityOut.value };
 });
 
-// without the Battery Status API, show a full battery
-const batteryLevel = computed(() => device.batteryLevel.value ?? 1);
+// our Bridge fork reports the real battery; stock Bridge the web API, and a full battery without it
+const battery = useBatteryStore();
+const batteryLevel = computed(() => battery.level ?? 1);
 const batteryFillHeight = computed(() => Math.max(1, Math.round(batteryLevel.value * 14)));
-const isBatteryLow = computed(() => device.batteryLevel.value !== null && batteryLevel.value <= 0.15 && !device.charging.value);
+const isBatteryLow = computed(() => battery.level !== null && batteryLevel.value <= 0.15 && !battery.charging);
+// Gingerbread's state icons left of the signal, from our Bridge fork: Bluetooth on, an alarm set, GPS
+// on, and the ringer in vibrate or silent
+const qs = useQuickSettingsStore();
+// and an alarm clock while an alarm is set
+const alarm = useAlarmStore();
+
+// Gingerbread's USB icon: only for a USB cable when the fork says how it's plugged in, on any
+// charger otherwise
+const usbConnected = computed(() => battery.charging && (battery.pluggedType === null || battery.pluggedType === 'usb'));
 
 </script>
 
@@ -86,9 +99,40 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
 
         <!-- real icons when Bridge can read notifications, decorative ones otherwise -->
         <LiveNotificationIcons v-if="notifications.canRead" class="notifications" />
-        <NotificationIcons v-else class="notifications" :charging="device.charging.value" />
+        <NotificationIcons v-else class="notifications" :usb="usbConnected" />
 
         <div class="icons">
+            <!-- Bluetooth on: the rune -->
+            <svg v-if="qs.supportsRadioStates && qs.bluetoothOn" class="icon state" viewBox="0 0 12 18" aria-hidden="true">
+                <path d="M2.5 5.5l7 6.5-3.5 3.3V2.7L9.5 6l-7 6.5" class="line" />
+            </svg>
+
+            <!-- an alarm is set: the alarm clock -->
+            <svg v-if="alarm.nextAlarm" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+                <circle cx="9" cy="10" r="6" class="line" />
+                <path d="M9 6.8v3.5l2.2 1.4M2.5 4.5l2.8-2.3M15.5 4.5l-2.8-2.3" class="line" />
+            </svg>
+
+            <!-- GPS on: a crosshair -->
+            <svg v-if="qs.supportsLocationState && qs.locationOn" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+                <circle cx="9" cy="9" r="5" class="line" />
+                <circle cx="9" cy="9" r="1.8" class="solid" />
+                <path d="M9 1v3M9 14v3M1 9h3M14 9h3" class="line" />
+            </svg>
+
+            <!-- vibrate: a phone between shake marks -->
+            <svg v-if="qs.supportsRingerMode && qs.ringerMode === 'vibrate'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+                <rect x="5.5" y="2" width="7" height="14" rx="1" class="solid" />
+                <rect x="7" y="4" width="4" height="8" class="hole" />
+                <path d="M3 5.5v7M1 7.5v3M15 5.5v7M17 7.5v3" class="line" />
+            </svg>
+
+            <!-- silent: a speaker with a slash -->
+            <svg v-if="qs.supportsRingerMode && qs.ringerMode === 'silent'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M2 7h3l4-3.5v11L5 11H2z" class="solid" />
+                <path d="M11 6l5 6M16 6l-5 6" class="line" />
+            </svg>
+
             <!-- data activity: down (in) and up (out) arrows, lit while "transferring" -->
             <svg class="icon activity" viewBox="0 0 8 18" aria-hidden="true">
                 <path d="M4 17L0.8 12.5h6.4z" :class="{ on: activity.in }" />
@@ -122,7 +166,7 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
                     width="6"
                     :height="batteryFillHeight"
                     class="fill" />
-                <path v-if="device.charging.value" d="M5.8 5L2.8 10.4h2l-.6 3.6 3-5.4h-2z" class="bolt" />
+                <path v-if="battery.charging" d="M5.8 5L2.8 10.4h2l-.6 3.6 3-5.4h-2z" class="bolt" />
             </svg>
         </div>
 
@@ -200,6 +244,28 @@ $gb-dim-light: rgba(#000, 0.2);
 
             &.wifi {
                 width: 18px;
+            }
+
+            // state icons are drawn in white, like 2.3's, not green
+            &.state {
+                width: auto;
+
+                > .solid,
+                > .solid.on {
+                    fill: #e8e8e8;
+                }
+
+                > .line {
+                    fill: none;
+                    stroke: #e8e8e8;
+                    stroke-width: 1.6;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+                > .hole {
+                    fill: #000;
+                }
             }
 
             &.signal {
@@ -287,6 +353,20 @@ $gb-dim-light: rgba(#000, 0.2);
 
             &.activity > path.on {
                 fill: #111;
+            }
+
+            &.state {
+                > .solid {
+                    fill: #3a3a3a;
+                }
+
+                > .line {
+                    stroke: #3a3a3a;
+                }
+
+                > .hole {
+                    fill: #e8e8e8;
+                }
             }
 
             &.battery {

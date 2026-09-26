@@ -12,3 +12,10 @@ export function findClockApp(isInstalled: (packageName: string) => boolean): str
 {
     return CLOCK_APP_PACKAGES.find(isInstalled) ?? null;
 }
+
+/** A time as Gingerbread's status bar writes it, 12-hour with AM/PM: "7:05 AM". */
+export function formatClockTime(date: Date): string
+{
+    const h = date.getHours();
+    return `${h % 12 === 0 ? 12 : h % 12}:${String(date.getMinutes()).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+}

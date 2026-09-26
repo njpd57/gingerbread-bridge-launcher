@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useNow } from '@vueuse/core';
-import { useAppsStore } from '@/stores/useAppsStore';
-import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
-import { findClockApp } from '@/utils/clock';
+import { useAlarmStore } from '@/stores/useAlarmStore';
+import { formatClockTime } from '@/utils/clock';
 
 // Big digital time with the date underneath, like the Android 2.x lock screen clock
 // (Clockopia digits, 12-hour with a small AM/PM, like the Gingerbread status bar).
@@ -29,14 +28,15 @@ const date = computed(() =>
 
 // tapping the clock opens a clock app, like Gingerbread's alarm app; long-pressing still drags it
 // (HomeGrid discards the click that ends a long press before it reaches us)
-const apps = useAppsStore();
-const launcher = useAppLauncherStore();
+const alarm = useAlarmStore();
 
 function openClockApp()
 {
-    const pkg = findClockApp(p => apps.apps.has(p));
-    if (pkg) launcher.launch(pkg);
+    alarm.openAlarms();
 }
+
+// the next alarm next to the date, like the Android 2.x lock screen ("7:00 AM"); needs our Bridge fork
+const nextAlarm = computed(() => alarm.nextAlarm ? formatClockTime(new Date(alarm.nextAlarm.triggerTime)) : null);
 </script>
 
 <template>
@@ -45,7 +45,16 @@ function openClockApp()
             <span class="hm">{{ time.hm }}</span>
             <span class="ampm">{{ time.ampm }}</span>
         </div>
-        <div class="date">{{ date }}</div>
+        <div class="date">
+            <span>{{ date }}</span>
+            <span v-if="nextAlarm" class="alarm">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <circle cx="8" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M8 6v3.2l2 1.3M2 4l2.5-2M14 4l-2.5-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+                {{ nextAlarm }}
+            </span>
+        </div>
     </div>
 </template>
 
@@ -78,8 +87,23 @@ function openClockApp()
     }
 
     > .date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         font-size: 16px;
         color: rgba(#fff, 0.9);
+
+        > .alarm {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 14px;
+
+            > svg {
+                width: 13px;
+                height: 13px;
+            }
+        }
     }
 }
 </style>

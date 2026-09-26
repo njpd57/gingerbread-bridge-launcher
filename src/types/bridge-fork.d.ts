@@ -39,6 +39,15 @@ export type BridgePluggedType = 'ac' | 'usb' | 'wireless' | 'other';
 
 export type BridgeRingerMode = 'normal' | 'vibrate' | 'silent';
 
+/** The next alarm clock set on the device, from `getNextAlarm()` and `nextAlarmChanged`. */
+export interface BridgeNextAlarm
+{
+    /** When it goes off, in ms since the epoch. */
+    triggerTime: number;
+    /** The app that set it, if Android says. */
+    packageName: string | null;
+}
+
 /** The device's battery, from `getBattery()` and `batteryChanged`. */
 export interface BridgeBattery
 {
@@ -214,6 +223,7 @@ export type BridgeForkEvent =
     | { name: 'locationEnabledChanged'; newValue: boolean }
     | { name: 'connectivityChanged'; newValue: BridgeConnectivity }
     | { name: 'batteryChanged'; newValue: BridgeBattery }
+    | { name: 'nextAlarmChanged'; newValue: BridgeNextAlarm | null }
     | { name: 'canReadCalendarChanged'; newValue: boolean }
     | { name: 'calendarChanged' }
     | { name: 'canReadUsageStatsChanged'; newValue: boolean }
@@ -335,6 +345,11 @@ declare module '@bridgelauncher/api'
 
         /** A {@link BridgeBattery} as JSON. Fires `batteryChanged`. */
         getBattery(): string;
+
+        /** The next alarm clock as a {@link BridgeNextAlarm} in JSON, or `"null"`. Fires `nextAlarmChanged`. */
+        getNextAlarm(): string;
+        /** Opens the alarm list of the clock app (`AlarmClock.ACTION_SHOW_ALARMS`). */
+        requestOpenAlarms(showToastIfFailed?: boolean): boolean;
 
         getIsFlashlightAvailable(): boolean;
         /** Fires `flashlightChanged`. */

@@ -344,6 +344,21 @@ class ForkBridgeMock extends BridgeMock
         return JSON.stringify({ level: 72, isCharging: false, pluggedType: null });
     }
 
+    getNextAlarm()
+    {
+        // tomorrow at 7:00
+        const alarm = new Date();
+        alarm.setDate(alarm.getDate() + 1);
+        alarm.setHours(7, 0, 0, 0);
+        return JSON.stringify({ triggerTime: alarm.getTime(), packageName: 'com.google.android.deskclock' });
+    }
+
+    requestOpenAlarms()
+    {
+        alert('Would open the clock app\'s alarms.');
+        return true;
+    }
+
     getIsFlashlightAvailable()
     {
         return true;

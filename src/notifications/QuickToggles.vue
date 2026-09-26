@@ -5,11 +5,13 @@ import { brightnessStep, nextBrightnessStep, type BrightnessStep } from '@/utils
 import { ringerModeIndicator } from '@/utils/indicators';
 import type { BridgeRingerMode } from '@/types/bridge-fork';
 import AudioIcon from '@/home/icons/AudioIcon.vue';
+import { useLongPress } from '@/composables/useLongPress';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 // The row of quick settings at the top of our notification panel, drawn like Gingerbread's power
 // control widget (indicator bar: green = on, amber = in between, gray = off). Flashlight, brightness,
-// auto-rotate, sync and ringer mode change directly; Wi-Fi and Bluetooth can only open Android's
-// panel for them, but show whether they're on.
+// auto-rotate, sync and ringer mode change directly (long-pressing ringer mode opens the volume panel);
+// Wi-Fi and Bluetooth can only open Android's panel for them, but show whether they're on.
 
 type Indicator = 'on' | 'mid' | 'off' | 'none';
 
@@ -20,6 +22,19 @@ const step = computed(() => brightnessStep(qs.brightness));
 const BRIGHTNESS_INDICATORS: Record<BrightnessStep, Indicator> = { auto: 'on', low: 'off', mid: 'mid', high: 'on' };
 const BRIGHTNESS_LABELS: Record<BrightnessStep, string> = { auto: 'Auto', low: 'Bajo', mid: 'Medio', high: 'Alto' };
 const RINGER_LABELS: Record<BridgeRingerMode, string> = { normal: 'Sonido', vibrate: 'Vibrar', silent: 'Silencio' };
+
+// long-pressing ringer mode opens the volume panel
+const menu = useMenuStore();
+const press = useLongPress<null>(() =>
+{
+    if (qs.supportsMusicVolume) menu.showDialog('volume');
+});
+
+function onRingerClick()
+{
+    if (!press.consumeLongPress())
+        qs.cycleRingerMode();
+}
 
 const onOff = (on: boolean): Indicator => on ? 'on' : 'off';
 // older fork builds can't read Wi-Fi and Bluetooth
@@ -50,7 +65,13 @@ const radio = (on: boolean): Indicator => qs.supportsRadioStates ? onOff(on) : '
             class="toggle"
             :class="{ unavailable: !qs.canAccessNotificationPolicy }"
             :aria-label="RINGER_LABELS[qs.ringerMode]"
-            @click="qs.cycleRingerMode()">
+            @pointerdown="press.down(null, $event)"
+            @pointermove="press.move"
+            @pointerup="press.cancel"
+            @pointercancel="press.cancel"
+            @pointerleave="press.cancel"
+            @contextmenu.prevent
+            @click="onRingerClick">
             <AudioIcon :mode="qs.ringerMode" />
             <span class="label">{{ RINGER_LABELS[qs.ringerMode] }}</span>
             <span class="indicator" :class="ringerModeIndicator(qs.ringerMode)"></span>

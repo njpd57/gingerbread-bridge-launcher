@@ -47,13 +47,21 @@ const bluetoothIndicator = computed<Indicator>(() => qs.supportsRadioStates ? on
 
 // these buttons stop the press from reaching HomeGrid, whose long press would start dragging the widget
 // (the other buttons still move it)
-const press = useLongPress<'night' | 'lock'>(action =>
+const press = useLongPress<'night' | 'lock' | 'volume'>(action =>
 {
     if (action === 'night')
         toggles.toggleNightMode();
-    else
+    else if (action === 'lock')
         toggles.lockScreen();
+    else if (qs.supportsMusicVolume)
+        menu.showDialog('volume');
 });
+
+function onRingerClick()
+{
+    if (!press.consumeLongPress())
+        qs.cycleRingerMode();
+}
 
 function onSyncClick()
 {
@@ -95,7 +103,13 @@ function openNotifications()
             class="toggle"
             :class="{ unavailable: !qs.canAccessNotificationPolicy }"
             :aria-label="RINGER_LABELS[qs.ringerMode]"
-            @click="qs.cycleRingerMode()">
+            @pointerdown.stop="press.down('volume', $event)"
+            @pointermove="press.move"
+            @pointerup="press.cancel"
+            @pointercancel="press.cancel"
+            @pointerleave="press.cancel"
+            @contextmenu.prevent
+            @click="onRingerClick">
             <AudioIcon :mode="qs.ringerMode" />
             <span class="indicator" :class="ringerModeIndicator(qs.ringerMode)"></span>
         </button>

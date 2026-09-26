@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useNow } from '@vueuse/core';
-import { useAppsStore } from '@/stores/useAppsStore';
-import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
-import { findClockApp } from '@/utils/clock';
+import { useAlarmStore } from '@/stores/useAlarmStore';
 
 const now = useNow({ interval: 1000 });
 
 // tapping the clock opens a clock app, like Gingerbread's alarm app; long-pressing still drags it
 // (HomeGrid discards the click that ends a long press before it reaches us)
-const apps = useAppsStore();
-const launcher = useAppLauncherStore();
+const alarm = useAlarmStore();
 
 function openClockApp()
 {
-    const pkg = findClockApp(p => apps.apps.has(p));
-    if (pkg) launcher.launch(pkg);
+    alarm.openAlarms();
 }
 
 const hourAngle = computed(() =>

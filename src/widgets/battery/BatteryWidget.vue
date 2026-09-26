@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useDeviceStatus } from '@/statusbar/useDeviceStatus';
+import { useBatteryStore } from '@/stores/useBatteryStore';
+import { pluggedLabel } from '@/utils/battery';
 
 // A 1x1 battery gauge in Gingerbread colors: green, yellow when getting low, red when low,
-// with a bolt while charging. Uses the web Battery API (Bridge doesn't expose the battery).
+// with a bolt while charging. The level comes from our Bridge fork, or the web Battery API on stock
+// Bridge; with the fork it also says what it's charging from (USB, charger, wireless).
 
-const device = useDeviceStatus();
+const battery = useBatteryStore();
 
-const level = computed(() => device.batteryLevel.value);
+const level = computed(() => battery.level);
 const percent = computed(() => level.value === null ? null : Math.round(level.value * 100));
 
 const state = computed(() =>
@@ -36,9 +38,10 @@ const fillHeight = computed(() => Math.max(2, Math.round((level.value ?? 0) * 36
             <rect x="11" y="1" width="10" height="5" rx="1" fill="url(#battery-shell)" />
             <rect x="3" y="5" width="26" height="42" rx="3" fill="#1c1c1c" stroke="url(#battery-shell)" stroke-width="3" />
             <rect class="fill" x="7" :y="45 - fillHeight" width="18" :height="fillHeight" rx="1" />
-            <path v-if="device.charging.value" class="bolt" d="M18.5 14l-8 13h5.5l-2 11 8-14h-5.5z" />
+            <path v-if="battery.charging" class="bolt" d="M18.5 14l-8 13h5.5l-2 11 8-14h-5.5z" />
         </svg>
         <span class="label">{{ percent === null ? '—' : `${percent} %` }}</span>
+        <span v-if="battery.charging && pluggedLabel(battery.pluggedType)" class="plugged">{{ pluggedLabel(battery.pluggedType) }}</span>
     </div>
 </template>
 
@@ -87,6 +90,14 @@ $gb-green: #7ed31b;
         font-size: 12px;
         line-height: 1.3;
         white-space: nowrap;
+    }
+
+    > .plugged {
+        margin-top: -3px;
+        font-size: 10px;
+        line-height: 1.2;
+        white-space: nowrap;
+        text-shadow: 0 1px 2px #000;
     }
 }
 </style>

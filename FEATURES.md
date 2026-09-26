@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 7, 9, 12, 15 a 38 ya están implementadas (marcadas con ✅), salvo la variante 4×2 de la 35. Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 39 a 50 salen de una revisión de la API del 26/09/2026 y están sin empezar. Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y el modo de sonido), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono. La 25, de la 30 a la 33 y de la 35 a la 37 necesitan nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 12, 15 a 38 ya están implementadas (marcadas con ✅), salvo la variante 4×2 de la 35. Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 39 a 50 salen de una revisión de la API del 26/09/2026: la 39, 40, 41, 45, 49 y 50 están hechas pero **falta probarlas en el teléfono** (la 49 necesita instalar el fork nuevo); las demás, sin empezar. Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y el modo de sonido), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono. La 25, de la 30 a la 33 y de la 35 a la 37 necesitan nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -11,11 +11,11 @@ Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publica
 | Apps | `getAppsURL`, `getDefaultAppIconURL`, `requestLaunchApp`, `requestAppUninstall`, `requestOpenAppInfo`, eventos `appInstalled` / `appChanged` / `appRemoved` | — |
 | Fondo de pantalla | `setWallpaperOffsetSteps`, `setWallpaperOffsets`, `requestChangeSystemWallpaper`, dibujar el fondo del sistema detrás del WebView | `sendWallpaperTap` |
 | Barras del sistema | Apariencia de la barra de estado (incluido ocultarla), insets de barras, del recorte de la cámara y del teclado (`getImeWindowInsets`) | Gestos (`systemGestures`, `mandatorySystemGestures`), `tappableElement`, `captionBar`, `waterfall`, `getDisplayCutoutPath`, `getDisplayShapePath` |
-| Ajustes de Bridge | Botón flotante, efectos de overscroll, "dibujar el fondo del sistema detrás del WebView", modo noche del sistema (`requestSetSystemNightMode`) | Tema de Bridge (envuelto en `useTogglesStore`, sin usar; idea 50) |
+| Ajustes de Bridge | Botón flotante, efectos de overscroll, "dibujar el fondo del sistema detrás del WebView", modo noche del sistema (`requestSetSystemNightMode`), tema de Bridge (oscuro con la barra Gingerbread, idea 50) | — |
 | Sistema | `requestExpandNotificationShade`, `requestOpenAndroidSettings`, `requestOpenBridgeSettings`, `requestLockScreen` / `getCanLockScreen`, `showToast`, `requestOpenDeveloperConsole` y `getLastErrorMessage` (diagnóstico) | `requestOpenBridgeAppDrawer` |
 | Información | `getAndroidAPILevel`, `getBridgeVersionName`, `getBridgeVersionCode` (diagnóstico) | `getProjectURL` |
 | Ciclo de vida | `newIntent` (botón de inicio), `beforePause`, `afterResume` | — |
-| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización, modo de sonido (`requestSetRingerMode`, necesita "Acceso a No molestar") y `requestOpenSystemPanel` para Wi-Fi y Bluetooth; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel), calendario (`getCalendarEventsURL`, `requestOpenCalendarEvent`, `requestOpenCalendarAt`: widget Agenda y eventos en el calendario del mes), estado de Wi-Fi y Bluetooth (`getWifiEnabled`, `getBluetoothEnabled`), señal real (`getConnectivity`: barras, Wi-Fi y flechas de datos en la barra Gingerbread), accesos directos de apps (`getAppShortcutsURL`, `requestStartAppShortcut`), selector de archivos para `<input type="file">` (marco de fotos), contactos y llamadas (`getContactsURL`, `requestCallPhoneNumber`: contactos en la búsqueda), batería (`getBattery`, sin consumidor todavía) | `getScreenOrientation`, evento `screenOrientationChanged`; batería (`getBattery`, idea 40); volumen multimedia (`getMusicVolume`, `requestSetMusicVolume`, idea 41); `getWindowInsetsSwapFixed` (idea 45); `getLocationEnabled` desde que el GPS dejó su botón (idea 39); `getDefaultAppPackageName` para `sms`, `email` y `camera` (idea 44); la última vez que se usó cada app, en `getAppUsageURL` (idea 42) |
+| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL`, `requestOpenNotification`, `requestDismissNotification` y sus eventos: iconos reales en la barra de estado y panel de notificaciones propio), ajustes rápidos (linterna, brillo, rotación, sincronización, modo de sonido (`requestSetRingerMode`, necesita "Acceso a No molestar") y `requestOpenSystemPanel` para Wi-Fi y Bluetooth; también en el widget Control de energía), música (`getMediaSession`, `requestMediaAction`: widget "Música" y reproductor en el panel), calendario (`getCalendarEventsURL`, `requestOpenCalendarEvent`, `requestOpenCalendarAt`: widget Agenda y eventos en el calendario del mes), estado de Wi-Fi y Bluetooth (`getWifiEnabled`, `getBluetoothEnabled`), señal real (`getConnectivity`: barras, Wi-Fi y flechas de datos en la barra Gingerbread), accesos directos de apps (`getAppShortcutsURL`, `requestStartAppShortcut`), selector de archivos para `<input type="file">` (marco de fotos), contactos y llamadas (`getContactsURL`, `requestCallPhoneNumber`: contactos en la búsqueda), batería (`getBattery`, sin consumidor todavía) | `getScreenOrientation`, evento `screenOrientationChanged`; `getDefaultAppPackageName` para `sms`, `email` y `camera` (idea 44); la última vez que se usó cada app, en `getAppUsageURL` (idea 42) |
 
 Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la API como borrador, comentados: todavía no existen en Bridge.
 
@@ -79,7 +79,7 @@ Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 
 ### 34. Los relojes abren la app Reloj ✅ Hecho
 En Gingerbread, tocar el widget del reloj abría la app de alarmas. Tocar el reloj analógico (2×2 y 4×2) o el digital (4×1) abre la app Reloj del teléfono.
 - **Con el Bridge original:** se lanza la primera app instalada de una lista de paquetes conocidos, igual que hace el dock con el teléfono y el navegador: `com.sec.android.app.clockpackage` (Samsung), `com.google.android.deskclock` (Google) y `com.android.deskclock` (AOSP) (`src/utils/clock.ts`, `findClockApp()`). Se comprueba en la lista de apps (`useAppsStore`) y se abre con `useAppLauncherStore().launch()`. Si no hay ninguna, el toque no hace nada.
-- **Con nuestro fork (mejor, sin hacer todavía):** un método nuevo, por ejemplo `requestOpenAlarms()`, que lance el intent `AlarmClock.ACTION_SHOW_ALARMS`. Así se abriría la app de reloj que tenga el usuario, sea cual sea, sin lista de paquetes. Habría que declararlo en `src/types/bridge-fork.d.ts` y en `ForkBridgeMock`, y usarlo con `bridgeHas()` antes de la lista.
+- **Con nuestro fork:** `requestOpenAlarms()` lanza `AlarmClock.ACTION_SHOW_ALARMS`, que abre la lista de alarmas de la app de reloj que tenga el usuario, sea cual sea. Lo hace `useAlarmStore.openAlarms()`, que cae a la lista de paquetes si el método no existe o falla (hecho junto con la idea 49).
 - La pulsación larga sigue moviendo el widget: `HomeGrid` ya descarta el toque que termina una pulsación larga.
 - **Esfuerzo:** muy bajo en el launcher; bajo en el fork.
 
@@ -298,23 +298,25 @@ El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda r
 
 Revisión de lo que el launcher todavía no aprovecha. De la API publicada queda poco (los insets de gestos y del recorte, ya en las ideas 10 y 11); casi todo sale de nuestro fork, que ya trae batería, volumen, modo de sonido, estadísticas de uso, respuestas a notificaciones y las apps predeterminadas de mensajes, correo y cámara. Van de más a menos Gingerbread y de menos a más esfuerzo; las que dicen "solo en el launcher" funcionan también con el Bridge original.
 
-### 39. Iconos de estado de Gingerbread en la barra
-La barra de estado de 2.3 mostraba a la izquierda de la señal un icono por cada cosa activa: **vibrar** (un teléfono con ondas), **silencio** (un altavoz tachado), **Bluetooth** encendido y **GPS** encendido. Nuestra barra Gingerbread solo dibuja Wi-Fi, señal y batería.
-- **API (fork):** `getRingerMode()` y `ringerModeChanged` (ya en `useQuickSettingsStore`), `getBluetoothEnabled()` / `bluetoothEnabledChanged` y `getLocationEnabled()` / `locationEnabledChanged` (este último sin usar desde que el GPS dejó su botón).
-- Los iconos, dibujados como los de 2.3 (blancos y grises, sin color), van en `statusbar/` junto a los de señal.
+### 39. Iconos de estado de Gingerbread en la barra ✅ Hecho
+La barra de estado de 2.3 mostraba a la izquierda de la señal un icono por cada cosa activa. Nuestra barra Gingerbread ahora los dibuja, en blanco como los de 2.3 (en gris oscuro sobre las barras claras): **Bluetooth** encendido (la runa), **alarma** puesta (un despertador, idea 49), **GPS** encendido (una mira) y el timbre en **vibrar** (un teléfono entre marcas de vibración) o **silencio** (un altavoz tachado).
+- **API (fork):** `getRingerMode()` / `ringerModeChanged` y `getBluetoothEnabled()` / `bluetoothEnabledChanged`, ya en `useQuickSettingsStore`; `getLocationEnabled()` / `locationEnabledChanged` volvió al store como `locationOn` (solo lectura, sin botón). Con el Bridge original no se muestran.
+- Están en `statusbar/GingerbreadStatusBar.vue`, con la clase `state`.
 - **Esfuerzo:** bajo.
 
-### 40. Batería real y el aviso de batería baja
-- **Barra de estado:** hoy la batería sale de la API web (`useDeviceStatus`) y el icono de USB es decorativo. Con el fork, el nivel, si está cargando y cómo (`pluggedType`: cargador, USB o inalámbrico) son reales, y el icono de USB aparece solo con un cable USB, como en 2.3.
-- **Widget de batería:** "Cargando (USB)", "Cargando (cargador)" o "Cargando (inalámbrico)" debajo del porcentaje.
-- **El aviso de 2.3:** al bajar del 15 % y del 5 %, el diálogo "Conecta el cargador. La batería se está agotando: queda un X %" con el botón "Uso de la batería", en un `GbDialog`. Se muestra una vez por cada umbral y no mientras carga.
-- **API (fork):** `getBattery()` y `batteryChanged`, sin permisos. Con el Bridge original queda la API web actual.
-- **Esfuerzo:** bajo. Los tipos y el mock ya están.
+### 40. Batería real y el aviso de batería baja ✅ Hecho
+- **`useBatteryStore`:** con el fork lee `getBattery()` / `batteryChanged` (nivel, si carga y por dónde: `pluggedType`); con el Bridge original, la API web de batería, como antes. Lo usan la barra de estado y el widget de batería (`useDeviceStatus` ya no lee la batería).
+- **Barra de estado:** el icono de USB decorativo aparece solo con un cable USB cuando el fork dice por dónde carga (con cualquier cargador en el Bridge original, que no lo sabe).
+- **Widget de batería:** debajo del porcentaje, de qué está cargando: "USB", "Cargador" o "Inalámbrico" (una palabra, para que quepa en 1×1).
+- **El aviso de 2.3** (`menu/LowBatteryDialog.vue`): al bajar al 15 % y otra vez al 5 %, "Conecta el cargador. La batería se está agotando: queda un X % o menos", con "Uso de la batería" (abre los ajustes de Android) y "Cerrar". No avisa mientras carga ni con la primera lectura, así que volver al launcher con 10 % no repite el aviso. La lógica está en `crossedLowBattery()` (`utils/battery.ts`), con tests.
+- **Esfuerzo:** bajo.
 
-### 41. Volumen multimedia
+### 41. Volumen multimedia ✅ Hecho
 Gingerbread mostraba un panel con una barra al cambiar el volumen. Las teclas de volumen no llegan al WebView, pero el launcher puede cambiar el volumen multimedia él mismo.
-- Una barra de volumen, con el estilo de los deslizadores de 2.3, en el reproductor del panel de notificaciones y en un diálogo que se abre manteniendo pulsado el botón de modo de sonido.
-- **API (fork):** `getMusicVolume()`, `requestSetMusicVolume(0–1)` y `musicVolumeChanged`, sin permisos. El volumen del timbre necesitaría un método nuevo en el fork.
+- **Mantener pulsado el botón de modo de sonido**, en el panel de notificaciones o en el Control de energía, abre el diálogo "Volumen" (`menu/VolumeDialog.vue`) con una barra "Multimedia" y "Más ajustes", que abre el panel de volumen de Android (`requestOpenSystemPanel('volume')`).
+- La barra es `components/GbSlider.vue`, el deslizador de 2.3: pista oscura hundida, la parte llena en naranja-amarillo y el botón gris brillante (naranja al arrastrarlo).
+- **API (fork):** `getMusicVolume()`, `requestSetMusicVolume(0–1)` y `musicVolumeChanged`, sin permisos, en `useQuickSettingsStore`. El volumen del timbre necesitaría un método nuevo en el fork.
+- No se puso una barra dentro del reproductor del panel: su diseño es una fila, y el diálogo queda a una pulsación larga del mismo panel.
 - **Esfuerzo:** bajo.
 
 ### 42. Aplicaciones recientes
@@ -334,10 +336,10 @@ Las últimas conversaciones de la app de mensajes predeterminada (remitente, tex
 - Tamaño 4×2, con la barra "Mensajes" y la lista hundida del estilo de los widgets.
 - **Esfuerzo:** medio.
 
-### 45. Márgenes de pantalla precisos con el fork
-El fork ya informa bien los márgenes (`getWindowInsetsSwapFixed()` es `true`), pero el launcher sigue calculando la altura de la barra de estado con sus alternativas, pensadas para el intercambio de arriba e izquierda del Bridge original.
-- Con el fork arreglado, tomar el `top` de Bridge directamente y dejar las alternativas solo para el Bridge original.
-- De paso, `getTappableElementWindowInsets()` dice si el teléfono usa navegación por gestos (sin botones abajo) o por botones, para ajustar el espacio bajo el dock; y ayuda con la idea 10.
+### 45. Márgenes de pantalla precisos ✅ Hecho
+El fork ya informaba bien los márgenes y el launcher los tomaba bien (usa el mayor `top` de varias fuentes). Lo que faltaba era el **Bridge original**, donde el `top` real llega en `left`: ahí el launcher dependía de sus alternativas (`env(safe-area-inset-top)`, un mínimo, la altura manual).
+- `useWindowInsetsStore` deshace el intercambio (`unswapInsets()`, con tests) en los valores y en los eventos cuando Bridge no tiene `getWindowInsetsSwapFixed()` (todas las versiones sin el arreglo lo tienen). Con el fork arreglado no toca nada. Así el Bridge original también da la altura real de la barra y del recorte de la cámara.
+- **Sin hacer:** usar `getTappableElementWindowInsets()` para distinguir la navegación por gestos de la de botones; se verá con la idea 10.
 - **Esfuerzo:** bajo.
 
 ### 46. Vista previa de las pantallas
@@ -358,15 +360,15 @@ El widget "Marcadores" del navegador de 2.3: una cuadrícula de sitios con su no
 - **API:** `requestOpenUrl` (fork); con el Bridge original no se pueden abrir enlaces.
 - **Esfuerzo:** bajo a medio.
 
-### 49. Próxima alarma
-La barra de estado de 2.3 mostraba un despertador cuando había una alarma puesta, y el reloj de escritorio mostraba la hora de la próxima.
-- **API (fork, nuevo):** `getNextAlarm()` (de `AlarmManager.getNextAlarmClock()`, sin permisos) y un evento `nextAlarmChanged` (del broadcast `ACTION_NEXT_ALARM_CLOCK_CHANGED`). Se haría junto con `requestOpenAlarms()` de la idea 34, así el reloj abre directamente la lista de alarmas.
-- En el launcher: el icono en la barra de estado Gingerbread y "⏰ 7:00" debajo del reloj digital.
-- **Esfuerzo:** bajo en el launcher; bajo en el fork.
+### 49. Próxima alarma ✅ Hecho
+La barra de estado de 2.3 mostraba un despertador cuando había una alarma puesta, y la pantalla de bloqueo, la hora de la próxima.
+- **Fork (nuevo):** `getNextAlarm()` (JSON `{ triggerTime, packageName }` o `null`, de `AlarmManager.getNextAlarmClock()`, sin permisos), el evento `nextAlarmChanged` (del broadcast `ACTION_NEXT_ALARM_CLOCK_CHANGED`, en `AlarmHolder`) y `requestOpenAlarms()` (`AlarmClock.ACTION_SHOW_ALARMS`, con el permiso normal `SET_ALARM`), que completa la idea 34.
+- **Launcher:** `useAlarmStore`; el despertador en la barra Gingerbread (idea 39) y la hora de la próxima alarma junto a la fecha del reloj digital ("7:00 AM", `formatClockTime()` en `utils/clock.ts`). Los relojes abren la lista de alarmas.
+- **Esfuerzo:** bajo en los dos.
 
-### 50. Tema de Bridge a juego
-Bridge tiene sus propias pantallas (ajustes, consola, cajón propio) con tema claro u oscuro. El launcher podría ponerlas en oscuro al elegir la barra Gingerbread, para que no destaquen al abrirlas, y restaurar el tema anterior al quitarla, como ya hace con la barra de estado y el overscroll.
-- **API:** `getBridgeTheme()` / `requestSetBridgeTheme()` (API publicada). `useTogglesStore.bridgeTheme` ya los envuelve, pero nada del launcher lo cambia.
+### 50. Tema de Bridge a juego ✅ Hecho
+Al elegir la barra Gingerbread, el launcher pone en oscuro las pantallas propias de Bridge (ajustes, consola, su cajón), para que no destaquen al abrirlas, y al quitarla restaura el tema que había (`settings.savedBridgeTheme`, vacío si no lo cambió, para no pisar un tema oscuro que ya estaba), como hace con la barra de estado y el overscroll.
+- **API:** `getBridgeTheme()` / `requestSetBridgeTheme()` (API publicada), a través de `useTogglesStore.bridgeTheme`.
 - **Esfuerzo:** muy bajo.
 
 ---
