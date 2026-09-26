@@ -31,7 +31,7 @@ Funciona con el Bridge original, y con **[nuestro fork de Bridge](https://github
   - También puedes usar el fondo de pantalla del sistema. Si es un fondo animado, al tocar un hueco vacío reacciona como en Gingerbread.
 - **Menú de opciones** (mantén pulsado un hueco vacío): Añadir, Fondo de pantalla, Apariencia, Notificaciones, Ajustes y Bridge.
 - **Apariencia**:
-  - Barra de estado de Samsung o una **barra propia de Gingerbread**, que muestra la hora y la batería reales.
+  - Barra de estado **nativa** (la del sistema) o una **barra propia de Gingerbread**, que muestra la hora y la batería reales.
     - **Con nuestro fork**, también son reales la señal móvil, el Wi-Fi, las flechas de datos y los iconos de notificaciones (con el acceso a notificaciones), y al tocarla se abre el **panel de notificaciones** del launcher (ver abajo).
     - Con el Bridge original, la señal y el Wi-Fi son simulados (suben y bajan poco a poco), los iconos de notificaciones son decorativos y al tocarla se abre la cortina de Android.
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.

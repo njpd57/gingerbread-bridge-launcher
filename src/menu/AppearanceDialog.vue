@@ -20,7 +20,7 @@ const toggles = useTogglesStore();
 const notifications = useNotificationsStore();
 
 const statusBarKindOptions: { value: boolean; label: string }[] = [
-    { value: false, label: 'Samsung' },
+    { value: false, label: 'Nativo' },
     { value: true, label: 'Gingerbread' },
 ];
 
@@ -144,7 +144,7 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             </div>
             <div class="field-hint">
                 Ajústala para que la barra no tape la cámara, o para que el fondo cubra justo la barra
-                de Samsung. También mueve el contenido de las pantallas para que no quede debajo.
+                nativa. También mueve el contenido de las pantallas para que no quede debajo.
             </div>
         </section>
 
