@@ -7,6 +7,16 @@ import '@bridgelauncher/api';
 export type BridgeScreenOrientation = 'unspecified' | 'portrait';
 export type BridgeDefaultAppRole = 'dialer' | 'browser' | 'sms' | 'email' | 'camera';
 
+/** Things projects can't toggle themselves; `requestOpenSystemPanel` opens their panel or settings screen. */
+export type BridgeSystemPanel = 'wifi' | 'internet' | 'bluetooth' | 'nfc' | 'volume' | 'location';
+
+export interface BridgeScreenBrightness
+{
+    isAuto: boolean;
+    /** Manual brightness, 0 to 1. */
+    level: number;
+}
+
 /** An active notification, as served by `getNotificationsURL()` and the `notificationPosted` event. */
 export interface BridgeNotification
 {
@@ -38,7 +48,12 @@ export type BridgeForkEvent =
     | { name: 'screenOrientationChanged'; newValue: BridgeScreenOrientation }
     | { name: 'canReadNotificationsChanged'; newValue: boolean }
     | { name: 'notificationPosted'; notification: BridgeNotification }
-    | { name: 'notificationRemoved'; key: string };
+    | { name: 'notificationRemoved'; key: string }
+    | { name: 'canWriteSystemSettingsChanged'; newValue: boolean }
+    | { name: 'flashlightChanged'; newValue: boolean }
+    | { name: 'screenBrightnessChanged'; newValue: BridgeScreenBrightness }
+    | { name: 'autoRotateChanged'; newValue: boolean }
+    | { name: 'masterSyncChanged'; newValue: boolean };
 
 declare module '@bridgelauncher/api'
 {
@@ -73,5 +88,31 @@ declare module '@bridgelauncher/api'
 
         /** Dismisses a clearable notification. */
         requestDismissNotification(key: string, showToastIfFailed?: boolean): boolean;
+
+        /** Opens the floating panel (Android 10+) or the settings screen for something projects can't toggle. */
+        requestOpenSystemPanel(panel: BridgeSystemPanel, showToastIfFailed?: boolean): boolean;
+
+        getIsFlashlightAvailable(): boolean;
+        /** Fires `flashlightChanged`. */
+        getFlashlightOn(): boolean;
+        requestSetFlashlightOn(on: boolean, showToastIfFailed?: boolean): boolean;
+
+        /** Whether the user let Bridge "modify system settings", needed for brightness and auto-rotate. Fires `canWriteSystemSettingsChanged`. */
+        getCanWriteSystemSettings(): boolean;
+        requestOpenWriteSystemSettingsPermission(showToastIfFailed?: boolean): boolean;
+
+        /** A {@link BridgeScreenBrightness} as JSON. Fires `screenBrightnessChanged`. */
+        getScreenBrightness(): string;
+        requestSetScreenBrightnessAuto(auto: boolean, showToastIfFailed?: boolean): boolean;
+        /** Switches to manual brightness at `level` (0 to 1). */
+        requestSetScreenBrightnessLevel(level: number, showToastIfFailed?: boolean): boolean;
+
+        /** Fires `autoRotateChanged`. */
+        getAutoRotateOn(): boolean;
+        requestSetAutoRotateOn(on: boolean, showToastIfFailed?: boolean): boolean;
+
+        /** Fires `masterSyncChanged`. */
+        getMasterSyncOn(): boolean;
+        requestSetMasterSyncOn(on: boolean, showToastIfFailed?: boolean): boolean;
     }
 }

@@ -16,12 +16,14 @@ export const useMenuStore = defineStore('menu', () =>
     const openDialog = ref<LauncherDialog | null>(null);
     const openFolderId = ref<string | null>(null);
     const isSearchOpen = ref(false);
+    const isNotificationPanelOpen = ref(false);
 
     // the cell that was long-pressed to open the menu; "Añadir" places new items there if it can
     const addAnchor = ref<AddAnchor | null>(null);
 
     const isAnythingOpen = computed(() =>
-        isOptionsMenuOpen.value || openDialog.value !== null || openFolderId.value !== null || isSearchOpen.value);
+        isOptionsMenuOpen.value || openDialog.value !== null || openFolderId.value !== null || isSearchOpen.value
+        || isNotificationPanelOpen.value);
 
     function showOptionsMenu(anchor: AddAnchor | null = null)
     {
@@ -43,9 +45,18 @@ export const useMenuStore = defineStore('menu', () =>
         history.pushState({ search: true }, '');
     }
 
+    // our own notification panel (Bridge fork), also closed by the back button
+    function showNotificationPanel()
+    {
+        closeAll();
+        isNotificationPanelOpen.value = true;
+        history.pushState({ notificationPanel: true }, '');
+    }
+
     window.addEventListener('popstate', () =>
     {
         isSearchOpen.value = false;
+        isNotificationPanelOpen.value = false;
     });
 
     function showDialog(dialog: LauncherDialog)
@@ -65,6 +76,12 @@ export const useMenuStore = defineStore('menu', () =>
             if (history.state?.search)
                 history.back();
         }
+        if (isNotificationPanelOpen.value)
+        {
+            isNotificationPanelOpen.value = false;
+            if (history.state?.notificationPanel)
+                history.back();
+        }
     }
 
     return {
@@ -72,11 +89,13 @@ export const useMenuStore = defineStore('menu', () =>
         openDialog,
         openFolderId,
         isSearchOpen,
+        isNotificationPanelOpen,
         addAnchor,
         isAnythingOpen,
         showOptionsMenu,
         showFolder,
         showSearch,
+        showNotificationPanel,
         showDialog,
         closeAll,
     };

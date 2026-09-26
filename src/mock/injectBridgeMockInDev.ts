@@ -1,5 +1,5 @@
 import { BridgeMock } from '@bridgelauncher/api-mock';
-import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeScreenOrientation } from '@/types/bridge-fork';
+import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeScreenBrightness, BridgeScreenOrientation, BridgeSystemPanel } from '@/types/bridge-fork';
 
 // a couple of notifications for the Gingerbread status bar in the browser
 const MOCK_NOTIFICATIONS: BridgeGetNotificationsResponse = {
@@ -25,6 +25,16 @@ const MOCK_NOTIFICATION_ICON = 'data:image/svg+xml,' + encodeURIComponent(
 class ForkBridgeMock extends BridgeMock
 {
     private screenOrientation: BridgeScreenOrientation = 'unspecified';
+    private flashlightOn = false;
+    private brightness: BridgeScreenBrightness = { isAuto: true, level: 0.5 };
+    private autoRotateOn = false;
+    private masterSyncOn = true;
+
+    // like Bridge, tell the page about a change through onBridgeEvent
+    private emit(event: object)
+    {
+        (window.onBridgeEvent as ((ev: object) => void) | undefined)?.(event);
+    }
 
     getScreenOrientation()
     {
@@ -85,6 +95,83 @@ class ForkBridgeMock extends BridgeMock
     requestDismissNotification(key: string)
     {
         alert(`Would dismiss notification ${key}.`);
+        return true;
+    }
+
+    requestOpenSystemPanel(panel: BridgeSystemPanel)
+    {
+        alert(`Would open the ${panel} panel.`);
+        return true;
+    }
+
+    getIsFlashlightAvailable()
+    {
+        return true;
+    }
+
+    getFlashlightOn()
+    {
+        return this.flashlightOn;
+    }
+
+    requestSetFlashlightOn(on: boolean)
+    {
+        this.flashlightOn = on;
+        this.emit({ name: 'flashlightChanged', newValue: on });
+        return true;
+    }
+
+    getCanWriteSystemSettings()
+    {
+        return true;
+    }
+
+    requestOpenWriteSystemSettingsPermission()
+    {
+        alert('Would open the "Modify system settings" permission screen.');
+        return true;
+    }
+
+    getScreenBrightness()
+    {
+        return JSON.stringify(this.brightness);
+    }
+
+    requestSetScreenBrightnessAuto(auto: boolean)
+    {
+        this.brightness = { ...this.brightness, isAuto: auto };
+        this.emit({ name: 'screenBrightnessChanged', newValue: this.brightness });
+        return true;
+    }
+
+    requestSetScreenBrightnessLevel(level: number)
+    {
+        this.brightness = { isAuto: false, level };
+        this.emit({ name: 'screenBrightnessChanged', newValue: this.brightness });
+        return true;
+    }
+
+    getAutoRotateOn()
+    {
+        return this.autoRotateOn;
+    }
+
+    requestSetAutoRotateOn(on: boolean)
+    {
+        this.autoRotateOn = on;
+        this.emit({ name: 'autoRotateChanged', newValue: on });
+        return true;
+    }
+
+    getMasterSyncOn()
+    {
+        return this.masterSyncOn;
+    }
+
+    requestSetMasterSyncOn(on: boolean)
+    {
+        this.masterSyncOn = on;
+        this.emit({ name: 'masterSyncChanged', newValue: on });
         return true;
     }
 }

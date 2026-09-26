@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { statusBarNotifications } from '../notifications';
+import { formatNotificationTime, notificationPanelSections, statusBarNotifications } from '../notifications';
 import type { BridgeNotification } from '@/types/bridge-fork';
 
 function notification(key: string, packageName: string, postTime: number, extra: Partial<BridgeNotification> = {}): BridgeNotification
@@ -37,5 +37,37 @@ describe('statusBarNotifications', () =>
     {
         const many = Array.from({ length: 10 }, (_, i) => notification(`k${i}`, `com.app${i}`, i));
         expect(statusBarNotifications(many, 4)).toHaveLength(4);
+    });
+});
+
+describe('notificationPanelSections', () =>
+{
+    it('splits ongoing notifications from the rest, newest first, without group summaries', () =>
+    {
+        const sections = notificationPanelSections([
+            notification('old', 'com.a', 100),
+            notification('usb', 'android', 50, { isOngoing: true }),
+            notification('new', 'com.b', 300),
+            notification('summary', 'com.b', 400, { isGroupSummary: true }),
+        ]);
+        expect(sections.ongoing.map(n => n.key)).toEqual(['usb']);
+        expect(sections.others.map(n => n.key)).toEqual(['new', 'old']);
+    });
+});
+
+describe('formatNotificationTime', () =>
+{
+    const now = new Date(2026, 8, 25, 22, 0);
+
+    it('shows the time for notifications from today', () =>
+    {
+        expect(formatNotificationTime(new Date(2026, 8, 25, 9, 5).getTime(), now)).toBe('9:05 AM');
+        expect(formatNotificationTime(new Date(2026, 8, 25, 12, 30).getTime(), now)).toBe('12:30 PM');
+        expect(formatNotificationTime(new Date(2026, 8, 25, 0, 15).getTime(), now)).toBe('12:15 AM');
+    });
+
+    it('shows the date for older notifications', () =>
+    {
+        expect(formatNotificationTime(new Date(2026, 8, 24, 23, 59).getTime(), now)).toBe('24/9/26');
     });
 });

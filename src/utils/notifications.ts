@@ -19,3 +19,34 @@ export function statusBarNotifications(notifications: Iterable<BridgeNotificatio
         .sort((a, b) => b.postTime - a.postTime)
         .slice(0, max);
 }
+
+export interface NotificationPanelSections
+{
+    ongoing: BridgeNotification[];
+    others: BridgeNotification[];
+}
+
+/** Gingerbread's notification panel: "ongoing" ones first, then the rest, each newest first. */
+export function notificationPanelSections(notifications: Iterable<BridgeNotification>): NotificationPanelSections
+{
+    const shown = [...notifications]
+        .filter(n => !n.isGroupSummary)
+        .sort((a, b) => b.postTime - a.postTime);
+
+    return {
+        ongoing: shown.filter(n => n.isOngoing),
+        others: shown.filter(n => !n.isOngoing),
+    };
+}
+
+/** "11:02 AM" for today (like the status bar clock), a short date otherwise. */
+export function formatNotificationTime(postTime: number, now: Date): string
+{
+    const date = new Date(postTime);
+    if (date.toDateString() !== now.toDateString())
+        return `${date.getDate()}/${date.getMonth() + 1}/${String(date.getFullYear()).slice(-2)}`;
+
+    const h = date.getHours();
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? 'AM' : 'PM'}`;
+}

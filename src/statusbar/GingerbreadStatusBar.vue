@@ -7,6 +7,7 @@ import { useSimulatedSignal } from './useSimulatedSignal';
 import NotificationIcons from './NotificationIcons.vue';
 import LiveNotificationIcons from './LiveNotificationIcons.vue';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 const props = defineProps<{
     background: StatusBarBackground;
@@ -17,6 +18,16 @@ const props = defineProps<{
 const now = useNow({ interval: 1000 });
 const device = useDeviceStatus();
 const notifications = useNotificationsStore();
+const menu = useMenuStore();
+
+// with our Bridge fork, our own panel (it also holds the quick settings); otherwise Android's shade
+function openNotifications()
+{
+    if (notifications.isSupported)
+        menu.isNotificationPanelOpen ? menu.closeAll() : menu.showNotificationPanel();
+    else
+        Bridge.requestExpandNotificationShade(true);
+}
 
 // Wi-Fi has 3 arcs, the cell signal 4 bars; neither strength is readable, so both drift believably
 const wifi = useSimulatedSignal(3, device.online, device.effectiveType);
@@ -54,7 +65,7 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
         :style="{ '--side-margin': `${sideMargin}px` }"
         role="button"
         aria-label="Abrir notificaciones"
-        @click="Bridge.requestExpandNotificationShade(true)">
+        @click="openNotifications">
 
         <!-- real icons when Bridge can read notifications, decorative ones otherwise -->
         <LiveNotificationIcons v-if="notifications.canRead" class="notifications" />

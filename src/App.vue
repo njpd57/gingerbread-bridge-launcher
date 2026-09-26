@@ -21,6 +21,7 @@ import ManageAppsDialog from './menu/ManageAppsDialog.vue';
 import SearchPanel from './widgets/search/SearchPanel.vue';
 import FolderPanel from './home/FolderPanel.vue';
 import GingerbreadStatusBar from './statusbar/GingerbreadStatusBar.vue';
+import NotificationPanel from './notifications/NotificationPanel.vue';
 
 const DOCK_HEIGHT = 56;
 const GRID_SIDE_PADDING = 8;
@@ -120,6 +121,8 @@ function onWorkspaceClick(e: MouseEvent)
         <ManageAppsDialog />
 
         <SearchPanel />
+
+        <NotificationPanel />
 
         <!-- our own Gingerbread status bar, replacing the system one (hidden through Bridge) -->
         <GingerbreadStatusBar

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useTogglesStore } from '@/stores/useTogglesStore';
+import { useNotificationsStore } from '@/stores/useNotificationsStore';
+import { useMenuStore } from '@/stores/useMenuStore';
 
 // A take on Android 2.x's "Power control" widget: a row of buttons, each with an indicator bar
 // underneath (green = on, amber = in between, gray = off). Bridge can't toggle Wi-Fi, Bluetooth,
@@ -9,6 +11,17 @@ import { useTogglesStore } from '@/stores/useTogglesStore';
 type Indicator = 'on' | 'mid' | 'off' | 'none';
 
 const toggles = useTogglesStore();
+const notifications = useNotificationsStore();
+const menu = useMenuStore();
+
+// our own notification panel with the Bridge fork, Android's shade otherwise
+function openNotifications()
+{
+    if (notifications.isSupported)
+        menu.showNotificationPanel();
+    else
+        Bridge.requestExpandNotificationShade(true);
+}
 
 const lockIndicator = computed<Indicator>(() => toggles.canLockScreen ? 'on' : 'off');
 
@@ -76,7 +89,7 @@ function toggleNightMode()
             <span class="indicator" :class="nightIndicator"></span>
         </button>
 
-        <button class="toggle" aria-label="Notificaciones" @click="Bridge.requestExpandNotificationShade(true)">
+        <button class="toggle" aria-label="Notificaciones" @click="openNotifications">
             <svg viewBox="0 0 32 32" aria-hidden="true">
                 <rect x="5" y="4" width="22" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2.5" />
                 <path d="M9 9h14M9 13h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
