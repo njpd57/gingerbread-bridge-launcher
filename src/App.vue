@@ -12,6 +12,7 @@ import Workspace from './home/Workspace.vue';
 import HomeGrid from './home/HomeGrid.vue';
 import Dock from './home/Dock.vue';
 import DragLayer from './home/DragLayer.vue';
+import AppShortcutsMenu from './shortcuts/AppShortcutsMenu.vue';
 import AppDrawer from './drawer/AppDrawer.vue';
 import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
 import OptionsMenu from './menu/OptionsMenu.vue';
@@ -129,6 +130,8 @@ function onWorkspaceClick(e: MouseEvent)
         <FolderPanel />
 
         <DragLayer />
+
+        <AppShortcutsMenu />
 
         <OptionsMenu />
         <AddDialog />
