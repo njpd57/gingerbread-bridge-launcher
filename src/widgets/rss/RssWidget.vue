@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useWidgetData } from '@/stores/useWidgetDataStore';
 import { useBridgeEventStore, type AnyBridgeEventListener } from '@/stores/useBridgeEventStore';
-import { parseFeed, type FeedItem } from '@/utils/rss';
+import { normalizeFeedUrl, parseFeed, type FeedItem } from '@/utils/rss';
 import { bridgeHas } from '@/utils/bridge-utils';
 import WidgetDialog from '@/components/WidgetDialog.vue';
 import GbButton from '@/components/GbButton.vue';
@@ -11,8 +11,8 @@ import GbButton from '@/components/GbButton.vue';
 // requestOpenUrl); tapping the title changes the feed. The WebView can only read feeds that allow CORS,
 // which many don't: the error says so.
 
-// a Chilean news feed that allows CORS, so the widget works right away
-const DEFAULT_FEED = 'https://cooperativa.cl/noticias/site/tax/port/all/rss_3___1.xml';
+// a Chilean news feed that allows CORS, so the widget works right away (the m. site: see normalizeFeedUrl)
+const DEFAULT_FEED = 'https://m.cooperativa.cl/noticias/site/tax/port/all/rss_3___1.xml';
 const REFRESH_MS = 30 * 60_000;
 const MAX_ITEMS = 8;
 
@@ -34,7 +34,7 @@ async function load()
     error.value = '';
     try
     {
-        const resp = await fetch(feedUrl.value);
+        const resp = await fetch(normalizeFeedUrl(feedUrl.value));
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const feed = parseFeed(await resp.text());
         if (!feed)
@@ -110,7 +110,7 @@ function save()
 {
     const url = draft.value.trim();
     if (url)
-        feedUrl.value = /^https?:\/\//.test(url) ? url : `https://${url}`;
+        feedUrl.value = normalizeFeedUrl(url);
     isEditing.value = false;
 }
 </script>

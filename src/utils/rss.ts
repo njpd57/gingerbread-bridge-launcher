@@ -42,3 +42,17 @@ export function parseFeed(xml: string): Feed | null
 
     return null;
 }
+
+/**
+ * The address the widget actually fetches. The launcher runs on an https page, so the WebView blocks
+ * http requests (mixed content), redirects to http included: plain http is upgraded, and a missing
+ * scheme gets https. Cooperativa.cl redirects Android browsers from cooperativa.cl and www to
+ * http://m.cooperativa.cl, which failed for that reason, so its feeds go straight to https://m.
+ */
+export function normalizeFeedUrl(url: string): string
+{
+    let u = url.trim();
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = `https://${u}`;
+    u = u.replace(/^http:\/\//i, 'https://');
+    return u.replace(/^https:\/\/(www\.)?cooperativa\.cl\//i, 'https://m.cooperativa.cl/');
+}

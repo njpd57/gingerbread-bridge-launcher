@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseFeed } from '../rss';
+import { normalizeFeedUrl, parseFeed } from '../rss';
 
 describe('parseFeed', () =>
 {
@@ -25,5 +25,26 @@ describe('parseFeed', () =>
     {
         expect(parseFeed('<html><body>no</body></html>')).toBeNull();
         expect(parseFeed('not xml at all <')).toBeNull();
+    });
+});
+
+describe('normalizeFeedUrl', () =>
+{
+    it('adds https when there is no scheme', () =>
+    {
+        expect(normalizeFeedUrl('  blog.cl/feed.xml ')).toBe('https://blog.cl/feed.xml');
+    });
+
+    it('upgrades http, which the https page cannot fetch', () =>
+    {
+        expect(normalizeFeedUrl('http://blog.cl/feed.xml')).toBe('https://blog.cl/feed.xml');
+    });
+
+    it('sends Cooperativa.cl straight to its mobile site over https', () =>
+    {
+        const path = '/noticias/site/tax/port/all/rss_3___1.xml';
+        expect(normalizeFeedUrl(`https://cooperativa.cl${path}`)).toBe(`https://m.cooperativa.cl${path}`);
+        expect(normalizeFeedUrl(`http://www.cooperativa.cl${path}`)).toBe(`https://m.cooperativa.cl${path}`);
+        expect(normalizeFeedUrl(`https://m.cooperativa.cl${path}`)).toBe(`https://m.cooperativa.cl${path}`);
     });
 });
