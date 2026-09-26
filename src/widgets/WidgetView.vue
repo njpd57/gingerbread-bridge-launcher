@@ -12,6 +12,7 @@ import PhotoFrameWidget from './photo/PhotoFrameWidget.vue';
 import MusicPlayer from './music/MusicPlayer.vue';
 import SongbirdPlayer from './music/SongbirdPlayer.vue';
 import MostUsedWidget from './mostUsed/MostUsedWidget.vue';
+import AgendaWidget from './agenda/AgendaWidget.vue';
 
 // Renders any widget by kind, filling the grid area it's placed in.
 // Used both on the home screen (HomeGrid) and for the item being dragged (DragLayer).
@@ -40,6 +41,7 @@ defineProps<{
         <MusicPlayer v-else-if="kind === 'music'" variant="widget" />
         <SongbirdPlayer v-else-if="kind === 'musicSongbird'" />
         <MostUsedWidget v-else-if="kind === 'mostUsed'" />
+        <AgendaWidget v-else-if="kind === 'agenda'" />
     </div>
 </template>
 

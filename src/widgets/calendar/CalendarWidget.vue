@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useNow } from '@vueuse/core';
-import { monthGrid } from './month-grid';
+import { monthGrid, monthGridStart, WEEKS_SHOWN } from './month-grid';
+import { useCalendarStore } from '@/stores/useCalendarStore';
+import { dayKey, eventsByDay } from '@/utils/calendar-events';
+import type { BridgeCalendarEvent } from '@/types/bridge-fork';
 
 // The current month's grid (4x2), today circled in Gingerbread orange, with arrows to browse
-// months. Tapping the month name returns to today. No events: the API can't read the calendar.
+// months. Tapping the month name returns to today. With our Bridge fork and calendar access,
+// days with events get colored dots (up to 3), and tapping a day opens it in the calendar app.
+
+// dots under a day, one per event color
+const MAX_DOTS = 3;
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -23,6 +30,40 @@ const title = computed(() => shown.value.date.toLocaleDateString('es', { month: 
 
 const days = computed(() => monthGrid(shown.value.year, shown.value.month, now.value));
 
+const calendar = useCalendarStore();
+const gridStart = computed(() => monthGridStart(shown.value.year, shown.value.month));
+const events = ref<BridgeCalendarEvent[]>([]);
+
+// the events of the 6 weeks shown, fetched again when the month or the events change
+watch([gridStart, () => calendar.version, () => calendar.canRead], async () =>
+{
+    const start = gridStart.value;
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + WEEKS_SHOWN * 7);
+    const fetched = await calendar.fetchEvents(start, end);
+    if (start === gridStart.value)
+        events.value = fetched;
+}, { immediate: true });
+
+const byDay = computed(() => eventsByDay(events.value));
+
+function dateAt(index: number)
+{
+    const s = gridStart.value;
+    return new Date(s.getFullYear(), s.getMonth(), s.getDate() + index);
+}
+
+function dotColors(index: number)
+{
+    const dayEvents = byDay.value.get(dayKey(dateAt(index))) ?? [];
+    return [...new Set(dayEvents.map(e => e.color ?? '#ffffff'))].slice(0, MAX_DOTS);
+}
+
+function onDayClick(index: number)
+{
+    if (calendar.isSupported)
+        calendar.openDay(dateAt(index));
+}
+
 </script>
 
 <template>
@@ -35,13 +76,17 @@ const days = computed(() => monthGrid(shown.value.year, shown.value.month, now.v
 
         <div class="grid">
             <span v-for="w in WEEKDAYS" :key="w" class="weekday">{{ w }}</span>
-            <span
+            <button
                 v-for="(d, i) in days"
                 :key="i"
                 class="day"
-                :class="{ out: !d.inMonth, today: d.isToday }">
+                :class="{ out: !d.inMonth, today: d.isToday }"
+                @click="onDayClick(i)">
                 {{ d.day }}
-            </span>
+                <span v-if="dotColors(i).length" class="dots">
+                    <span v-for="c in dotColors(i)" :key="c" class="dot" :style="{ backgroundColor: c }"></span>
+                </span>
+            </button>
         </div>
     </div>
 </template>
@@ -117,11 +162,30 @@ $gingerbread-orange: #ffa800;
         }
 
         > .day {
+            position: relative;
             display: grid;
             place-items: center;
             width: 1.9em;
             height: 1.9em;
+            padding: 0;
             border-radius: 50%;
+            font-size: inherit;
+
+            > .dots {
+                position: absolute;
+                left: 50%;
+                bottom: -2px;
+                display: flex;
+                gap: 2px;
+                transform: translateX(-50%);
+
+                > .dot {
+                    width: 4px;
+                    height: 4px;
+                    border-radius: 50%;
+                    box-shadow: 0 0 1px #000;
+                }
+            }
 
             &.out {
                 color: rgba(#fff, 0.3);

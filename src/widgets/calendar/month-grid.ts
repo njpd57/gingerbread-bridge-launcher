@@ -14,9 +14,7 @@ export const WEEKS_SHOWN = 6;
  */
 export function monthGrid(year: number, month: number, today: Date): CalendarDay[]
 {
-    // 0 = Monday ... 6 = Sunday
-    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
-    const start = new Date(year, month, 1 - firstWeekday);
+    const start = monthGridStart(year, month);
 
     const days: CalendarDay[] = [];
     for (let i = 0; i < WEEKS_SHOWN * 7; i++)
@@ -31,4 +29,12 @@ export function monthGrid(year: number, month: number, today: Date): CalendarDay
         });
     }
     return days;
+}
+
+/** The first day the grid shows: the Monday on or before the 1st. */
+export function monthGridStart(year: number, month: number): Date
+{
+    // 0 = Monday ... 6 = Sunday
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    return new Date(year, month, 1 - firstWeekday);
 }

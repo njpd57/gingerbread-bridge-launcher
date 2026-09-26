@@ -178,6 +178,47 @@ class ForkBridgeMock extends BridgeMock
         return true;
     }
 
+    getCanReadCalendar()
+    {
+        return true;
+    }
+
+    requestCalendarPermission()
+    {
+        return true;
+    }
+
+    getCalendarEventsURL(from: number, to: number)
+    {
+        const at = (dayOffset: number, h: number, m = 0) =>
+        {
+            const d = new Date();
+            d.setDate(d.getDate() + dayOffset);
+            d.setHours(h, m, 0, 0);
+            return d.getTime();
+        };
+        const today = new Date();
+        const allDayBegin = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() + 2);
+        const events = [
+            { eventId: 1, title: 'Reunión de equipo', location: 'Oficina', begin: at(0, 10), end: at(0, 11), allDay: false, color: '#4285f4', calendarName: 'Trabajo' },
+            { eventId: 2, title: 'Cena con Ana', location: null, begin: at(1, 21), end: at(1, 23), allDay: false, color: '#e67c73', calendarName: 'Personal' },
+            { eventId: 3, title: 'Cumpleaños de Tomás', location: null, begin: allDayBegin, end: allDayBegin + 86_400_000, allDay: true, color: '#33b679', calendarName: 'Cumpleaños' },
+        ].filter(e => e.end > from && e.begin < to);
+        return 'data:application/json,' + encodeURIComponent(JSON.stringify({ events }));
+    }
+
+    requestOpenCalendarEvent(eventId: number)
+    {
+        alert(`Would open calendar event ${eventId}.`);
+        return true;
+    }
+
+    requestOpenCalendarAt(time: number)
+    {
+        alert(`Would open the calendar at ${new Date(time).toLocaleString()}.`);
+        return true;
+    }
+
     getCanAccessAppShortcuts()
     {
         return true;

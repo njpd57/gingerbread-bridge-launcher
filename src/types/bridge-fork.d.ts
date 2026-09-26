@@ -35,6 +35,27 @@ export interface BridgeConnectivity
     dataActivity: BridgeDataActivity;
 }
 
+/** An occurrence of a calendar event, from `getCalendarEventsURL()`. */
+export interface BridgeCalendarEvent
+{
+    eventId: number;
+    title: string | null;
+    location: string | null;
+    /** Milliseconds since the epoch. For all-day events, midnight UTC of the first day. */
+    begin: number;
+    /** Milliseconds since the epoch. For all-day events, midnight UTC of the day after the last one. */
+    end: number;
+    allDay: boolean;
+    /** `#rrggbb`, the color the calendar app shows the event in. */
+    color: string | null;
+    calendarName: string | null;
+}
+
+export interface BridgeGetCalendarEventsResponse
+{
+    events: BridgeCalendarEvent[];
+}
+
 /** One of an app's shortcuts ("New message", "Navigate home"...), from `getAppShortcutsURL()`. */
 export interface BridgeAppShortcut
 {
@@ -115,7 +136,9 @@ export type BridgeForkEvent =
     | { name: 'wifiEnabledChanged'; newValue: boolean }
     | { name: 'bluetoothEnabledChanged'; newValue: boolean }
     | { name: 'locationEnabledChanged'; newValue: boolean }
-    | { name: 'connectivityChanged'; newValue: BridgeConnectivity };
+    | { name: 'connectivityChanged'; newValue: BridgeConnectivity }
+    | { name: 'canReadCalendarChanged'; newValue: boolean }
+    | { name: 'calendarChanged' };
 
 declare module '@bridgelauncher/api'
 {
@@ -172,6 +195,17 @@ declare module '@bridgelauncher/api'
         getBluetoothEnabled(): boolean;
         /** Whether location (GPS) is on. Fires `locationEnabledChanged`. */
         getLocationEnabled(): boolean;
+
+        /** Whether Bridge may read the calendar (READ_CALENDAR). Fires `canReadCalendarChanged`. */
+        getCanReadCalendar(): boolean;
+        /** Shows Android's dialog asking for calendar access (or Bridge's app settings if it was refused for good). */
+        requestCalendarPermission(showToastIfFailed?: boolean): boolean;
+        /** URL of a {@link BridgeGetCalendarEventsResponse} JSON with the events overlapping [from, to) (ms). 403 without permission. */
+        getCalendarEventsURL(from: number, to: number): string;
+        /** Opens one occurrence of an event in the calendar app. */
+        requestOpenCalendarEvent(eventId: number, begin: number, end: number, showToastIfFailed?: boolean): boolean;
+        /** Opens the calendar app at a time (e.g. a day tapped in a month view). */
+        requestOpenCalendarAt(time: number, showToastIfFailed?: boolean): boolean;
 
         /** Whether Bridge can read apps' shortcuts: only the default launcher can, on Android 7.1+. */
         getCanAccessAppShortcuts(): boolean;

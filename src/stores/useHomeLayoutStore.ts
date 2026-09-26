@@ -20,7 +20,7 @@ export function autoGridRows(gridWidth: number, gridHeight: number)
     return Math.max(MIN_GRID_ROWS, Math.min(MAX_GRID_ROWS, rows));
 }
 
-export type WidgetKind = 'clock' | 'clockLarge' | 'digitalClock' | 'weather' | 'power' | 'search' | 'battery' | 'calendar' | 'quote' | 'photo' | 'music' | 'musicSongbird' | 'mostUsed';
+export type WidgetKind = 'clock' | 'clockLarge' | 'digitalClock' | 'weather' | 'power' | 'search' | 'battery' | 'calendar' | 'quote' | 'photo' | 'music' | 'musicSongbird' | 'agenda' | 'mostUsed';
 
 export const WIDGET_SIZES: Record<WidgetKind, { w: number; h: number }> = {
     clock: { w: 2, h: 2 },
@@ -36,6 +36,7 @@ export const WIDGET_SIZES: Record<WidgetKind, { w: number; h: number }> = {
     music: { w: 4, h: 1 },
     musicSongbird: { w: 4, h: 1 },
     mostUsed: { w: 4, h: 1 },
+    agenda: { w: 4, h: 2 },
 };
 
 export interface GridArea

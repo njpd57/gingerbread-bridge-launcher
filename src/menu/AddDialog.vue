@@ -43,6 +43,7 @@ const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'clockLarge', label: 'Reloj analógico grande' },
     { kind: 'digitalClock', label: 'Reloj digital' },
     { kind: 'calendar', label: 'Calendario' },
+    { kind: 'agenda', label: 'Agenda' },
     { kind: 'battery', label: 'Batería' },
     { kind: 'quote', label: 'Frase del día' },
     { kind: 'photo', label: 'Marco de fotos' },
