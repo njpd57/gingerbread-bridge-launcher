@@ -15,7 +15,7 @@ Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publica
 | Sistema | `requestExpandNotificationShade`, `requestOpenAndroidSettings`, `requestOpenBridgeSettings`, `requestLockScreen` / `getCanLockScreen`, `showToast` | `requestOpenDeveloperConsole`, `requestOpenBridgeAppDrawer`, `getLastErrorMessage` |
 | Información | — | `getAndroidAPILevel`, `getBridgeVersionName`, `getBridgeVersionCode`, `getProjectURL` |
 | Ciclo de vida | `newIntent` (botón de inicio), `beforePause`, `afterResume` | — |
-| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web) | `getScreenOrientation`, evento `screenOrientationChanged` |
+| Solo en nuestro fork de Bridge | `requestSetScreenOrientation` (vertical fija), `getDefaultAppPackageName` (dock), `requestOpenUrl` (búsqueda web), notificaciones (`getNotificationsURL`, `getNotificationIconURL` y sus eventos: iconos reales en la barra de estado) | `getScreenOrientation`, evento `screenOrientationChanged` |
 
 Los **packs de iconos** (`getIconPacksURL`, `getAppIconURL`…) aparecen en la API como borrador, comentados: todavía no existen en Bridge.
 
@@ -209,7 +209,7 @@ Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin
 ## Lo que la API no permite (sin ampliar Bridge)
 
 - Widgets nativos de Android.
-- Leer notificaciones, controlar la música o leer la señal móvil y el Wi-Fi reales.
+- Controlar la música o leer la señal móvil y el Wi-Fi reales. (Leer notificaciones ya se puede con nuestro fork.)
 - Abrir intents que no sean "abrir una app" o una URL.
 - Detectar el botón Atrás. Hay un truco que sí funciona: `history.pushState` al abrir el cajón o la búsqueda, porque Bridge pasa el "atrás" al historial del WebView.
 - Packs de iconos: están en la API como borrador, pero todavía no los ofrece Bridge.

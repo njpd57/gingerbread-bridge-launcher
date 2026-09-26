@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useNow } from '@vueuse/core';
 
-// Bridge can't read notifications, so these are decorative Gingerbread notification icons,
+// Without notification access (or on stock Bridge), these are decorative Gingerbread notification icons,
 // with a bit of life: today's date on the calendar, USB icons while charging, and an occasional download.
 
 const props = defineProps<{

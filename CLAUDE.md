@@ -36,13 +36,15 @@ Development happens on the **`dev`** branch. Keep `.claude/` (other agents' work
 - **There is a single `window.onBridgeEvent` handler, and `useBridgeEventStore` owns it.** Everything else subscribes with `bridgeEvents.addEventListener(...)`. Never assign `window.onBridgeEvent` anywhere else.
 - **The API can't do these things; don't design features that need them:**
   - Receive back-button events. The drawer uses a `history.pushState` workaround instead.
-  - Read media sessions or notifications.
+  - Read media sessions. Notifications need our fork (below).
   - Embed native app widgets. All widgets are HTML.
   - Open intents other than launching an app by package name or opening a URL (the latter needs our fork, below).
 - **Our Bridge fork ([njpd57/bridge-launcher](https://github.com/njpd57/bridge-launcher)) adds methods** that the published types lack. They are declared by module augmentation in `src/types/bridge-fork.d.ts`, and the dev mock implements them (`ForkBridgeMock` in `src/mock/injectBridgeMockInDev.ts`), so add new fork methods to both. Always call them behind `bridgeHas()` with a fallback for stock Bridge:
   - `requestSetScreenOrientation` / `getScreenOrientation`: `main.ts` locks the home screen to portrait at startup.
   - `getDefaultAppPackageName(role)`: `Dock.vue` uses it for the phone and browser buttons, falling back to a list of known package names.
   - `requestOpenUrl(url)`: the search panel offers a web search (Google), also on Enter when the query doesn't match exactly one app.
+  - Notifications (`getCanReadNotifications`, `getNotificationsURL`, `getNotificationIconURL`, events `notificationPosted` / `notificationRemoved` / `canReadNotificationsChanged`): `useNotificationsStore` keeps the list; with access, the Gingerbread status bar shows real icons (`LiveNotificationIcons.vue`, one per app, filtered by `utils/notifications.ts`), otherwise the decorative ones. The access button is in the Appearance dialog.
+  - Events the fork adds are typed as `BridgeForkEvent`; `useBridgeEventStore` hands listeners `AnyBridgeEvent`, so type listeners as `AnyBridgeEventListener`.
 - **Window insets are unreliable on the real device.** Bridge reported 0 for the status bar there. `useWindowInsetsStore` resolves the bar heights anyway: it re-reads the insets after startup and on resume, falls back to other insets, then to `env(safe-area-inset-*)` (`index.html` sets `viewport-fit=cover`), then to a minimum. The user can also set a manual status bar height. **For layout, use the CSS variables `--status-bar-height` and `--nav-bar-height`, which are set on `.launcher-root`, not the raw insets.**
 
 ## Architecture

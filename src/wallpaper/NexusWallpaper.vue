@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useDocumentVisibility, usePreferredReducedMotion, useResizeObserver } from '@vueuse/core';
-import type { BridgeEventListener } from '@bridgelauncher/api';
+import type { AnyBridgeEventListener } from '@/stores/useBridgeEventStore';
 import { useBridgeEventStore } from '@/stores/useBridgeEventStore';
 import { useDrawerStore } from '@/stores/useDrawerStore';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
@@ -296,7 +296,7 @@ function burst(clientX: number, clientY: number)
 
 defineExpose({ burst });
 
-const onBridgeEvent: BridgeEventListener = ev =>
+const onBridgeEvent: AnyBridgeEventListener = ev =>
 {
     if (ev.name === 'beforePause')
         bridgePaused.value = true;

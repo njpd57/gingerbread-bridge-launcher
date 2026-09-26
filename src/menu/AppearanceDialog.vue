@@ -5,6 +5,7 @@ import { MAX_GRID_ROWS, MIN_GRID_ROWS, useHomeLayoutStore } from '@/stores/useHo
 import { MAX_STATUS_BAR_HEIGHT, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useTogglesStore } from '@/stores/useTogglesStore';
+import { useNotificationsStore } from '@/stores/useNotificationsStore';
 import type { BridgeButtonVisibility } from '@bridgelauncher/api';
 import GbDialog from '@/components/GbDialog.vue';
 import GbButton from '@/components/GbButton.vue';
@@ -15,6 +16,7 @@ const layout = useHomeLayoutStore();
 const settings = useSettingsStore();
 const insets = useWindowInsetsStore();
 const toggles = useTogglesStore();
+const notifications = useNotificationsStore();
 
 const statusBarKindOptions: { value: boolean; label: string }[] = [
     { value: false, label: 'Samsung' },
@@ -77,14 +79,22 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 <template v-if="settings.gingerbreadStatusBar">
                     Oculta la barra del sistema en el launcher y dibuja la de Gingerbread.
-                    La hora y la batería son reales; la señal y el Wi-Fi son decorativos
-                    y no se ven las notificaciones. Tócala para abrirlas.
+                    La hora y la batería son reales; la señal y el Wi-Fi son decorativos.
+                    <template v-if="notifications.canRead">Muestra los iconos de tus notificaciones.</template>
+                    <template v-else>Los iconos de notificaciones son decorativos.</template>
+                    Tócala para abrir las notificaciones.
                 </template>
                 <template v-else>
                     La barra del sistema, con un fondo opcional detrás. El color de sus iconos
                     se cambia en los ajustes de Bridge.
                 </template>
             </div>
+            <!-- only our Bridge fork can read notifications -->
+            <GbButton
+                v-if="settings.gingerbreadStatusBar && notifications.isSupported && !notifications.canRead"
+                @click="notifications.requestAccess()">
+                Mostrar notificaciones reales
+            </GbButton>
         </section>
 
         <GbRadioRow

@@ -1,4 +1,5 @@
-import type { BridgeEventListener, WindowInsets } from "@bridgelauncher/api";
+import type { WindowInsets } from "@bridgelauncher/api";
+import type { AnyBridgeEventListener } from "./useBridgeEventStore";
 import { defineStore } from "pinia";
 import { computed, reactive } from "vue";
 import { useBridgeEventStore } from "./useBridgeEventStore";
@@ -79,7 +80,7 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
         setTimeout(refresh, delay);
     window.addEventListener('resize', refresh);
 
-    const onBridgeEvent: BridgeEventListener = ev =>
+    const onBridgeEvent: AnyBridgeEventListener = ev =>
     {
         if (ev.name === 'afterResume')
         {

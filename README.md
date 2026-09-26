@@ -70,6 +70,7 @@ Algunas funciones necesitan permisos que Bridge no pide por sí solo. Sin ellos 
 | Función | Qué hace falta | Cómo |
 |---|---|---|
 | **Modo noche** (botón de la luna) | Permiso `WRITE_SECURE_SETTINGS` para Bridge | Con el teléfono conectado por adb (depuración USB activada): `npm run grant-permissions`, o a mano: `adb shell pm grant com.tored.bridgelauncher android.permission.WRITE_SECURE_SETTINGS` |
+| **Notificaciones reales** en la barra de estado Gingerbread | Nuestro [fork de Bridge](https://github.com/njpd57/bridge-launcher) y el acceso a notificaciones | En **Apariencia**, con la barra Gingerbread elegida, toca "Mostrar notificaciones reales" y activa Bridge en la pantalla que se abre. Sin el acceso, los iconos de notificaciones son decorativos |
 | **Bloquear pantalla** (botón del candado) | El servicio de accesibilidad de Bridge y permitir el bloqueo | En Android: *Ajustes → Accesibilidad → Bridge* (activar), y en los ajustes de Bridge, permitir que el proyecto bloquee la pantalla. Después de bloquear así, se desbloquea con PIN o patrón, no con huella |
 
 Sobre el permiso del modo noche:

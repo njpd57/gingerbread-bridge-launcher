@@ -5,6 +5,8 @@ import type { StatusBarBackground } from '@/stores/useSettingsStore';
 import { useDeviceStatus } from './useDeviceStatus';
 import { useSimulatedSignal } from './useSimulatedSignal';
 import NotificationIcons from './NotificationIcons.vue';
+import LiveNotificationIcons from './LiveNotificationIcons.vue';
+import { useNotificationsStore } from '@/stores/useNotificationsStore';
 
 const props = defineProps<{
     background: StatusBarBackground;
@@ -12,6 +14,7 @@ const props = defineProps<{
 
 const now = useNow({ interval: 1000 });
 const device = useDeviceStatus();
+const notifications = useNotificationsStore();
 
 // Wi-Fi has 3 arcs, the cell signal 4 bars; neither strength is readable, so both drift believably
 const wifi = useSimulatedSignal(3, device.online, device.effectiveType);
@@ -50,7 +53,9 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
         aria-label="Abrir notificaciones"
         @click="Bridge.requestExpandNotificationShade(true)">
 
-        <NotificationIcons class="notifications" :charging="device.charging.value" />
+        <!-- real icons when Bridge can read notifications, decorative ones otherwise -->
+        <LiveNotificationIcons v-if="notifications.canRead" class="notifications" />
+        <NotificationIcons v-else class="notifications" :charging="device.charging.value" />
 
         <div class="icons">
             <!-- data activity: down (in) and up (out) arrows, lit while "transferring" -->
