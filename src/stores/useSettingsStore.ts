@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { watch } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import type { OverscrollEffects, SystemBarAppearance } from "@bridgelauncher/api";
+import type { BridgeTheme, OverscrollEffects, SystemBarAppearance } from "@bridgelauncher/api";
 import { useTogglesStore } from "./useTogglesStore";
 import { useBridgeEventStore } from "./useBridgeEventStore";
 import { useHomeLayoutStore } from "./useHomeLayoutStore";
@@ -40,6 +40,8 @@ export const useSettingsStore = defineStore('settings', () =>
     const statusBarSideMargin = useLocalStorage<number>('settings.statusBarSideMargin', 16);
     // the Bridge status bar appearance to restore when turning the Gingerbread bar off
     const savedStatusBarAppearance = useLocalStorage<SystemBarAppearance>('settings.savedStatusBarAppearance', 'light-fg');
+    // Bridge's own theme to restore when the Gingerbread bar is turned off; '' when we didn't change it
+    const savedBridgeTheme = useLocalStorage<BridgeTheme | ''>('settings.savedBridgeTheme', '');
     // Gingerbread's orange glow at the end of lists, instead of Android's own overscroll effect
     const gingerbreadOverscroll = useLocalStorage<boolean>('settings.gingerbreadOverscroll', true);
     // Bridge's overscroll setting to restore when turning the Gingerbread glow off
@@ -68,10 +70,22 @@ export const useSettingsStore = defineStore('settings', () =>
                 savedStatusBarAppearance.value = toggles.statusBarAppearance;
                 toggles.statusBarAppearance = 'hide';
             }
+            // Bridge's own screens (its settings, console, drawer) go dark to match, so they don't
+            // flash white when opened from the launcher
+            if (toggles.bridgeTheme !== 'dark')
+            {
+                savedBridgeTheme.value = toggles.bridgeTheme;
+                toggles.bridgeTheme = 'dark';
+            }
         }
         else if (wasOn)
         {
             toggles.statusBarAppearance = savedStatusBarAppearance.value;
+            if (savedBridgeTheme.value)
+            {
+                toggles.bridgeTheme = savedBridgeTheme.value;
+                savedBridgeTheme.value = '';
+            }
         }
     }, { immediate: true });
 
