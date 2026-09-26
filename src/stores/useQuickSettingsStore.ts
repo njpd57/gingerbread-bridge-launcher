@@ -3,11 +3,17 @@ import { ref } from "vue";
 import { useBridgeEventStore } from "./useBridgeEventStore";
 import { bridgeHas } from "@/utils/bridge-utils";
 import { BRIGHTNESS_LEVELS, type BrightnessStep } from "@/utils/brightness";
-import type { BridgeScreenBrightness, BridgeSystemPanel } from "@/types/bridge-fork";
+import type { BridgeRingerMode, BridgeScreenBrightness, BridgeSystemPanel } from "@/types/bridge-fork";
 
-// System toggles our Bridge fork can change: flashlight, brightness, auto-rotate and sync. Brightness
-// and auto-rotate need the "Modify system settings" permission; Wi-Fi, Bluetooth and the like can only
-// be opened as system panels.
+const RINGER_MODE_CYCLE: Record<BridgeRingerMode, BridgeRingerMode> = {
+    normal: 'vibrate',
+    vibrate: 'silent',
+    silent: 'normal',
+};
+
+// System toggles our Bridge fork can change: flashlight, brightness, auto-rotate, sync and ringer
+// mode. Brightness and auto-rotate need the "Modify system settings" permission, ringer mode needs
+// "Do Not Disturb access"; Wi-Fi, Bluetooth and the like can only be opened as system panels.
 export const useQuickSettingsStore = defineStore('quickSettings', () =>
 {
     const bridgeEvents = useBridgeEventStore();
@@ -23,12 +29,15 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
     const autoRotateOn = ref(isSupported && Bridge.getAutoRotateOn());
     const masterSyncOn = ref(isSupported && Bridge.getMasterSyncOn());
 
-    // whether Wi-Fi, Bluetooth and location are on (read-only: apps can't toggle them)
-    const supportsRadioStates = bridgeHas('getWifiEnabled') && bridgeHas('getBluetoothEnabled') && bridgeHas('getLocationEnabled');
+    // whether Wi-Fi and Bluetooth are on (read-only: apps can't toggle them)
+    const supportsRadioStates = bridgeHas('getWifiEnabled') && bridgeHas('getBluetoothEnabled');
     const isBluetoothAvailable = supportsRadioStates && Bridge.getIsBluetoothAvailable();
     const wifiOn = ref(supportsRadioStates && Bridge.getWifiEnabled());
     const bluetoothOn = ref(supportsRadioStates && Bridge.getBluetoothEnabled());
-    const locationOn = ref(supportsRadioStates && Bridge.getLocationEnabled());
+
+    const supportsRingerMode = bridgeHas('getRingerMode') && bridgeHas('requestSetRingerMode');
+    const canAccessNotificationPolicy = ref(supportsRingerMode && bridgeHas('getCanAccessNotificationPolicy') && Bridge.getCanAccessNotificationPolicy());
+    const ringerMode = ref<BridgeRingerMode>(supportsRingerMode ? Bridge.getRingerMode() : 'normal');
 
     if (isSupported)
     {
@@ -48,11 +57,17 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
                 wifiOn.value = ev.newValue;
             else if (ev.name === 'bluetoothEnabledChanged')
                 bluetoothOn.value = ev.newValue;
-            else if (ev.name === 'locationEnabledChanged')
-                locationOn.value = ev.newValue;
+            else if (ev.name === 'ringerModeChanged')
+                ringerMode.value = ev.newValue;
+            else if (ev.name === 'canAccessNotificationPolicyChanged')
+                canAccessNotificationPolicy.value = ev.newValue;
             // the permission is granted in Android's settings
             else if (ev.name === 'afterResume')
+            {
                 canWriteSystemSettings.value = Bridge.getCanWriteSystemSettings();
+                if (supportsRingerMode && bridgeHas('getCanAccessNotificationPolicy'))
+                    canAccessNotificationPolicy.value = Bridge.getCanAccessNotificationPolicy();
+            }
         });
     }
 
@@ -77,7 +92,9 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
         isBluetoothAvailable,
         wifiOn,
         bluetoothOn,
-        locationOn,
+        supportsRingerMode,
+        canAccessNotificationPolicy,
+        ringerMode,
 
         openPanel: (panel: BridgeSystemPanel) => Bridge.requestOpenSystemPanel(panel, true),
         toggleFlashlight: () => Bridge.requestSetFlashlightOn(!flashlightOn.value, true),
@@ -94,6 +111,16 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
                 Bridge.requestSetScreenBrightnessAuto(true, true);
             else
                 Bridge.requestSetScreenBrightnessLevel(BRIGHTNESS_LEVELS[step], true);
+        },
+        cycleRingerMode()
+        {
+            if (!canAccessNotificationPolicy.value)
+            {
+                Bridge.showToast('Permite que Bridge acceda a "No molestar" para cambiar el modo de sonido.', true);
+                Bridge.requestOpenNotificationPolicyAccessSettings(true);
+                return;
+            }
+            Bridge.requestSetRingerMode(RINGER_MODE_CYCLE[ringerMode.value], true);
         },
     };
 });

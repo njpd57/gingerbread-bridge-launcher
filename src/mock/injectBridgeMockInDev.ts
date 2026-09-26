@@ -1,5 +1,5 @@
 import { BridgeMock } from '@bridgelauncher/api-mock';
-import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeMediaAction, BridgeMediaSession, BridgeScreenBrightness, BridgeScreenOrientation, BridgeSystemPanel } from '@/types/bridge-fork';
+import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeMediaAction, BridgeMediaSession, BridgeRingerMode, BridgeScreenBrightness, BridgeScreenOrientation, BridgeSystemPanel } from '@/types/bridge-fork';
 
 // a couple of notifications for the Gingerbread status bar in the browser
 const MOCK_NOTIFICATIONS: BridgeGetNotificationsResponse = {
@@ -39,6 +39,9 @@ class ForkBridgeMock extends BridgeMock
     private brightness: BridgeScreenBrightness = { isAuto: true, level: 0.5 };
     private autoRotateOn = false;
     private masterSyncOn = true;
+    private canAccessNotificationPolicy = true;
+    private ringerMode: BridgeRingerMode = 'normal';
+    private musicVolume = 0.6;
     private track = 0;
     private media: BridgeMediaSession = this.mediaSession('paused', 30_000);
 
@@ -336,6 +339,11 @@ class ForkBridgeMock extends BridgeMock
         return JSON.stringify({ type: 'wifi', wifiLevel: 3, cellularLevel: 2, cellularDataActivity: 'none', dataActivity: 'in' });
     }
 
+    getBattery()
+    {
+        return JSON.stringify({ level: 72, isCharging: false, pluggedType: null });
+    }
+
     getIsFlashlightAvailable()
     {
         return true;
@@ -404,6 +412,46 @@ class ForkBridgeMock extends BridgeMock
     {
         this.masterSyncOn = on;
         this.emit({ name: 'masterSyncChanged', newValue: on });
+        return true;
+    }
+
+    getCanAccessNotificationPolicy()
+    {
+        return this.canAccessNotificationPolicy;
+    }
+
+    requestOpenNotificationPolicyAccessSettings()
+    {
+        alert('Would open the Do Not Disturb access settings.');
+        return true;
+    }
+
+    getRingerMode()
+    {
+        return this.ringerMode;
+    }
+
+    requestSetRingerMode(mode: BridgeRingerMode)
+    {
+        if (!this.canAccessNotificationPolicy)
+        {
+            alert('Bridge needs "Do Not Disturb access" for this.');
+            return false;
+        }
+        this.ringerMode = mode;
+        this.emit({ name: 'ringerModeChanged', newValue: mode });
+        return true;
+    }
+
+    getMusicVolume()
+    {
+        return this.musicVolume;
+    }
+
+    requestSetMusicVolume(level: number)
+    {
+        this.musicVolume = level;
+        this.emit({ name: 'musicVolumeChanged', newValue: level });
         return true;
     }
 }

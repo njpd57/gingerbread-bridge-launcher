@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brightnessIndicator, nightModeIndicator, onOffIndicator } from '../indicators';
+import { brightnessIndicator, nightModeIndicator, onOffIndicator, ringerModeIndicator } from '../indicators';
 
 describe('onOffIndicator', () =>
 {
@@ -35,5 +35,15 @@ describe('nightModeIndicator', () =>
     it('is off without the permission to change it', () =>
     {
         expect(nightModeIndicator('yes', false)).toBe('off');
+    });
+});
+
+describe('ringerModeIndicator', () =>
+{
+    it('lights up for normal, amber for vibrate, gray for silent', () =>
+    {
+        expect(ringerModeIndicator('normal')).toBe('on');
+        expect(ringerModeIndicator('vibrate')).toBe('mid');
+        expect(ringerModeIndicator('silent')).toBe('off');
     });
 });

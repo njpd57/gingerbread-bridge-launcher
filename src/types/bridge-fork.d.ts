@@ -35,6 +35,21 @@ export interface BridgeConnectivity
     dataActivity: BridgeDataActivity;
 }
 
+export type BridgePluggedType = 'ac' | 'usb' | 'wireless' | 'other';
+
+export type BridgeRingerMode = 'normal' | 'vibrate' | 'silent';
+
+/** The device's battery, from `getBattery()` and `batteryChanged`. */
+export interface BridgeBattery
+{
+    /** 0 to 100. */
+    level: number;
+    /** Whether a charger of any kind is connected. */
+    isCharging: boolean;
+    /** null when not plugged in. */
+    pluggedType: BridgePluggedType | null;
+}
+
 export interface BridgePhoneNumber
 {
     number: string;
@@ -190,11 +205,15 @@ export type BridgeForkEvent =
     | { name: 'screenBrightnessChanged'; newValue: BridgeScreenBrightness }
     | { name: 'autoRotateChanged'; newValue: boolean }
     | { name: 'masterSyncChanged'; newValue: boolean }
+    | { name: 'canAccessNotificationPolicyChanged'; newValue: boolean }
+    | { name: 'ringerModeChanged'; newValue: BridgeRingerMode }
+    | { name: 'musicVolumeChanged'; newValue: number }
     | { name: 'mediaSessionChanged'; session: BridgeMediaSession | null }
     | { name: 'wifiEnabledChanged'; newValue: boolean }
     | { name: 'bluetoothEnabledChanged'; newValue: boolean }
     | { name: 'locationEnabledChanged'; newValue: boolean }
     | { name: 'connectivityChanged'; newValue: BridgeConnectivity }
+    | { name: 'batteryChanged'; newValue: BridgeBattery }
     | { name: 'canReadCalendarChanged'; newValue: boolean }
     | { name: 'calendarChanged' }
     | { name: 'canReadUsageStatsChanged'; newValue: boolean }
@@ -314,6 +333,9 @@ declare module '@bridgelauncher/api'
         /** A {@link BridgeConnectivity} as JSON. Fires `connectivityChanged`. */
         getConnectivity(): string;
 
+        /** A {@link BridgeBattery} as JSON. Fires `batteryChanged`. */
+        getBattery(): string;
+
         getIsFlashlightAvailable(): boolean;
         /** Fires `flashlightChanged`. */
         getFlashlightOn(): boolean;
@@ -336,5 +358,19 @@ declare module '@bridgelauncher/api'
         /** Fires `masterSyncChanged`. */
         getMasterSyncOn(): boolean;
         requestSetMasterSyncOn(on: boolean, showToastIfFailed?: boolean): boolean;
+
+        /** Whether the user gave Bridge "Do Not Disturb access", needed to change the ringer mode. Fires `canAccessNotificationPolicyChanged`. */
+        getCanAccessNotificationPolicy(): boolean;
+        requestOpenNotificationPolicyAccessSettings(showToastIfFailed?: boolean): boolean;
+
+        /** Fires `ringerModeChanged`. */
+        getRingerMode(): BridgeRingerMode;
+        /** Requires "Do Not Disturb access" (see {@link getCanAccessNotificationPolicy}). */
+        requestSetRingerMode(mode: BridgeRingerMode, showToastIfFailed?: boolean): boolean;
+
+        /** Media volume, 0 to 1. Fires `musicVolumeChanged`. */
+        getMusicVolume(): number;
+        /** No special permission needed. */
+        requestSetMusicVolume(level: number, showToastIfFailed?: boolean): boolean;
     }
 }

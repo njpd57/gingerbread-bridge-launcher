@@ -2,11 +2,14 @@
 import { computed } from 'vue';
 import { useQuickSettingsStore } from '@/stores/useQuickSettingsStore';
 import { brightnessStep, nextBrightnessStep, type BrightnessStep } from '@/utils/brightness';
+import { ringerModeIndicator } from '@/utils/indicators';
+import type { BridgeRingerMode } from '@/types/bridge-fork';
+import AudioIcon from '@/home/icons/AudioIcon.vue';
 
 // The row of quick settings at the top of our notification panel, drawn like Gingerbread's power
 // control widget (indicator bar: green = on, amber = in between, gray = off). Flashlight, brightness,
-// auto-rotate and sync change directly; Wi-Fi, Bluetooth and GPS can only open Android's panel for them,
-// but show whether they're on.
+// auto-rotate, sync and ringer mode change directly; Wi-Fi and Bluetooth can only open Android's
+// panel for them, but show whether they're on.
 
 type Indicator = 'on' | 'mid' | 'off' | 'none';
 
@@ -16,9 +19,10 @@ const step = computed(() => brightnessStep(qs.brightness));
 
 const BRIGHTNESS_INDICATORS: Record<BrightnessStep, Indicator> = { auto: 'on', low: 'off', mid: 'mid', high: 'on' };
 const BRIGHTNESS_LABELS: Record<BrightnessStep, string> = { auto: 'Auto', low: 'Bajo', mid: 'Medio', high: 'Alto' };
+const RINGER_LABELS: Record<BridgeRingerMode, string> = { normal: 'Sonido', vibrate: 'Vibrar', silent: 'Silencio' };
 
 const onOff = (on: boolean): Indicator => on ? 'on' : 'off';
-// older fork builds can't read Wi-Fi, Bluetooth and GPS
+// older fork builds can't read Wi-Fi and Bluetooth
 const radio = (on: boolean): Indicator => qs.supportsRadioStates ? onOff(on) : 'none';
 </script>
 
@@ -41,13 +45,15 @@ const radio = (on: boolean): Indicator => qs.supportsRadioStates ? onOff(on) : '
             <span class="indicator" :class="radio(qs.bluetoothOn)"></span>
         </button>
 
-        <button class="toggle" aria-label="Ubicación" @click="qs.openPanel('location')">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M16 3a9 9 0 0 0-9 9c0 7 9 17 9 17s9-10 9-17a9 9 0 0 0-9-9z" fill="currentColor" />
-                <circle cx="16" cy="12" r="3.5" fill="#1a1a1a" />
-            </svg>
-            <span class="label">GPS</span>
-            <span class="indicator" :class="radio(qs.locationOn)"></span>
+        <button
+            v-if="qs.supportsRingerMode"
+            class="toggle"
+            :class="{ unavailable: !qs.canAccessNotificationPolicy }"
+            :aria-label="RINGER_LABELS[qs.ringerMode]"
+            @click="qs.cycleRingerMode()">
+            <AudioIcon :mode="qs.ringerMode" />
+            <span class="label">{{ RINGER_LABELS[qs.ringerMode] }}</span>
+            <span class="indicator" :class="ringerModeIndicator(qs.ringerMode)"></span>
         </button>
 
         <button v-if="qs.isFlashlightAvailable" class="toggle" aria-label="Linterna" @click="qs.toggleFlashlight()">

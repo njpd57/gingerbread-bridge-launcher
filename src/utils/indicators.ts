@@ -1,4 +1,5 @@
 import type { SystemNightModeOrError } from "@bridgelauncher/api";
+import type { BridgeRingerMode } from "@/types/bridge-fork";
 import type { BrightnessStep } from "./brightness";
 
 // The bar under each button of Gingerbread's power control: green = on, amber = in between,
@@ -18,6 +19,16 @@ export function brightnessIndicator(step: BrightnessStep): Indicator
         case 'high': return 'on';
         case 'mid': return 'mid';
         default: return 'off';
+    }
+}
+
+export function ringerModeIndicator(mode: BridgeRingerMode): Indicator
+{
+    switch (mode)
+    {
+        case 'normal': return 'on';
+        case 'vibrate': return 'mid';
+        case 'silent': return 'off';
     }
 }
 

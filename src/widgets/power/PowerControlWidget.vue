@@ -7,10 +7,11 @@ import { useMenuStore } from '@/stores/useMenuStore';
 import { useDeviceStatus } from '@/statusbar/useDeviceStatus';
 import { useLongPress } from '@/composables/useLongPress';
 import { brightnessStep, nextBrightnessStep } from '@/utils/brightness';
-import { brightnessIndicator, nightModeIndicator, onOffIndicator, type Indicator } from '@/utils/indicators';
+import { brightnessIndicator, nightModeIndicator, onOffIndicator, ringerModeIndicator, type Indicator } from '@/utils/indicators';
+import type { BridgeRingerMode } from '@/types/bridge-fork';
 import WifiIcon from '@/home/icons/WifiIcon.vue';
 import BluetoothIcon from '@/home/icons/BluetoothIcon.vue';
-import LocationIcon from '@/home/icons/LocationIcon.vue';
+import AudioIcon from '@/home/icons/AudioIcon.vue';
 import SyncIcon from '@/home/icons/SyncIcon.vue';
 import BrightnessIcon from '@/home/icons/BrightnessIcon.vue';
 import LockIcon from '@/home/icons/LockIcon.vue';
@@ -19,10 +20,13 @@ import NotificationsIcon from '@/home/icons/NotificationsIcon.vue';
 import SettingsIcon from '@/home/icons/SettingsIcon.vue';
 
 // Android 2.x's "Power control" widget: a row of buttons, each with an indicator bar underneath.
-// With our Bridge fork it's the original set (Wi-Fi, Bluetooth, GPS, sync, brightness); Wi-Fi,
-// Bluetooth and GPS only open Android's panels (apps can't toggle them), but show whether they're on.
-// Stock Bridge can toggle none of those, so it gets the actions it can do instead. With the fork,
-// long-pressing brightness toggles night mode and long-pressing sync locks the screen.
+// With our Bridge fork it's Wi-Fi, Bluetooth, ringer mode, sync and brightness (swapping the original's
+// GPS, which only ever opened a panel, for ringer mode, which changes for real). Wi-Fi and Bluetooth
+// only open Android's panels (apps can't toggle them), but show whether they're on. Stock Bridge can
+// toggle none of those, so it gets the actions it can do instead. With the fork, long-pressing
+// brightness toggles night mode and long-pressing sync locks the screen.
+
+const RINGER_LABELS: Record<BridgeRingerMode, string> = { normal: 'Sonido', vibrate: 'Vibrar', silent: 'Silencio' };
 
 const toggles = useTogglesStore();
 const notifications = useNotificationsStore();
@@ -40,7 +44,6 @@ const wifiIndicator = computed<Indicator>(() =>
     return device.connectionType.value === null ? 'none' : onOffIndicator(device.connectionType.value === 'wifi');
 });
 const bluetoothIndicator = computed<Indicator>(() => qs.supportsRadioStates ? onOffIndicator(qs.bluetoothOn) : 'none');
-const locationIndicator = computed<Indicator>(() => qs.supportsRadioStates ? onOffIndicator(qs.locationOn) : 'none');
 
 // these buttons stop the press from reaching HomeGrid, whose long press would start dragging the widget
 // (the other buttons still move it)
@@ -87,9 +90,14 @@ function openNotifications()
             <span class="indicator" :class="bluetoothIndicator"></span>
         </button>
 
-        <button class="toggle" aria-label="Ubicación" @click="qs.openPanel('location')">
-            <LocationIcon />
-            <span class="indicator" :class="locationIndicator"></span>
+        <button
+            v-if="qs.supportsRingerMode"
+            class="toggle"
+            :class="{ unavailable: !qs.canAccessNotificationPolicy }"
+            :aria-label="RINGER_LABELS[qs.ringerMode]"
+            @click="qs.cycleRingerMode()">
+            <AudioIcon :mode="qs.ringerMode" />
+            <span class="indicator" :class="ringerModeIndicator(qs.ringerMode)"></span>
         </button>
 
         <button
