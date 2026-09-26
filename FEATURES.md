@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 7, 9, 12, 15, 16, 20, 25, 26 y 28 a 33 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Los widgets 15, 20, 26 y 28 y las ideas 6 y 9 todavía no se han probado en el teléfono; la 12 y la 29 sí. La 25 y de la 30 a la 33 necesitan nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 12, 15 a 33 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono, menos los widgets 17, 18, 19, 21, 22, 23, 24 y 27. La 25 y de la 30 a la 33 necesitan nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -75,6 +75,13 @@ Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 
 - **Limitaciones:** con el Bridge original no hay búsqueda web (no abre URLs). Tampoco hay búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
 - **Filtrar con cada letra.** En el teléfono los resultados solo se actualizaban al pulsar espacio: el teclado de Android va "componiendo" cada palabra (la que subraya con sugerencias) y el `v-model` de Vue no actualiza el valor hasta que termina la composición. El campo de `SearchPanel.vue` usa `:value` más `@input`, porque el evento `input` llega con cada letra (probado en el teléfono).
 - **Esfuerzo:** medio. Está hecho en `src/widgets/search/`, con la búsqueda en `src/utils/search.ts`. Las apps recientes salen de `useAppLauncherStore`, por donde pasan todos los lanzamientos, y el panel usa `useKeyboardInset()` para que el teclado no tape los resultados.
+
+### 34. Los relojes abren la app Reloj
+En Gingerbread, tocar el widget del reloj abría la app de alarmas. Tocar el reloj analógico (2×2 y 4×2) o el digital (4×1) abriría la app Reloj del teléfono.
+- **Con el Bridge original:** lanzar la primera app instalada de una lista de paquetes conocidos, igual que hace el dock con el teléfono y el navegador: `com.sec.android.app.clockpackage` (Samsung), `com.google.android.deskclock` (Google) y `com.android.deskclock` (AOSP). Se comprueba en la lista de apps (`useAppsStore`) y se abre con `useAppLauncherStore().launch()`. Si no hay ninguna, el toque no hace nada.
+- **Con nuestro fork (mejor):** un método nuevo, por ejemplo `requestOpenAlarms()`, que lance el intent `AlarmClock.ACTION_SHOW_ALARMS`. Así se abre la app de reloj que tenga el usuario, sea cual sea, sin lista de paquetes. Habría que declararlo en `src/types/bridge-fork.d.ts` y en `ForkBridgeMock`, y usarlo con `bridgeHas()` antes de la lista.
+- La pulsación larga sigue moviendo el widget: `HomeGrid` ya descarta el toque que termina una pulsación larga.
+- **Esfuerzo:** muy bajo en el launcher; bajo en el fork.
 
 ---
 
@@ -151,22 +158,20 @@ La cuadrícula del mes actual con el día de hoy resaltado en naranja y flechas 
 - **Tamaño:** 4×2 o 4×3.
 - **Esfuerzo:** bajo. Los nombres de meses y días salen de `Intl.DateTimeFormat('es')`.
 
-### 17. Cuenta regresiva
-Los días que faltan para una fecha elegida (un cumpleaños, un viaje), con un título. Se configura al añadirlo, con un diálogo `GbDialog`.
-- **Tamaño:** 2×1.
-- **Esfuerzo:** bajo. Cada instancia necesita guardar su propia configuración, lo que sirve de base para otros widgets configurables.
+### 17. Cuenta regresiva ✅ Hecho
+Los días que faltan para una fecha elegida (un cumpleaños, un viaje), con un título: "12 días para Vacaciones", "¡Hoy!" el día mismo y "3 días desde…" después. Al tocarlo se editan el título y la fecha en un diálogo.
+- Es el primer widget con datos propios por instancia: `useWidgetData()` en `src/stores/useWidgetDataStore.ts` los guarda en localStorage (`widgets.data`) bajo el id del widget y los borra al quitarlo. Los días salen de `src/utils/countdown.ts`.
+- **Tamaño:** 2×1. Está en `src/widgets/countdown/`.
 
-### 18. Pronóstico extendido
-El tiempo de los próximos 4 o 5 días (icono, máxima y mínima), con la misma ciudad que el widget del tiempo.
-- **API:** Open-Meteo, pidiendo `forecast_days` > 1 en `useWeatherStore` (hoy pide 1).
-- **Tamaño:** 4×2.
-- **Esfuerzo:** bajo.
+### 18. Pronóstico extendido ✅ Hecho
+El tiempo de hoy y los 4 días siguientes (día, icono, máxima y mínima) para la ciudad del widget del tiempo. Tocarlo actualiza.
+- **API:** Open-Meteo. `useWeatherStore` ahora pide 6 días (`forecast_days`) con `weather_code`, máximas, mínimas, amanecer y puesta, en la misma petición que el widget del tiempo; los datos guardados por versiones anteriores, sin días, se vuelven a pedir.
+- **Tamaño:** 4×2. Está en `src/widgets/forecast/`.
 
-### 19. Sol y luna
-La hora de salida y puesta del sol y la fase lunar, con un dibujo de la luna.
-- **API:** `sunrise`/`sunset` de Open-Meteo, en la misma petición del tiempo. La fase lunar se calcula localmente a partir de la fecha.
-- **Tamaño:** 2×1.
-- **Esfuerzo:** bajo.
+### 19. Sol y luna ✅ Hecho
+La fase lunar con un dibujo de la luna y su porcentaje iluminado, y las horas de salida y puesta del sol de la ciudad del tiempo.
+- **API:** `sunrise`/`sunset` de Open-Meteo (los mismos datos del pronóstico). La fase se calcula localmente desde una luna nueva conocida (`src/utils/moon.ts`), y la luna se dibuja invertida en el hemisferio sur, como se ve desde allí.
+- **Tamaño:** 2×1. Está en `src/widgets/sunMoon/`.
 
 ### 20. Batería ✅ Hecho
 El porcentaje y un icono de batería al estilo Gingerbread (verde, amarillo o rojo, y el rayo cuando está cargando).
@@ -174,27 +179,25 @@ El porcentaje y un icono de batería al estilo Gingerbread (verde, amarillo o ro
 - **Tamaño:** 1×1.
 - **Esfuerzo:** muy bajo.
 
-### 21. Nota adhesiva
-Una nota amarilla con texto que se edita al tocarla y se guarda en localStorage.
-- **Tamaño:** 2×2.
-- **Esfuerzo:** bajo. Conviene hacerlo junto con la idea 9, porque el teclado puede tapar la nota.
+### 21. Nota adhesiva ✅ Hecho
+Una nota amarilla de papel. Al tocarla se edita el texto en un diálogo, que queda por encima del teclado (idea 9); se guarda por widget con `useWidgetData()`.
+- **Tamaño:** 2×2. Está en `src/widgets/note/`.
 
-### 22. Cronómetro y temporizador
-Un cronómetro con vueltas y un temporizador que avisa con un sonido.
-- **API:** Web Audio para el sonido y la vibración web (`navigator.vibrate`), si el WebView lo permite.
-- **Limitación:** el aviso solo suena mientras el launcher está visible. Al abrir otra app, el WebView se pausa y no hay notificaciones. Hay que avisarlo en la interfaz, y al volver (`afterResume`) mostrar si el tiempo ya terminó.
-- **Tamaño:** 2×1.
-- **Esfuerzo:** bajo.
+### 22. Cronómetro y temporizador ✅ Hecho
+Un solo widget con dos modos: cronómetro y temporizador. Iniciar/Pausar y Reiniciar; en el temporizador, tocar el tiempo cambia la duración. Al terminar vibra y pita tres veces (Web Audio y `navigator.vibrate`).
+- Guarda la hora de inicio y no un contador, así que sigue bien aunque el launcher quede en segundo plano.
+- **Limitación:** el aviso solo suena con el launcher visible; si terminó mientras usabas otra app, al volver muestra "¡Tiempo!" parpadeando, sin pitar.
+- Sin vueltas por ahora: no caben en 2×1.
+- **Tamaño:** 2×1. Está en `src/widgets/timer/`.
 
-### 23. Calculadora
-Una calculadora básica en el escritorio, con teclas al estilo de la calculadora de Gingerbread (fondo negro y pulsación naranja).
-- **Tamaño:** 4×3.
-- **Esfuerzo:** bajo. Hay que evaluar las expresiones sin `eval`.
+### 23. Calculadora ✅ Hecho
+Una calculadora básica con el aspecto de la de Gingerbread: pantalla clara, teclas negras y pulsación naranja. Muestra el resultado mientras se escribe.
+- Evalúa sin `eval`, con precedencia y números negativos (`src/utils/calculator.ts`, con tests).
+- **Tamaño:** 4×3. Está en `src/widgets/calculator/`.
 
-### 24. Lista de tareas
-Una lista corta de tareas que se marcan al tocarlas; se añaden desde un campo al pie. Se guarda en localStorage.
-- **Tamaño:** 2×2 o 4×2.
-- **Esfuerzo:** bajo. Tiene los mismos problemas con el teclado que la nota (idea 9).
+### 24. Lista de tareas ✅ Hecho
+Una lista corta: tocar una tarea la marca como hecha (y baja al final). El "+" abre un diálogo para añadir varias seguidas y borrar las hechas; se guarda por widget con `useWidgetData()`.
+- **Tamaño:** 2×2. Está en `src/widgets/tasks/`.
 
 ### 25. Marco de fotos ✅ Hecho
 El clásico widget de Gingerbread: una foto con un marco blanco y ligeramente girada. Al tocarlo se elige la foto con `<input type="file">`; el Bridge original no abre el selector de archivos, nuestro fork sí (mejora 1.2). La foto se reduce a 800 px con un canvas y se guarda en IndexedDB, porque localStorage se queda corto. Cada marco tiene su propia foto. Más adelante podría ir rotando entre varias fotos.
@@ -210,11 +213,11 @@ Una fila con las 4 apps que más se abren, cada una en su columna para que quede
 - **Tamaño:** 4×1.
 - **Esfuerzo:** bajo.
 
-### 27. Titulares RSS
-Los últimos titulares de un feed RSS configurable, en una lista que se desplaza.
-- **Limitaciones:** con el Bridge original los titulares no se pueden abrir, porque no abre URLs; con nuestro fork se abren con `requestOpenUrl`. Además, muchos feeds no permiten CORS; habría que elegir feeds que lo permitan o pasar por un proxy público.
-- **Tamaño:** 4×2.
-- **Esfuerzo:** medio.
+### 27. Titulares RSS ✅ Hecho
+Los últimos titulares de un feed RSS o Atom, en una lista que se desplaza. Tocar un titular lo abre (con nuestro fork, `requestOpenUrl`); tocar el título cambia el feed. Se actualiza cada 30 minutos y al volver al launcher.
+- Viene configurado con el feed de **Cooperativa.cl**, que permite CORS. **Limitación:** el WebView solo puede leer feeds que permitan CORS, y la mayoría no lo hace (la BBC, Xataka, The Verge no; Cooperativa, hnrss.org y Wikipedia sí). El widget lo explica cuando falla. **Mejora en el fork:** un método que descargue la URL desde Bridge, sin CORS.
+- La lectura de RSS y Atom está en `src/utils/rss.ts`, con tests.
+- **Tamaño:** 4×2. Está en `src/widgets/rss/`.
 
 ### 28. Frase del día ✅ Hecho
 Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin red), con su autor.
@@ -247,6 +250,34 @@ Lo que suena en cualquier app (Spotify, YouTube Music…), con carátula, títul
 - **Widget "Música"** (4×1) y el reproductor de arriba del panel de notificaciones: `widgets/music/MusicPlayer.vue`, con una barra de progreso que avanza sola.
 - **Widget "Música (estilo Songbird)"** (4×1), más de Gingerbread: la carátula en un marco claro y, al lado, "Artista - Título" sobre tres botones grandes grises (`widgets/music/SongbirdPlayer.vue`).
 - **Solo con nuestro fork de Bridge** y el acceso a notificaciones: `getMediaSession`, `getMediaArtURL`, `requestMediaAction`, `requestOpenMediaApp` y el evento `mediaSessionChanged`.
+
+### 35. Contactos favoritos
+Una fila (4×1) o cuadrícula (4×2) con las fotos de los contactos marcados como favoritos (con estrella) en la app de Contactos, con su nombre debajo. Al tocar una foto se abre un pequeño menú al estilo del *Quick Contact* de Gingerbread, con **Llamar**, **Mensaje** (SMS) y **Ver contacto**; cada contacto se puede configurar para que el toque **llame directamente**. Sin foto, se dibuja la silueta gris de contacto de Android 2.x.
+- **Necesita ampliar nuestro fork de Bridge** (ver "Contactos en el fork" más abajo).
+- **Tamaño:** 4×1 (4 contactos) o 4×2 (8).
+- **Esfuerzo:** medio, contando lo del fork.
+
+### 36. Marcación directa
+El acceso directo "Marcación directa" de Gingerbread (1×1): se elige un contacto y uno de sus números al añadirlo, y queda como un icono con la foto del contacto y un pequeño teléfono verde en la esquina. Al tocarlo **llama directamente** a ese número. La variante **"Mensaje directo"** abre una conversación de SMS con ese número (con un sobre en vez del teléfono).
+- Se elige el contacto en un diálogo con buscador, con los mismos datos que la idea 37.
+- **Necesita ampliar nuestro fork de Bridge** (ver abajo). La llamada directa necesita el permiso `CALL_PHONE`; sin él, el toque abre el marcador con el número escrito (`requestOpenUrl('tel:…')`, que ya existe) y hay que pulsar llamar.
+- **Tamaño:** 1×1.
+- **Esfuerzo:** bajo, una vez hecha la parte de contactos del fork.
+
+### 37. Contactos en la búsqueda
+El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda rápida de Gingerbread: debajo de las apps aparece una sección "Contactos" con la foto, el nombre y el número de los que coinciden (sin tildes ni mayúsculas, igual que las apps). **Al tocar un contacto se le llama** (directamente o abriendo el marcador, según el permiso); con una pulsación larga se ven sus otros números y "Enviar mensaje".
+- También sirve escribir un número: si el texto parece un teléfono, aparece "Llamar a …".
+- **Necesita ampliar nuestro fork de Bridge** (ver abajo). Los contactos se cargan al abrir la búsqueda y se filtran en el launcher, o se buscan en Bridge si son muchos.
+- **Esfuerzo:** bajo-medio en el launcher.
+
+#### Contactos en el fork (lo que necesitan las ideas 35 a 37)
+Nada de esto existe todavía en Bridge. Propuesta, siguiendo lo que ya hay para el calendario:
+- **Permiso `READ_CONTACTS`**, pedido con el diálogo de Android: `getCanReadContacts()`, `requestContactsPermission()` y el evento `canReadContactsChanged` (el mecanismo `BridgeRuntimePermissionRequester` ya existe).
+- **`getContactsURL({ query?, starredOnly? })`**: JSON con `id`, `lookupKey`, `name`, `starred`, `hasPhoto` y los números (`number`, `label`: móvil, casa, trabajo…), leídos de `ContactsContract`. Evento `contactsChanged` cuando cambian.
+- **`getContactPhotoURL(lookupKey)`**: la foto del contacto, servida por un endpoint como los iconos.
+- **`requestOpenContact(lookupKey)`**: abre la ficha del contacto.
+- **`requestCallPhoneNumber(number)`**: llama directamente. Necesita el permiso `CALL_PHONE` (también con el diálogo de Android); sin él, el launcher usa `requestOpenUrl('tel:…')`, que abre el marcador. Los mensajes van con `requestOpenUrl('smsto:…')`.
+- En el launcher: declararlo en `src/types/bridge-fork.d.ts` y `ForkBridgeMock` (con contactos de ejemplo), y un `useContactsStore`.
 
 ---
 

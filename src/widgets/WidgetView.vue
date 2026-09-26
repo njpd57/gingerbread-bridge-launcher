@@ -11,6 +11,14 @@ import QuoteWidget from './quote/QuoteWidget.vue';
 import PhotoFrameWidget from './photo/PhotoFrameWidget.vue';
 import MusicPlayer from './music/MusicPlayer.vue';
 import SongbirdPlayer from './music/SongbirdPlayer.vue';
+import CountdownWidget from './countdown/CountdownWidget.vue';
+import ForecastWidget from './forecast/ForecastWidget.vue';
+import SunMoonWidget from './sunMoon/SunMoonWidget.vue';
+import NoteWidget from './note/NoteWidget.vue';
+import TimerWidget from './timer/TimerWidget.vue';
+import CalculatorWidget from './calculator/CalculatorWidget.vue';
+import TasksWidget from './tasks/TasksWidget.vue';
+import RssWidget from './rss/RssWidget.vue';
 import MostUsedWidget from './mostUsed/MostUsedWidget.vue';
 import AgendaWidget from './agenda/AgendaWidget.vue';
 import ScreenTimeWidget from './screenTime/ScreenTimeWidget.vue';
@@ -20,7 +28,7 @@ import ScreenTimeWidget from './screenTime/ScreenTimeWidget.vue';
 
 defineProps<{
     kind: WidgetKind;
-    // the home item id, for widgets that keep per-instance data (the photo frame)
+    // the home item id, for widgets that keep per-instance data (photo frame, countdown, note, timer, tasks, feed)
     widgetId?: string;
 }>();
 </script>
@@ -44,6 +52,14 @@ defineProps<{
         <MostUsedWidget v-else-if="kind === 'mostUsed'" />
         <AgendaWidget v-else-if="kind === 'agenda'" />
         <ScreenTimeWidget v-else-if="kind === 'screenTime'" />
+        <CountdownWidget v-else-if="kind === 'countdown'" :widget-id="widgetId" />
+        <ForecastWidget v-else-if="kind === 'forecast'" />
+        <SunMoonWidget v-else-if="kind === 'sunMoon'" />
+        <NoteWidget v-else-if="kind === 'note'" :widget-id="widgetId" />
+        <TimerWidget v-else-if="kind === 'timer'" :widget-id="widgetId" />
+        <CalculatorWidget v-else-if="kind === 'calculator'" />
+        <TasksWidget v-else-if="kind === 'tasks'" :widget-id="widgetId" />
+        <RssWidget v-else-if="kind === 'rss'" :widget-id="widgetId" />
     </div>
 </template>
 
