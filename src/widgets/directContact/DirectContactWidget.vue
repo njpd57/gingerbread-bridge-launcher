@@ -100,17 +100,14 @@ function onClick()
             <span class="photo">
                 <img v-if="data.hasPhoto" :src="contacts.photoUrl(data)" alt="" draggable="false" />
                 <ContactGlyph v-else />
-                <span class="badge" :class="mode">
-                    <svg v-if="mode === 'call'" viewBox="0 0 24 24" aria-hidden="true">
-                        <path
-                            d="M6.6 10.8c1.3 2.6 3.4 4.7 6 6l2-2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.8c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1L6.6 10.8z"
-                            fill="currentColor" />
-                    </svg>
-                    <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
-                        <path d="M3 6.5l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
+                <!-- Gingerbread's shortcut overlay: a green action glyph in the corner, no badge behind it -->
+                <svg v-if="mode === 'call'" class="action" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                        d="M6.6 10.8c1.3 2.6 3.4 4.7 6 6l2-2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.8c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1L6.6 10.8z" />
+                </svg>
+                <svg v-else class="action" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                </svg>
             </span>
             <span class="label">{{ message ? (mode === 'call' ? 'Marcación directa' : 'Mensaje directo') : data.name }}</span>
         </button>
@@ -140,7 +137,6 @@ function onClick()
 
 <style scoped lang="scss">
 $gb-green: #7ed31b;
-$gb-blue: #4a90d9;
 
 .direct-contact-widget {
     display: flex;
@@ -162,54 +158,38 @@ $gb-blue: #4a90d9;
         cursor: pointer;
 
         > .photo {
+            @include gb-contact-photo;
             position: relative;
             display: grid;
             place-items: center;
             width: var(--icon-size, 48px);
             height: var(--icon-size, 48px);
-            border-radius: 50%;
-            background: #b0b0b0;
-            color: #7d7d7d;
-            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
 
             > img {
                 width: 100%;
                 height: 100%;
-                border-radius: 50%;
                 object-fit: cover;
             }
 
             > :deep(svg:first-child) {
-                width: 70%;
-                height: 70%;
+                width: 85%;
+                height: 85%;
+                margin-top: 15%;
             }
 
-            > .badge {
+            > .action {
                 position: absolute;
-                right: -2px;
-                bottom: -2px;
-                display: grid;
-                place-items: center;
-                width: 40%;
-                height: 40%;
+                right: -5px;
+                bottom: -5px;
+                width: 45%;
+                height: 45%;
                 min-width: 16px;
                 min-height: 16px;
-                border: 2px solid #1a1a1a;
-                border-radius: 50%;
-                color: #fff;
-
-                &.call {
-                    background: $gb-green;
-                }
-
-                &.message {
-                    background: $gb-blue;
-                }
-
-                > svg {
-                    width: 65%;
-                    height: 65%;
-                }
+                fill: $gb-green;
+                stroke: #1f3d05;
+                stroke-width: 1.2;
+                stroke-linejoin: round;
+                filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
             }
         }
 
@@ -226,7 +206,8 @@ $gb-blue: #4a90d9;
         }
 
         &:active > .photo {
-            filter: drop-shadow(0 0 4px #ffa800) drop-shadow(0 0 2px #ffa800);
+            border-color: #ffa800;
+            box-shadow: 0 0 4px #ffa800, 0 0 2px #ffa800;
         }
     }
 }
@@ -275,22 +256,20 @@ $gb-blue: #4a90d9;
 
             > img,
             > .glyph {
+                @include gb-contact-photo;
                 flex-shrink: 0;
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                object-fit: cover;
+                width: 40px;
+                height: 40px;
             }
 
             > .glyph {
                 display: grid;
-                place-items: center;
-                background: #b0b0b0;
-                color: #7d7d7d;
+                place-items: end center;
+                overflow: hidden;
 
                 > :deep(svg) {
-                    width: 26px;
-                    height: 26px;
+                    width: 34px;
+                    height: 34px;
                 }
             }
 

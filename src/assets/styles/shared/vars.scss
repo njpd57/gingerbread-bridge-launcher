@@ -81,3 +81,16 @@ $ease-mat-decel: cubic-bezier(0.0, 0.0, 0.2, 1);
         @include gb-pressed;
     }
 }
+
+// a contact photo like Gingerbread's QuickContactBadge: square, in a thin light frame, never a circle.
+// Put the photo <img> or the default silhouette (ContactGlyph, colored by `color`) inside.
+@mixin gb-contact-photo
+{
+    box-sizing: border-box;
+    border: 2px solid #e6e6e6;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, #d8d8d8, #a8a8a8);
+    box-shadow: 0 1px 3px rgba(#000, 0.7);
+    color: #7a7a7a;
+    object-fit: cover;
+}

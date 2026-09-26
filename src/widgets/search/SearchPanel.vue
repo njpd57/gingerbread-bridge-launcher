@@ -368,8 +368,13 @@ $gingerbread-orange: #ffa800;
                     flex-shrink: 0;
                     width: 40px;
                     height: 40px;
-                    border-radius: 50%;
                     object-fit: cover;
+                }
+
+                // contact photos: square in a light frame, like Gingerbread's QuickContactBadge
+                &.contact > img,
+                > .contact-icon {
+                    @include gb-contact-photo;
                 }
 
                 > .web-icon {
@@ -383,16 +388,15 @@ $gingerbread-orange: #ffa800;
                     }
                 }
 
-                // Android 2.x's default contact photo: a gray circle with a darker silhouette
+                // Android 2.x's default contact photo: a gray silhouette cut off by the frame's bottom
                 > .contact-icon {
                     display: grid;
-                    place-items: center;
-                    background: #b0b0b0;
-                    color: #7d7d7d;
+                    place-items: end center;
+                    overflow: hidden;
 
                     > :deep(svg) {
-                        width: 30px;
-                        height: 30px;
+                        width: 34px;
+                        height: 34px;
                     }
                 }
 

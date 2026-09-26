@@ -145,21 +145,20 @@ function viewContact(c: BridgeContact)
 
             > img,
             > .glyph {
+                @include gb-contact-photo;
+                flex-shrink: 0;
                 width: 36px;
                 height: 36px;
-                border-radius: 50%;
-                object-fit: cover;
             }
 
             > .glyph {
                 display: grid;
-                place-items: center;
-                background: #b0b0b0;
-                color: #7d7d7d;
+                place-items: end center;
+                overflow: hidden;
 
                 > :deep(svg) {
-                    width: 26px;
-                    height: 26px;
+                    width: 30px;
+                    height: 30px;
                 }
             }
 
