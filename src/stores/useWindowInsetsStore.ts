@@ -58,6 +58,22 @@ const EVENTS: Record<string, InsetsName> = {
     imeWindowInsetsChanged: 'ime',
 };
 
+/**
+ * Which insets a Bridge event updates, and their new value; null for other events.
+ *
+ * The published API types say `{ name: 'imeWindowInsetsChanged', newValue }`, but Bridge builds the
+ * name from its Kotlin enum and sends `{ name: 'ImeWindowInsetsChanged', insets }` (seen on the device),
+ * so both spellings are accepted. Without this, the keyboard's inset never went back to 0.
+ */
+export function parseInsetsEvent(ev: { name: string } & Record<string, unknown>): { name: InsetsName; value: WindowInsets } | null
+{
+    const eventName = ev.name.charAt(0).toLowerCase() + ev.name.slice(1);
+    const name = EVENTS[eventName];
+    if (!name) return null;
+    const value = 'newValue' in ev ? ev.newValue : ev.insets;
+    return value === undefined ? null : { name, value: toInsets(value) };
+}
+
 export const useWindowInsetsStore = defineStore('windowInsets', () =>
 {
     const bridgeEvents = useBridgeEventStore();
@@ -87,9 +103,9 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
             refresh();
             return;
         }
-        const name = EVENTS[ev.name];
-        if (name && 'newValue' in ev)
-            insets[name] = toInsets(ev.newValue);
+        const changed = parseInsetsEvent(ev as { name: string } & Record<string, unknown>);
+        if (changed)
+            insets[changed.name] = changed.value;
     };
     bridgeEvents.addEventListener(onBridgeEvent);
 
