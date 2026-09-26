@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { MAX_GRID_ROWS, MIN_GRID_ROWS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
+import { MAX_ICON_SCALE, MIN_ICON_SCALE } from '@/utils/iconSize';
 import { MAX_STATUS_BAR_HEIGHT, MAX_STATUS_BAR_SIDE_MARGIN, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useTogglesStore } from '@/stores/useTogglesStore';
@@ -51,6 +52,11 @@ const isHeightAuto = computed(() => settings.statusBarHeight < 0);
 function onHeightInput(e: Event)
 {
     settings.statusBarHeight = Number((e.target as HTMLInputElement).value);
+}
+
+function onIconScaleInput(e: Event)
+{
+    settings.iconScale = Number((e.target as HTMLInputElement).value);
 }
 
 function onSideMarginInput(e: Event)
@@ -176,6 +182,31 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 «Auto» elige las filas según el alto de tu pantalla.
                 Si reduces las filas, lo que no quepa se mueve a un hueco libre.
+            </div>
+        </section>
+
+        <section class="options">
+            <div class="field-label">Tamaño de los iconos</div>
+            <div class="height-control">
+                <button
+                    class="auto"
+                    :class="{ selected: settings.iconScale === 100 }"
+                    @click="settings.iconScale = 100">
+                    Normal
+                </button>
+                <input
+                    type="range"
+                    :min="MIN_ICON_SCALE"
+                    :max="MAX_ICON_SCALE"
+                    step="5"
+                    :value="settings.iconScale"
+                    aria-label="Tamaño de los iconos"
+                    @input="onIconScaleInput" />
+                <span class="value">{{ settings.iconScale }} %</span>
+            </div>
+            <div class="field-hint">
+                Cambia los iconos del escritorio, las carpetas y el cajón de aplicaciones. En el escritorio
+                nunca crecen más de lo que cabe en su celda, así que con muchas filas pueden quedar más chicos.
             </div>
         </section>
 

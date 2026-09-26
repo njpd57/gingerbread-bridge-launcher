@@ -3,6 +3,8 @@ import { computed, nextTick, ref } from 'vue';
 import { useWeatherStore } from '@/stores/useWeatherStore';
 import { describeWeatherCode } from './weather-codes';
 import WeatherIcon from './WeatherIcon.vue';
+import GbDialog from '@/components/GbDialog.vue';
+import GbButton from '@/components/GbButton.vue';
 
 const weather = useWeatherStore();
 
@@ -24,7 +26,8 @@ async function startEditing()
 function submit()
 {
     isEditing.value = false;
-    weather.setCityAsync(cityInput.value);
+    if (cityInput.value.trim())
+        weather.setCityAsync(cityInput.value);
 }
 
 function onWidgetClick()
@@ -40,18 +43,29 @@ function onWidgetClick()
 <template>
     <div class="weather-widget" @click="onWidgetClick">
 
-        <form v-if="isEditing" class="city-form" @submit.prevent="submit" @click.stop>
-            <input
-                ref="inputEl"
-                v-model="cityInput"
-                type="text"
-                enterkeyhint="search"
-                placeholder="Escribe tu ciudad"
-                @blur="isEditing = false"
-                @keydown.esc="isEditing = false" />
-        </form>
+        <!-- a dialog rather than a field in the widget: the widget can sit low on the screen, where
+             the keyboard would cover it, while the dialog recenters above the keyboard. Mounted only
+             while editing, since .launcher-root doesn't exist yet when the widgets first mount. -->
+        <Teleport v-if="isEditing" to=".launcher-root">
+            <GbDialog open title="Ciudad del tiempo" @close="isEditing = false">
+                <form class="city-form" @submit.prevent="submit">
+                    <input
+                        ref="inputEl"
+                        v-model="cityInput"
+                        type="text"
+                        enterkeyhint="search"
+                        placeholder="Escribe tu ciudad"
+                        aria-label="Ciudad"
+                        @keydown.esc="isEditing = false" />
+                </form>
+                <template #buttons>
+                    <GbButton @click="isEditing = false">Cancelar</GbButton>
+                    <GbButton @click="submit">Aceptar</GbButton>
+                </template>
+            </GbDialog>
+        </Teleport>
 
-        <div v-else-if="!weather.city" class="empty">
+        <div v-if="!weather.city" class="empty">
             Toca para elegir tu ciudad
         </div>
 
@@ -147,22 +161,22 @@ function onWidgetClick()
         text-align: center;
         color: rgba(#fff, 0.8);
     }
+}
 
-    > .city-form {
-        flex: 1;
+// teleported into the dialog, outside .weather-widget
+.city-form {
+    padding: 8px 16px;
 
-        > input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ffa800;
-            border-radius: 4px;
-            background: rgba(#fff, 0.95);
-            color: #000;
-            font: inherit;
-            font-size: 16px;
-            text-shadow: none;
-            outline: none;
-        }
+    > input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ffa800;
+        border-radius: 4px;
+        background: rgba(#fff, 0.95);
+        color: #000;
+        font: inherit;
+        font-size: 16px;
+        outline: none;
     }
 }
 </style>

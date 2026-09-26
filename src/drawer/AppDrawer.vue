@@ -163,8 +163,8 @@ button {
             border-radius: 6px;
 
             > img {
-                width: 48px;
-                height: 48px;
+                width: var(--drawer-icon-size, 48px);
+                height: var(--drawer-icon-size, 48px);
                 filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
             }
 

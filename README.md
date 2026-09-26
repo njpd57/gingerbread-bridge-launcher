@@ -32,6 +32,7 @@ Bridge es una app de Android que usa una página web como pantalla de inicio y l
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.
   - Altura de la barra de estado: automática o manual.
   - Número de filas de la cuadrícula: automático según el alto de la pantalla, o de 4 a 7.
+  - Tamaño de los iconos, de 75 % a 130 %. En el escritorio no crecen más de lo que cabe en cada celda.
   - Mostrar u ocultar el botón flotante de Bridge.
   - **Brillo naranja** de Gingerbread al llegar al final de una lista, o el efecto de Android.
   - Añadir o no el icono de las apps que instalas.

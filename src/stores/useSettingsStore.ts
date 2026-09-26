@@ -44,6 +44,8 @@ export const useSettingsStore = defineStore('settings', () =>
     const savedOverscrollEffects = useLocalStorage<OverscrollEffects>('settings.savedOverscrollEffects', 'default');
     // like the Market of the time: put newly installed apps on the home screen
     const addIconOnInstall = useLocalStorage<boolean>('settings.addIconOnInstall', true);
+    // app icon size, in percent of Gingerbread's 48 px (utils/iconSize.ts)
+    const iconScale = useLocalStorage<number>('settings.iconScale', 100);
 
     // Bridge only needs to draw the system wallpaper when the Nexus canvas isn't covering it
     watch(wallpaper, kind =>
@@ -119,5 +121,6 @@ export const useSettingsStore = defineStore('settings', () =>
         statusBarSideMargin,
         gingerbreadOverscroll,
         addIconOnInstall,
+        iconScale,
     };
 });

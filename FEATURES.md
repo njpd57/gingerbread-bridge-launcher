@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 5, 7, 15, 16, 20, 25 y 28 ya están implementadas (marcadas con ✅). La 9 y la 26 están hechas en parte (marcadas con ◐). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25 y 28 todavía no se han probado en el teléfono. La 25 necesita nuestro fork.
+**Estado:** las ideas 1 a 5, 7, 9, 15, 16, 20, 25, 28 y 29 ya están implementadas (marcadas con ✅). La 26 está hecha en parte (marcada con ◐). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha, y la 7 (con la búsqueda web) con nuestro fork de Bridge; los widgets 15, 16, 20, 25 y 28 y la 9 todavía no se han probado en el teléfono; la 29 sí. La 25 necesita nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -78,6 +78,7 @@ Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 
 - **API:** la lista de apps que ya carga el cajón (`getAppsURL`) y `requestLaunchApp(packageName)`. El panel se cierra con el botón de inicio (`newIntent`, a través de `useMenuStore`) y con el truco de `history.pushState` que ya usa el cajón para el botón Atrás.
 - **Búsqueda web (solo con nuestro fork):** al final de los resultados aparece "Buscar «…» en la web", que abre Google con `requestOpenUrl`. "Intro" también busca en la web cuando no hay exactamente una coincidencia.
 - **Limitaciones:** con el Bridge original no hay búsqueda web (no abre URLs). Tampoco hay búsqueda por voz (el WebView de Android no soporta `SpeechRecognition`), así que el botón del micrófono se omite o solo enfoca el campo. Tampoco se puede responder a la tecla física de búsqueda de los teléfonos de la época.
+- **Filtrar con cada letra.** En el teléfono los resultados solo se actualizaban al pulsar espacio: el teclado de Android va "componiendo" cada palabra (la que subraya con sugerencias) y el `v-model` de Vue no actualiza el valor hasta que termina la composición. El campo de `SearchPanel.vue` usa `:value` más `@input`, porque el evento `input` llega con cada letra (probado en el teléfono).
 - **Esfuerzo:** medio. Está hecho en `src/widgets/search/`, con la búsqueda en `src/utils/search.ts`. Las apps recientes salen de `useAppLauncherStore`, por donde pasan todos los lanzamientos, y el panel usa `useKeyboardInset()` para que el teclado no tape los resultados.
 
 ---
@@ -89,11 +90,13 @@ No existía en Gingerbread, pero es muy práctico. Sería opcional en Apariencia
 - **API:** `requestLockScreen()` y `getCanLockScreen()`. Requiere activar el servicio de accesibilidad de Bridge y permitir el bloqueo en sus ajustes. En Android 9 y posteriores, después de bloquear así hay que desbloquear con el PIN, no con la huella; Bridge lo advierte en su documentación.
 - **Esfuerzo:** bajo.
 
-### 9. Que el teclado no tape los campos ◐ En parte
+### 9. Que el teclado no tape los campos ✅ Hecho
 Al escribir la ciudad del tiempo o renombrar una carpeta, el teclado puede tapar el campo.
 - **API:** `getImeWindowInsets()` y el evento `imeWindowInsetsChanged`, para subir el contenido lo que ocupa el teclado.
-- **Hecho:** el composable `useKeyboardInset()`, que ya usa el panel de búsqueda. Combina la altura del teclado que da Bridge con lo que el WebView ya se encogió.
-- **Falta:** aplicarlo al campo de la ciudad del tiempo y al nombre de las carpetas.
+- El composable `useKeyboardInset()` combina la altura del teclado que da Bridge con lo que el WebView ya se encogió. Lo usan el panel de búsqueda, **`GbDialog`** (todos los diálogos se recentran sobre el teclado) y la carpeta abierta mientras se renombra.
+- La ciudad del tiempo ya no se escribe dentro del widget, que puede estar abajo en el escritorio, sino en un diálogo "Ciudad del tiempo".
+- Mientras hay un campo con el foco, `App.vue` no recalcula las filas automáticas: si el teclado encogiera el WebView, menos filas moverían los iconos para siempre.
+- Las futuras nota adhesiva (21) y lista de tareas (24) pueden escribir en un `GbDialog` para aprovecharlo.
 - **Esfuerzo:** bajo.
 
 ### 10. Cambio de página por el borde sin chocar con el gesto "Atrás"
@@ -105,6 +108,14 @@ Al arrastrar un icono al borde para pasar de página, esa zona coincide con el g
 La barra de Gingerbread deja el centro libre "a ojo". Con la forma real del recorte se puede reservar justo ese espacio y colocar las notificaciones y los iconos a su alrededor.
 - **API:** `getDisplayCutoutPath()` (Android 12+) y `getDisplayShapePath()` (Android 14+, esquinas redondeadas de la pantalla). Ambas devuelven un path SVG.
 - **Esfuerzo:** medio.
+
+### 29. Tamaño de los iconos ✅ Hecho
+Un deslizante en **Apariencia → Tamaño de los iconos**, de 75 % a 130 % del tamaño de Gingerbread (48 px), con un botón "Normal" para volver al 100 %.
+- Se guarda en `useSettingsStore` (`settings.iconScale`). `App.vue` lo convierte en dos variables CSS en `.launcher-root`: `--icon-size` para el escritorio, las carpetas y el icono que se arrastra (`Shortcut.vue`), y `--drawer-icon-size` para el cajón (`AppDrawer.vue`).
+- En el escritorio el icono nunca crece más de lo que cabe en su celda con la etiqueta (`fittedIconSize()` en `src/utils/iconSize.ts`), así que con 7 filas en pantallas bajas puede quedar más chico que lo elegido. El cajón no tiene ese límite.
+- El texto de debajo y el dock no cambian: el dock es una barra de altura fija.
+- **API:** ninguna; es solo CSS y un ajuste guardado.
+- **Esfuerzo:** bajo.
 
 ---
 

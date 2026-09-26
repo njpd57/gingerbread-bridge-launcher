@@ -6,6 +6,7 @@ import { useDragStore } from '@/stores/useDragStore';
 import { useHomeLayoutStore, type FolderApp, type FolderItem } from '@/stores/useHomeLayoutStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useLongPress } from '@/composables/useLongPress';
+import { useKeyboardInset } from '@/composables/useKeyboardInset';
 import Shortcut from './Shortcut.vue';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
@@ -19,6 +20,8 @@ const menu = useMenuStore();
 const settings = useSettingsStore();
 
 const gridEl = ref<HTMLElement>();
+// while renaming, the panel recenters above the keyboard
+const keyboardInset = useKeyboardInset();
 const glow = useOverscrollGlow(gridEl, 'y', () => settings.gingerbreadOverscroll);
 
 const folder = computed(() =>
@@ -71,7 +74,11 @@ function launch(app: FolderApp)
 
 <template>
     <Transition name="folder">
-        <div v-if="folder" class="folder-overlay" @click.self="menu.closeAll()">
+        <div
+            v-if="folder"
+            class="folder-overlay"
+            :style="{ 'padding-bottom': `${16 + keyboardInset}px` }"
+            @click.self="menu.closeAll()">
             <div class="folder-panel">
 
                 <header class="title">

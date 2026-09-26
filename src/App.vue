@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { useWindowSize } from '@vueuse/core';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useDragStore } from '@/stores/useDragStore';
-import { autoGridRows, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
+import { autoGridRows, GRID_COLS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
 import { useLongPress } from '@/composables/useLongPress';
+import { fittedIconSize, scaledIconSize } from '@/utils/iconSize';
 import Workspace from './home/Workspace.vue';
 import HomeGrid from './home/HomeGrid.vue';
 import Dock from './home/Dock.vue';
@@ -39,9 +40,26 @@ const windowSize = useWindowSize();
 watchEffect(() =>
 {
     if (windowSize.width.value > windowSize.height.value) return;
+    // nor while typing: if the keyboard shrinks the WebView, fewer rows would move icons for good
+    if (isTyping()) return;
     const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
     layout.autoRows = autoGridRows(windowSize.width.value - GRID_SIDE_PADDING, gridHeight);
 });
+
+// the home screen icons follow the user's scale but must fit their cell (the drawer's needn't)
+const homeIconSize = computed(() =>
+{
+    const gridHeight = windowSize.height.value - insets.statusBarHeight - DOCK_HEIGHT - insets.navigationBarHeight;
+    const cellWidth = (windowSize.width.value - GRID_SIDE_PADDING) / GRID_COLS;
+    return fittedIconSize(settings.iconScale, cellWidth, gridHeight / layout.rows);
+});
+
+function isTyping()
+{
+    const el = document.activeElement;
+    return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+        || (el instanceof HTMLElement && el.isContentEditable);
+}
 
 const wallpaper = ref<InstanceType<typeof NexusWallpaper>>();
 
@@ -77,6 +95,8 @@ function onWorkspaceClick(e: MouseEvent)
         :style="{
             '--status-bar-height': insets.statusBarCss,
             '--nav-bar-height': insets.navigationBarCss,
+            '--icon-size': `${homeIconSize}px`,
+            '--drawer-icon-size': `${scaledIconSize(settings.iconScale)}px`,
         }">
 
         <NexusWallpaper v-if="settings.wallpaper === 'nexus'" ref="wallpaper" />

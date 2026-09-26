@@ -35,6 +35,13 @@ const recentApps = computed(() => launcher.recent
 
 const isQueryEmpty = computed(() => query.value.trim() === '');
 
+// v-model waits for the keyboard's composition (the underlined word) to end, which on Android means
+// until space; the input event fires on every letter
+function onInput(e: Event)
+{
+    query.value = (e.target as HTMLInputElement).value;
+}
+
 // only our Bridge fork can open URLs
 const canSearchWeb = bridgeHas('requestOpenUrl');
 const shownApps = computed(() => isQueryEmpty.value ? recentApps.value : results.value);
@@ -89,14 +96,15 @@ function clear()
                 <span class="badge"><SearchGlyph /></span>
                 <input
                     ref="inputEl"
-                    v-model="query"
+                    :value="query"
                     type="search"
                     enterkeyhint="go"
                     autocomplete="off"
                     autocapitalize="off"
                     spellcheck="false"
                     placeholder="Buscar aplicaciones"
-                    aria-label="Buscar aplicaciones" />
+                    aria-label="Buscar aplicaciones"
+                    @input="onInput" />
                 <button v-if="!isQueryEmpty" type="button" class="clear" aria-label="Borrar" @click="clear">×</button>
             </form>
 

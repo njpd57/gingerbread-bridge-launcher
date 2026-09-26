@@ -49,9 +49,20 @@ function iconUrl(n: BridgeNotification)
 {
     if (n.hasLargeIcon)
         return Bridge.getNotificationIconURL(n.key, true);
-    if (apps.apps.has(n.packageName))
-        return Bridge.getDefaultAppIconURL(n.packageName);
-    return Bridge.getNotificationIconURL(n.key);
+    return Bridge.getDefaultAppIconURL(n.packageName);
+}
+
+// the small icon is only a silhouette (Android tints it), so it's drawn as a mask in a light color,
+// like the status bar does; used as is, it could come out black on the dark panel
+function usesSmallIcon(n: BridgeNotification)
+{
+    return !n.hasLargeIcon && !apps.apps.has(n.packageName);
+}
+
+function smallIconStyle(n: BridgeNotification)
+{
+    const url = `url("${Bridge.getNotificationIconURL(n.key)}")`;
+    return { maskImage: url, webkitMaskImage: url };
 }
 
 function open(n: BridgeNotification)
@@ -109,7 +120,12 @@ function openSystemShade()
                                     :key="n.key"
                                     class="row"
                                     @click="open(n)">
-                                    <img :src="iconUrl(n)" alt="" draggable="false" />
+                                    <span
+                                        v-if="usesSmallIcon(n)"
+                                        class="small-icon"
+                                        :style="smallIconStyle(n)"
+                                        aria-hidden="true"></span>
+                                    <img v-else :src="iconUrl(n)" alt="" draggable="false" />
                                     <span class="texts">
                                         <span class="title">{{ title(n) }}</span>
                                         <span v-if="n.text" class="text">{{ n.text }}</span>
@@ -228,6 +244,20 @@ $gingerbread-orange: #ffa800;
                     height: 40px;
                     border-radius: 3px;
                     object-fit: cover;
+                }
+
+                // a silhouette, centered in the same 40px box as the images
+                > .small-icon {
+                    flex-shrink: 0;
+                    width: 40px;
+                    height: 40px;
+                    background-color: #e6e6e6;
+                    mask-size: 28px;
+                    mask-repeat: no-repeat;
+                    mask-position: center;
+                    -webkit-mask-size: 28px;
+                    -webkit-mask-repeat: no-repeat;
+                    -webkit-mask-position: center;
                 }
 
                 > .texts {

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
 import OverscrollGlow from './OverscrollGlow.vue';
+import { useKeyboardInset } from '@/composables/useKeyboardInset';
 
 defineProps<{
     open: boolean;
@@ -16,12 +17,18 @@ const emit = defineEmits<{
 const settings = useSettingsStore();
 const bodyEl = ref<HTMLElement>();
 const glow = useOverscrollGlow(bodyEl, 'y', () => settings.gingerbreadOverscroll);
+// a dialog with a text field recenters above the keyboard
+const keyboardInset = useKeyboardInset();
 
 </script>
 
 <template>
     <Transition name="dialog">
-        <div v-if="open" class="gb-dialog-overlay" @click.self="emit('close')">
+        <div
+            v-if="open"
+            class="gb-dialog-overlay"
+            :style="{ 'padding-bottom': `${16 + keyboardInset}px` }"
+            @click.self="emit('close')">
             <div class="gb-dialog" role="dialog" :aria-label="title">
                 <header class="title">{{ title }}</header>
                 <div class="body-wrap">
