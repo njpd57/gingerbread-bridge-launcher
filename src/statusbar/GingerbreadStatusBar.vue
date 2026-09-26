@@ -10,6 +10,8 @@ import { useNotificationsStore } from '@/stores/useNotificationsStore';
 
 const props = defineProps<{
     background: StatusBarBackground;
+    // side padding in CSS px, to keep clear of rounded screen corners
+    sideMargin: number;
 }>();
 
 const now = useNow({ interval: 1000 });
@@ -49,6 +51,7 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
     <div
         class="gb-status-bar"
         :class="[background, { light: isLight, offline: !device.online.value }]"
+        :style="{ '--side-margin': `${sideMargin}px` }"
         role="button"
         aria-label="Abrir notificaciones"
         @click="Bridge.requestExpandNotificationShade(true)">
@@ -114,8 +117,9 @@ $gb-dim-light: rgba(#000, 0.2);
         margin-right: auto;
     }
     gap: 5px;
-    // the center stays clear for the camera cutout
-    padding: 0 6px;
+    // the center stays clear for the camera cutout; the side padding (a setting) keeps
+    // the notification icons and the clock clear of rounded screen corners
+    padding: 0 max(var(--side-margin), env(safe-area-inset-right)) 0 max(var(--side-margin), env(safe-area-inset-left));
     color: #fff;
     cursor: pointer;
 

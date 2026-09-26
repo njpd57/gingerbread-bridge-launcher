@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { MAX_GRID_ROWS, MIN_GRID_ROWS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
-import { MAX_STATUS_BAR_HEIGHT, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
+import { MAX_STATUS_BAR_HEIGHT, MAX_STATUS_BAR_SIDE_MARGIN, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useTogglesStore } from '@/stores/useTogglesStore';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
@@ -51,6 +51,11 @@ const isHeightAuto = computed(() => settings.statusBarHeight < 0);
 function onHeightInput(e: Event)
 {
     settings.statusBarHeight = Number((e.target as HTMLInputElement).value);
+}
+
+function onSideMarginInput(e: Event)
+{
+    settings.statusBarSideMargin = Number((e.target as HTMLInputElement).value);
 }
 
 // 0 = automatic
@@ -133,6 +138,25 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 Ajústala para que la barra no tape la cámara, o para que el fondo cubra justo la barra
                 de Samsung. También mueve el contenido de las pantallas para que no quede debajo.
+            </div>
+        </section>
+
+        <section v-if="settings.gingerbreadStatusBar" class="options">
+            <div class="field-label">Margen lateral de la barra</div>
+            <div class="height-control">
+                <input
+                    type="range"
+                    min="0"
+                    :max="MAX_STATUS_BAR_SIDE_MARGIN"
+                    step="1"
+                    :value="settings.statusBarSideMargin"
+                    aria-label="Margen lateral de la barra de estado"
+                    @input="onSideMarginInput" />
+                <span class="value">{{ settings.statusBarSideMargin }} px</span>
+            </div>
+            <div class="field-hint">
+                Separa los iconos y la hora de los bordes, para que las esquinas redondeadas
+                de la pantalla no los tapen.
             </div>
         </section>
 

@@ -126,6 +126,7 @@ function onWorkspaceClick(e: MouseEvent)
             v-if="settings.gingerbreadStatusBar"
             class="gb-status-bar"
             :background="settings.statusBarBackground"
+            :side-margin="settings.statusBarSideMargin"
             :style="{ 'height': 'var(--status-bar-height)' }" />
 
         <!-- otherwise, an optional Gingerbread-style background behind the (translucent) system status bar -->

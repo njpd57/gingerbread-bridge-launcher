@@ -13,6 +13,7 @@ export type NexusFps = 30 | 60 | 120;
 export type StatusBarBackground = 'none' | 'gray' | 'blackGradient' | 'white' | 'black';
 
 export const MAX_STATUS_BAR_HEIGHT = 80;
+export const MAX_STATUS_BAR_SIDE_MARGIN = 60;
 
 export const NEXUS_PULSES: Record<Level, number> = { low: 5, normal: 9, high: 15 };
 export const NEXUS_SPEED: Record<Level, number> = { low: 0.6, normal: 1, high: 1.6 };
@@ -33,6 +34,8 @@ export const useSettingsStore = defineStore('settings', () =>
     const statusBarHeight = useLocalStorage<number>('settings.statusBarHeight', -1);
     // draw our own Gingerbread status bar instead of the system one (hidden through Bridge)
     const gingerbreadStatusBar = useLocalStorage<boolean>('settings.gingerbreadStatusBar', false);
+    // side padding of the Gingerbread bar, in CSS px, so rounded screen corners don't cover it
+    const statusBarSideMargin = useLocalStorage<number>('settings.statusBarSideMargin', 16);
     // the Bridge status bar appearance to restore when turning the Gingerbread bar off
     const savedStatusBarAppearance = useLocalStorage<SystemBarAppearance>('settings.savedStatusBarAppearance', 'light-fg');
     // Gingerbread's orange glow at the end of lists, instead of Android's own overscroll effect
@@ -113,6 +116,7 @@ export const useSettingsStore = defineStore('settings', () =>
         statusBarBackground,
         statusBarHeight,
         gingerbreadStatusBar,
+        statusBarSideMargin,
         gingerbreadOverscroll,
         addIconOnInstall,
     };
