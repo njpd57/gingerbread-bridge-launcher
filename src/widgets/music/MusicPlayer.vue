@@ -121,12 +121,36 @@ $gingerbread-orange: #ffa800;
     overflow: hidden;
     color: #fff;
 
-    // over the wallpaper: the same translucent panel as the weather widget
+    // on the home screen: Songbird's look, with the cover in a light frame and glossy grouped buttons
     &.widget {
-        border: 1px solid rgba(#fff, 0.12);
-        border-radius: 6px;
-        background: linear-gradient(to bottom, rgba(#000, 0.45), rgba(#000, 0.65));
-        text-shadow: 0 1px 2px #000;
+        @include gb-widget-frame;
+        padding: 5px 5px 8px;
+        text-shadow: 0 1px 1px #000;
+
+        > .info > .art {
+            padding: 3px;
+            border-radius: 2px;
+            background: linear-gradient(to bottom, #f2f2f2, #cfcfcf);
+        }
+
+        > .controls {
+            overflow: hidden;
+            border: 1px solid #111;
+            border-radius: 4px;
+
+            > button {
+                @include gb-widget-button;
+                border-radius: 0;
+
+                & + button {
+                    border-left: 1px solid #111;
+                }
+
+                &:disabled {
+                    opacity: 1;
+                }
+            }
+        }
     }
 
     // in the notification panel: a dark glossy card like the quick toggles

@@ -94,16 +94,15 @@ function onDayClick(index: number)
 <style scoped lang="scss">
 $gingerbread-orange: #ffa800;
 
-// same translucent panel as the weather widget
+// Songbird's look: a gray frame, the month on a dark bar between glossy arrows, the days recessed below
 .calendar-widget {
+    @include gb-widget-frame;
     display: flex;
     flex-direction: column;
+    gap: 4px;
     height: 100%;
-    padding: 6px 8px 8px;
-    border: 1px solid rgba(#fff, 0.12);
-    border-radius: 6px;
-    background: linear-gradient(to bottom, rgba(#000, 0.45), rgba(#000, 0.65));
-    text-shadow: 0 1px 2px #000;
+    padding: 5px;
+    text-shadow: 0 1px 1px #000;
 
     button {
         appearance: none;
@@ -120,16 +119,29 @@ $gingerbread-orange: #ffa800;
     }
 
     > header {
+        @include gb-widget-bar;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-shrink: 0;
+        overflow: hidden;
+        border: 1px solid #111;
+        border-radius: 4px;
 
         > .arrow {
+            @include gb-widget-button;
             width: 40px;
-            height: 30px;
-            font-size: 26px;
+            height: 28px;
+            font-size: 22px;
             line-height: 1;
+
+            &:first-child {
+                border-right: 1px solid #111;
+            }
+
+            &:last-child {
+                border-left: 1px solid #111;
+            }
         }
 
         > .title {
@@ -145,8 +157,10 @@ $gingerbread-orange: #ffa800;
     }
 
     > .grid {
+        @include gb-widget-inset;
         flex: 1;
         min-height: 0;
+        padding: 2px 2px 4px;
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         grid-template-rows: auto repeat(6, 1fr);

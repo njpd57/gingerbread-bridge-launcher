@@ -17,8 +17,9 @@ const quote = computed(() => quoteOfTheDay(now.value));
 </template>
 
 <style scoped lang="scss">
-// same translucent panel as the weather widget
+// the power control's glossy panel
 .quote-widget {
+    @include gb-widget-glossy;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -26,9 +27,6 @@ const quote = computed(() => quoteOfTheDay(now.value));
     min-height: 72px;
     margin: 0;
     padding: 8px 12px;
-    border: 1px solid rgba(#fff, 0.12);
-    border-radius: 6px;
-    background: linear-gradient(to bottom, rgba(#000, 0.45), rgba(#000, 0.65));
     text-shadow: 0 1px 2px #000;
 
     > blockquote {

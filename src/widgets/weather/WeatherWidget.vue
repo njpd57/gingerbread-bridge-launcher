@@ -101,9 +101,8 @@ function onWidgetClick()
     gap: 12px;
     min-height: 88px;
     padding: 10px 14px;
-    border-radius: 6px;
-    border: 1px solid rgba(#fff, 0.12);
-    background: linear-gradient(to bottom, rgba(#000, 0.45), rgba(#000, 0.65));
+    // the power control's glossy panel
+    @include gb-widget-glossy;
     text-shadow: 0 1px 2px #000;
     cursor: pointer;
 

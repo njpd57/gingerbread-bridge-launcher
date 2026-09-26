@@ -102,18 +102,15 @@ function openToday()
 <style scoped lang="scss">
 $gingerbread-orange: #ffa800;
 
-// same translucent panel as the weather and calendar widgets
+// Songbird's look: a gray frame, today's date on a glossy block (like its buttons), the events recessed
 .agenda-widget {
+    @include gb-widget-frame;
     display: flex;
-    gap: 10px;
+    gap: 5px;
     height: 100%;
-    padding: 8px 10px;
+    padding: 5px;
     overflow: hidden;
-    border: 1px solid rgba(#fff, 0.12);
-    border-radius: 6px;
-    background: linear-gradient(to bottom, rgba(#000, 0.45), rgba(#000, 0.65));
-    color: #fff;
-    text-shadow: 0 1px 2px #000;
+    text-shadow: 0 1px 1px #000;
 
     button {
         appearance: none;
@@ -135,7 +132,10 @@ $gingerbread-orange: #ffa800;
         justify-content: center;
         width: 76px;
         padding: 0;
-        border-right: 1px solid rgba(#fff, 0.15);
+        @include gb-widget-button;
+        border: 1px solid #111;
+        border-radius: 4px;
+        text-align: center;
 
         > .weekday {
             font-size: 13px;
@@ -155,14 +155,17 @@ $gingerbread-orange: #ffa800;
             color: $gingerbread-orange;
         }
 
-        &:active > .day {
-            color: $gingerbread-orange;
+        // pressed, the whole block turns orange (from the mixin): keep every line readable on it
+        &:active > * {
+            color: #111;
         }
     }
 
     > .list {
+        @include gb-widget-inset;
         flex: 1;
         min-width: 0;
+        padding: 4px 8px;
         display: flex;
         flex-direction: column;
         justify-content: center;
