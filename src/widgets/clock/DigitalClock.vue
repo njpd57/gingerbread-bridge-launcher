@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useNow } from '@vueuse/core';
+import { useAppsStore } from '@/stores/useAppsStore';
+import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
+import { findClockApp } from '@/utils/clock';
 
 // Big digital time with the date underneath, like the Android 2.x lock screen clock
 // (Clockopia digits, 12-hour with a small AM/PM, like the Gingerbread status bar).
@@ -24,10 +27,20 @@ const date = computed(() =>
     return s.charAt(0).toUpperCase() + s.slice(1);
 });
 
+// tapping the clock opens a clock app, like Gingerbread's alarm app; long-pressing still drags it
+// (HomeGrid discards the click that ends a long press before it reaches us)
+const apps = useAppsStore();
+const launcher = useAppLauncherStore();
+
+function openClockApp()
+{
+    const pkg = findClockApp(p => apps.apps.has(p));
+    if (pkg) launcher.launch(pkg);
+}
 </script>
 
 <template>
-    <div class="digital-clock">
+    <div class="digital-clock" @click="openClockApp">
         <div class="time">
             <span class="hm">{{ time.hm }}</span>
             <span class="ampm">{{ time.ampm }}</span>
@@ -44,6 +57,7 @@ const date = computed(() =>
     gap: 2px;
     color: #fff;
     text-shadow: 0 2px 4px rgba(#000, 0.8);
+    cursor: pointer;
 
     > .time {
         display: flex;

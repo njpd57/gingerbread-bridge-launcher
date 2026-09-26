@@ -62,6 +62,9 @@ const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'search', label: 'Búsqueda de aplicaciones' },
     { kind: 'mostUsed', label: 'Apps más usadas' },
     { kind: 'screenTime', label: 'Tiempo de pantalla' },
+    { kind: 'favContacts', label: 'Contactos favoritos' },
+    { kind: 'directCall', label: 'Marcación directa' },
+    { kind: 'directMessage', label: 'Mensaje directo' },
 ];
 
 // live previews: each widget is rendered at the size it has on the home screen, then scaled down by

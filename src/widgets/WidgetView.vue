@@ -22,6 +22,8 @@ import RssWidget from './rss/RssWidget.vue';
 import MostUsedWidget from './mostUsed/MostUsedWidget.vue';
 import AgendaWidget from './agenda/AgendaWidget.vue';
 import ScreenTimeWidget from './screenTime/ScreenTimeWidget.vue';
+import FavContactsWidget from './favContacts/FavContactsWidget.vue';
+import DirectContactWidget from './directContact/DirectContactWidget.vue';
 
 // Renders any widget by kind, filling the grid area it's placed in.
 // Used both on the home screen (HomeGrid) and for the item being dragged (DragLayer).
@@ -60,6 +62,9 @@ defineProps<{
         <CalculatorWidget v-else-if="kind === 'calculator'" />
         <TasksWidget v-else-if="kind === 'tasks'" :widget-id="widgetId" />
         <RssWidget v-else-if="kind === 'rss'" :widget-id="widgetId" />
+        <FavContactsWidget v-else-if="kind === 'favContacts'" />
+        <DirectContactWidget v-else-if="kind === 'directCall'" :widget-id="widgetId" mode="call" />
+        <DirectContactWidget v-else-if="kind === 'directMessage'" :widget-id="widgetId" mode="message" />
     </div>
 </template>
 

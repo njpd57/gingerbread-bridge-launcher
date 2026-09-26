@@ -67,6 +67,7 @@ export const useContactsStore = defineStore('contacts', () =>
         /** Calls right away with CALL_PHONE; without it, opens the dialer with the number typed in. */
         call: (number: string) => Bridge.requestCallPhoneNumber(number, true),
         openContact: (c: BridgeContact) => Bridge.requestOpenContact(c.lookupKey, true),
-        photoUrl: (c: BridgeContact) => Bridge.getContactPhotoURL(c.lookupKey),
+        /** Takes anything with a `lookupKey`, so widgets that only kept that (not the full contact) can use it too. */
+        photoUrl: (c: { lookupKey: string }) => Bridge.getContactPhotoURL(c.lookupKey),
     };
 });

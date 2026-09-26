@@ -21,7 +21,7 @@ export function autoGridRows(gridWidth: number, gridHeight: number)
 }
 
 export type WidgetKind = 'clock' | 'clockLarge' | 'digitalClock' | 'weather' | 'power' | 'search' | 'battery' | 'calendar' | 'quote' | 'photo' | 'music' | 'musicSongbird' | 'agenda' | 'screenTime' | 'mostUsed'
-    | 'countdown' | 'forecast' | 'sunMoon' | 'note' | 'timer' | 'calculator' | 'tasks' | 'rss';
+    | 'countdown' | 'forecast' | 'sunMoon' | 'note' | 'timer' | 'calculator' | 'tasks' | 'rss' | 'favContacts' | 'directCall' | 'directMessage';
 
 export const WIDGET_SIZES: Record<WidgetKind, { w: number; h: number }> = {
     clock: { w: 2, h: 2 },
@@ -47,6 +47,9 @@ export const WIDGET_SIZES: Record<WidgetKind, { w: number; h: number }> = {
     tasks: { w: 2, h: 2 },
     rss: { w: 4, h: 2 },
     screenTime: { w: 4, h: 1 },
+    favContacts: { w: 4, h: 1 },
+    directCall: { w: 1, h: 1 },
+    directMessage: { w: 1, h: 1 },
 };
 
 export interface GridArea

@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 7, 9, 12, 15 a 33 ya están implementadas (marcadas con ✅). Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono, menos los widgets 17, 18, 19, 21, 22, 23, 24 y 27. La 25 y de la 30 a la 33 necesitan nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 12, 15 a 37 ya están implementadas (marcadas con ✅), salvo la variante 4×2 de la 35. Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono, menos los widgets 17, 18, 19, 21, 22, 23, 24 y 27, la 34 y los contactos (35 a 37). La 25, de la 30 a la 33 y de la 35 a la 37 necesitan nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -76,10 +76,10 @@ Gingerbread traía de serie el widget de búsqueda de Google: una barra de 4×1 
 - **Filtrar con cada letra.** En el teléfono los resultados solo se actualizaban al pulsar espacio: el teclado de Android va "componiendo" cada palabra (la que subraya con sugerencias) y el `v-model` de Vue no actualiza el valor hasta que termina la composición. El campo de `SearchPanel.vue` usa `:value` más `@input`, porque el evento `input` llega con cada letra (probado en el teléfono).
 - **Esfuerzo:** medio. Está hecho en `src/widgets/search/`, con la búsqueda en `src/utils/search.ts`. Las apps recientes salen de `useAppLauncherStore`, por donde pasan todos los lanzamientos, y el panel usa `useKeyboardInset()` para que el teclado no tape los resultados.
 
-### 34. Los relojes abren la app Reloj
-En Gingerbread, tocar el widget del reloj abría la app de alarmas. Tocar el reloj analógico (2×2 y 4×2) o el digital (4×1) abriría la app Reloj del teléfono.
-- **Con el Bridge original:** lanzar la primera app instalada de una lista de paquetes conocidos, igual que hace el dock con el teléfono y el navegador: `com.sec.android.app.clockpackage` (Samsung), `com.google.android.deskclock` (Google) y `com.android.deskclock` (AOSP). Se comprueba en la lista de apps (`useAppsStore`) y se abre con `useAppLauncherStore().launch()`. Si no hay ninguna, el toque no hace nada.
-- **Con nuestro fork (mejor):** un método nuevo, por ejemplo `requestOpenAlarms()`, que lance el intent `AlarmClock.ACTION_SHOW_ALARMS`. Así se abre la app de reloj que tenga el usuario, sea cual sea, sin lista de paquetes. Habría que declararlo en `src/types/bridge-fork.d.ts` y en `ForkBridgeMock`, y usarlo con `bridgeHas()` antes de la lista.
+### 34. Los relojes abren la app Reloj ✅ Hecho
+En Gingerbread, tocar el widget del reloj abría la app de alarmas. Tocar el reloj analógico (2×2 y 4×2) o el digital (4×1) abre la app Reloj del teléfono.
+- **Con el Bridge original:** se lanza la primera app instalada de una lista de paquetes conocidos, igual que hace el dock con el teléfono y el navegador: `com.sec.android.app.clockpackage` (Samsung), `com.google.android.deskclock` (Google) y `com.android.deskclock` (AOSP) (`src/utils/clock.ts`, `findClockApp()`). Se comprueba en la lista de apps (`useAppsStore`) y se abre con `useAppLauncherStore().launch()`. Si no hay ninguna, el toque no hace nada.
+- **Con nuestro fork (mejor, sin hacer todavía):** un método nuevo, por ejemplo `requestOpenAlarms()`, que lance el intent `AlarmClock.ACTION_SHOW_ALARMS`. Así se abriría la app de reloj que tenga el usuario, sea cual sea, sin lista de paquetes. Habría que declararlo en `src/types/bridge-fork.d.ts` y en `ForkBridgeMock`, y usarlo con `bridgeHas()` antes de la lista.
 - La pulsación larga sigue moviendo el widget: `HomeGrid` ya descarta el toque que termina una pulsación larga.
 - **Esfuerzo:** muy bajo en el launcher; bajo en el fork.
 
@@ -251,27 +251,29 @@ Lo que suena en cualquier app (Spotify, YouTube Music…), con carátula, títul
 - **Widget "Música (estilo Songbird)"** (4×1), más de Gingerbread: la carátula en un marco claro y, al lado, "Artista - Título" sobre tres botones grandes grises (`widgets/music/SongbirdPlayer.vue`).
 - **Solo con nuestro fork de Bridge** y el acceso a notificaciones: `getMediaSession`, `getMediaArtURL`, `requestMediaAction`, `requestOpenMediaApp` y el evento `mediaSessionChanged`.
 
-### 35. Contactos favoritos
-Una fila (4×1) o cuadrícula (4×2) con las fotos de los contactos marcados como favoritos (con estrella) en la app de Contactos, con su nombre debajo. Al tocar una foto se abre un pequeño menú al estilo del *Quick Contact* de Gingerbread, con **Llamar**, **Mensaje** (SMS) y **Ver contacto**; cada contacto se puede configurar para que el toque **llame directamente**. Sin foto, se dibuja la silueta gris de contacto de Android 2.x.
-- **Necesita ampliar nuestro fork de Bridge** (ver "Contactos en el fork" más abajo).
-- **Tamaño:** 4×1 (4 contactos) o 4×2 (8).
+### 35. Contactos favoritos ✅ Hecho (solo 4×1)
+Una fila (4×1) o cuadrícula (4×2) con las fotos de los contactos marcados como favoritos (con estrella) en la app de Contactos, con su nombre debajo. Al tocar una foto se abre un pequeño menú al estilo del *Quick Contact* de Gingerbread, con **Llamar**, **Mensaje** (SMS) y **Ver contacto**. Sin foto, se dibuja la silueta gris de contacto de Android 2.x.
+- Implementado como el widget "Contactos favoritos" (`src/widgets/favContacts/FavContactsWidget.vue`), solo en 4×1 (hasta 4 contactos); la variante 4×2 (8 contactos) queda pendiente.
+- **Simplificado:** el toque siempre abre el menú *Quick Contact*; no se implementó la configuración por contacto para que el toque llame directamente sin pasar por el menú.
+- **Necesita nuestro fork de Bridge** (ver "Contactos en el fork" más abajo).
 - **Esfuerzo:** medio, contando lo del fork.
 
-### 36. Marcación directa
+### 36. Marcación directa ✅ Hecho
 El acceso directo "Marcación directa" de Gingerbread (1×1): se elige un contacto y uno de sus números al añadirlo, y queda como un icono con la foto del contacto y un pequeño teléfono verde en la esquina. Al tocarlo **llama directamente** a ese número. La variante **"Mensaje directo"** abre una conversación de SMS con ese número (con un sobre en vez del teléfono).
-- Se elige el contacto en un diálogo con buscador, con los mismos datos que la idea 37.
-- **Necesita ampliar nuestro fork de Bridge** (ver abajo). La llamada directa necesita el permiso `CALL_PHONE`; sin él, el toque abre el marcador con el número escrito (`requestOpenUrl('tel:…')`, que ya existe) y hay que pulsar llamar.
+- Ambas variantes son el mismo componente (`src/widgets/directContact/DirectContactWidget.vue`, prop `mode: 'call' | 'message'`), registradas como los widgets "Marcación directa" y "Mensaje directo".
+- El contacto y el número se eligen la primera vez que se toca el icono recién añadido, en un diálogo con buscador que lista un número por fila (mismo contacto con dos números aparece dos veces). Se guardan con `useWidgetData` por el id del icono. **Para cambiar el contacto elegido hay que quitar el icono y añadirlo de nuevo** (no se implementó una forma de reconfigurarlo).
+- **Necesita nuestro fork de Bridge** (ver abajo). La llamada directa necesita el permiso `CALL_PHONE`; sin él, el toque abre el marcador con el número escrito (`requestOpenUrl('tel:…')`, que ya existe) y hay que pulsar llamar.
 - **Tamaño:** 1×1.
 - **Esfuerzo:** bajo, una vez hecha la parte de contactos del fork.
 
-### 37. Contactos en la búsqueda
+### 37. Contactos en la búsqueda ✅ Hecho
 El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda rápida de Gingerbread: debajo de las apps aparece una sección "Contactos" con la foto, el nombre y el número de los que coinciden (sin tildes ni mayúsculas, igual que las apps). **Al tocar un contacto se le llama** (directamente o abriendo el marcador, según el permiso); con una pulsación larga se ven sus otros números y "Enviar mensaje".
 - También sirve escribir un número: si el texto parece un teléfono, aparece "Llamar a …".
-- **Necesita ampliar nuestro fork de Bridge** (ver abajo). Los contactos se cargan al abrir la búsqueda y se filtran en el launcher, o se buscan en Bridge si son muchos.
+- **Necesita nuestro fork de Bridge** (ver abajo). Los contactos se cargan al abrir la búsqueda y se filtran en el launcher (`searchContacts()` en `src/utils/search.ts`).
 - **Esfuerzo:** bajo-medio en el launcher.
 
 #### Contactos en el fork (lo que necesitan las ideas 35 a 37)
-✅ Ya implementado en el fork de Bridge (instalado en el teléfono, falta probarlo desde el launcher y hacer commit). Ya está declarado en `src/types/bridge-fork.d.ts` y `ForkBridgeMock` (con contactos de ejemplo); falta todo el consumo (store, widgets, búsqueda).
+✅ Implementado en el fork de Bridge (instalado en el teléfono) y consumido en el launcher: `useContactsStore`, el widget de favoritos, marcación/mensaje directo y la búsqueda. **Falta probar las tres cosas en el teléfono.**
 - **Permiso `READ_CONTACTS`**, pedido con el diálogo de Android: `getCanReadContacts()`, `requestContactsPermission()` y el evento `canReadContactsChanged`.
 - **`getContactsURL(query?, starredOnly?, limit?)`** (parámetros posicionales, no un objeto): JSON con `id`, `lookupKey`, `name`, `starred`, `hasPhoto` y los números (`number`, `label`, `isPrimary` — el principal va primero y sin duplicados), leídos de `ContactsContract`. `query` busca por nombre y número igual que la app de Contactos (pasar `''` para no filtrar, no `undefined`); `limit` en 0 es sin límite. Evento `contactsChanged` cuando cambian.
 - **`getContactPhotoURL(lookupKey)`**: la foto del contacto en alta resolución, 404 si no tiene (revisar `hasPhoto`).
