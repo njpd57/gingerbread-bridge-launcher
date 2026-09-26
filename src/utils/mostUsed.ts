@@ -1,3 +1,5 @@
+import type { BridgeAppUsage } from "@/types/bridge-fork";
+
 /** Launch counts per package name, kept by useAppLauncherStore. */
 export type LaunchCounts = Record<string, number>;
 
@@ -34,4 +36,21 @@ export function mostUsedApps(
         .filter(isInstalled)
         .sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0) || recency(a) - recency(b) || a.localeCompare(b))
         .slice(0, limit);
+}
+
+/**
+ * The most used apps from Android's own records (Bridge fork, with usage access): most opened first,
+ * then by time in use. Unlike the launch counts, this includes apps opened from notifications, other apps
+ * or Recents. Apps that aren't installed launchable apps (system UI, keyboards…) are skipped.
+ */
+export function mostUsedFromUsage(
+    usage: readonly BridgeAppUsage[],
+    isInstalled: (packageName: string) => boolean,
+    limit: number): string[]
+{
+    return usage
+        .filter(u => u.openCount > 0 && isInstalled(u.packageName))
+        .sort((a, b) => b.openCount - a.openCount || b.totalTimeMs - a.totalTimeMs)
+        .slice(0, limit)
+        .map(u => u.packageName);
 }

@@ -1,23 +1,41 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useAppsStore } from '@/stores/useAppsStore';
 import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
 import { GRID_COLS } from '@/stores/useHomeLayoutStore';
-import { mostUsedApps } from '@/utils/mostUsed';
+import { mostUsedApps, mostUsedFromUsage } from '@/utils/mostUsed';
+import { useUsageStore } from '@/stores/useUsageStore';
+import type { BridgeAppUsage } from '@/types/bridge-fork';
 import Shortcut from '@/home/Shortcut.vue';
 
 // The 4 apps opened most often, one per column, so they line up with the icons on the home screen.
-// The counts come from useAppLauncherStore, which every launch goes through.
+// With our Bridge fork and usage access, the ranking comes from Android's records of the last week
+// (which also count apps opened outside the launcher); otherwise from useAppLauncherStore's launch counts.
+
+// how far back Android's records are read
+const USAGE_DAYS = 7;
 
 const apps = useAppsStore();
 const launcher = useAppLauncherStore();
+const usageStore = useUsageStore();
 
-const shown = computed(() => mostUsedApps(
-    launcher.launchCounts,
-    launcher.recent,
-    p => apps.apps.has(p),
-    GRID_COLS)
-    .map(p => apps.apps.get(p)!));
+const usage = ref<BridgeAppUsage[]>([]);
+
+watch([() => usageStore.version, () => usageStore.canRead], async () =>
+{
+    const now = new Date();
+    usage.value = await usageStore.fetchUsage(new Date(now.getTime() - USAGE_DAYS * 86_400_000), now);
+}, { immediate: true });
+
+const shown = computed(() =>
+{
+    const isInstalled = (p: string) => apps.apps.has(p);
+    const fromSystem = usageStore.canRead ? mostUsedFromUsage(usage.value, isInstalled, GRID_COLS) : [];
+    const packages = fromSystem.length > 0
+        ? fromSystem
+        : mostUsedApps(launcher.launchCounts, launcher.recent, isInstalled, GRID_COLS);
+    return packages.map(p => apps.apps.get(p)!);
+});
 </script>
 
 <template>

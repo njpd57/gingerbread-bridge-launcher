@@ -53,6 +53,7 @@ const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'power', label: 'Control de energía' },
     { kind: 'search', label: 'Búsqueda de aplicaciones' },
     { kind: 'mostUsed', label: 'Apps más usadas' },
+    { kind: 'screenTime', label: 'Tiempo de pantalla' },
 ];
 
 // live previews: each widget is rendered at the size it has on the home screen, then scaled down by

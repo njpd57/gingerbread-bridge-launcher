@@ -93,6 +93,24 @@ export interface BridgeMediaSession
     canSkipToPrevious: boolean;
 }
 
+/** One app's usage within a range, from `getAppUsageURL()`. */
+export interface BridgeAppUsage
+{
+    packageName: string;
+    /** Time in the foreground, in milliseconds. */
+    totalTimeMs: number;
+    /** How many times the user switched to the app. */
+    openCount: number;
+    /** Milliseconds since the epoch, or null if unused within the range. */
+    lastTimeUsed: number | null;
+}
+
+export interface BridgeGetAppUsageResponse
+{
+    /** Most used (by time) first. */
+    apps: BridgeAppUsage[];
+}
+
 /** An active notification, as served by `getNotificationsURL()` and the `notificationPosted` event. */
 export interface BridgeNotification
 {
@@ -149,7 +167,8 @@ export type BridgeForkEvent =
     | { name: 'locationEnabledChanged'; newValue: boolean }
     | { name: 'connectivityChanged'; newValue: BridgeConnectivity }
     | { name: 'canReadCalendarChanged'; newValue: boolean }
-    | { name: 'calendarChanged' };
+    | { name: 'calendarChanged' }
+    | { name: 'canReadUsageStatsChanged'; newValue: boolean };
 
 declare module '@bridgelauncher/api'
 {
@@ -222,6 +241,12 @@ declare module '@bridgelauncher/api'
         requestOpenCalendarEvent(eventId: number, begin: number, end: number, showToastIfFailed?: boolean): boolean;
         /** Opens the calendar app at a time (e.g. a day tapped in a month view). */
         requestOpenCalendarAt(time: number, showToastIfFailed?: boolean): boolean;
+
+        /** Whether the user gave Bridge "Usage access". Fires `canReadUsageStatsChanged` (checked on resume). */
+        getCanReadUsageStats(): boolean;
+        requestOpenUsageAccessSettings(showToastIfFailed?: boolean): boolean;
+        /** URL of a {@link BridgeGetAppUsageResponse} JSON for [from, to) (ms). 403 without access. */
+        getAppUsageURL(from: number, to: number): string;
 
         /** Whether Bridge can read apps' shortcuts: only the default launcher can, on Android 7.1+. */
         getCanAccessAppShortcuts(): boolean;

@@ -191,6 +191,27 @@ class ForkBridgeMock extends BridgeMock
         return true;
     }
 
+    getCanReadUsageStats()
+    {
+        return true;
+    }
+
+    requestOpenUsageAccessSettings()
+    {
+        alert('Would open the usage access settings.');
+        return true;
+    }
+
+    getAppUsageURL()
+    {
+        const apps = [
+            { packageName: 'com.android.chrome', totalTimeMs: 52 * 60_000, openCount: 14, lastTimeUsed: Date.now() - 600_000 },
+            { packageName: 'com.whatsapp', totalTimeMs: 31 * 60_000, openCount: 23, lastTimeUsed: Date.now() - 60_000 },
+            { packageName: 'com.spotify.music', totalTimeMs: 12 * 60_000, openCount: 3, lastTimeUsed: Date.now() - 3_600_000 },
+        ];
+        return 'data:application/json,' + encodeURIComponent(JSON.stringify({ apps }));
+    }
+
     getCanReadCalendar()
     {
         return true;
