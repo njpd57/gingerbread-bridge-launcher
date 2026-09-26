@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useNow } from '@vueuse/core';
-import type { StatusBarBackground } from '@/stores/useSettingsStore';
+import { useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
 import { useDeviceStatus } from './useDeviceStatus';
 import { useSimulatedSignal } from './useSimulatedSignal';
 import NotificationIcons from './NotificationIcons.vue';
@@ -21,6 +21,9 @@ const props = defineProps<{
 }>();
 
 const now = useNow({ interval: 1000 });
+// which icons to show (Appearance); the clock always shows
+const settings = useSettingsStore();
+const show = computed(() => settings.statusBarIcons);
 const device = useDeviceStatus();
 const notifications = useNotificationsStore();
 const menu = useMenuStore();
@@ -98,58 +101,58 @@ const usbConnected = computed(() => battery.charging && (battery.pluggedType ===
         @click="openNotifications">
 
         <!-- real icons when Bridge can read notifications, decorative ones otherwise -->
-        <LiveNotificationIcons v-if="notifications.canRead" class="notifications" />
-        <NotificationIcons v-else class="notifications" :usb="usbConnected" />
+        <LiveNotificationIcons v-if="show.notifications && notifications.canRead" class="notifications" />
+        <NotificationIcons v-else-if="show.notifications" class="notifications" :usb="usbConnected" />
 
         <div class="icons">
             <!-- Bluetooth on: the rune -->
-            <svg v-if="qs.supportsRadioStates && qs.bluetoothOn" class="icon state" viewBox="0 0 12 18" aria-hidden="true">
+            <svg v-if="show.bluetooth && qs.supportsRadioStates && qs.bluetoothOn" class="icon state" viewBox="0 0 12 18" aria-hidden="true">
                 <path d="M2.5 5.5l7 6.5-3.5 3.3V2.7L9.5 6l-7 6.5" class="line" />
             </svg>
 
             <!-- an alarm is set: the alarm clock -->
-            <svg v-if="alarm.nextAlarm" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+            <svg v-if="show.alarm && alarm.nextAlarm" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
                 <circle cx="9" cy="10" r="6" class="line" />
                 <path d="M9 6.8v3.5l2.2 1.4M2.5 4.5l2.8-2.3M15.5 4.5l-2.8-2.3" class="line" />
             </svg>
 
             <!-- GPS on: a crosshair -->
-            <svg v-if="qs.supportsLocationState && qs.locationOn" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+            <svg v-if="show.gps && qs.supportsLocationState && qs.locationOn" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
                 <circle cx="9" cy="9" r="5" class="line" />
                 <circle cx="9" cy="9" r="1.8" class="solid" />
                 <path d="M9 1v3M9 14v3M1 9h3M14 9h3" class="line" />
             </svg>
 
             <!-- vibrate: a phone between shake marks -->
-            <svg v-if="qs.supportsRingerMode && qs.ringerMode === 'vibrate'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+            <svg v-if="show.ringer && qs.supportsRingerMode && qs.ringerMode === 'vibrate'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
                 <rect x="5.5" y="2" width="7" height="14" rx="1" class="solid" />
                 <rect x="7" y="4" width="4" height="8" class="hole" />
                 <path d="M3 5.5v7M1 7.5v3M15 5.5v7M17 7.5v3" class="line" />
             </svg>
 
             <!-- silent: a speaker with a slash -->
-            <svg v-if="qs.supportsRingerMode && qs.ringerMode === 'silent'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
+            <svg v-if="show.ringer && qs.supportsRingerMode && qs.ringerMode === 'silent'" class="icon state" viewBox="0 0 18 18" aria-hidden="true">
                 <path d="M2 7h3l4-3.5v11L5 11H2z" class="solid" />
                 <path d="M11 6l5 6M16 6l-5 6" class="line" />
             </svg>
 
             <!-- data activity: down (in) and up (out) arrows, lit while "transferring" -->
-            <svg class="icon activity" viewBox="0 0 8 18" aria-hidden="true">
+            <svg v-if="show.dataActivity" class="icon activity" viewBox="0 0 8 18" aria-hidden="true">
                 <path d="M4 17L0.8 12.5h6.4z" :class="{ on: activity.in }" />
                 <path d="M4 1L7.2 5.5H0.8z" :class="{ on: activity.out }" />
             </svg>
 
             <!-- Wi-Fi: a wedge and two arcs, lit up to the current level (1..3) -->
-            <svg v-if="onWifi" class="icon wifi" viewBox="0 0 20 18" aria-hidden="true">
+            <svg v-if="show.wifi && onWifi" class="icon wifi" viewBox="0 0 20 18" aria-hidden="true">
                 <path d="M10 16.5l2.4-2.9a3.8 3.8 0 0 0-4.8 0z" :class="{ on: wifiLevel >= 1 }" />
                 <path d="M5.8 11.4a6.6 6.6 0 0 1 8.4 0l1.7-2.1a9.4 9.4 0 0 0-11.8 0z" :class="{ on: wifiLevel >= 2 }" />
                 <path d="M2.3 7.2a12 12 0 0 1 15.4 0l1.7-2.1a14.8 14.8 0 0 0-18.8 0z" :class="{ on: wifiLevel >= 3 }" />
             </svg>
 
-            <span v-else class="network-tag">3G</span>
+            <span v-else-if="!onWifi && show.signal" class="network-tag">3G</span>
 
             <!-- signal: four rising bars, lit up to the current level -->
-            <svg class="icon signal" viewBox="0 0 18 18" aria-hidden="true">
+            <svg v-if="show.signal" class="icon signal" viewBox="0 0 18 18" aria-hidden="true">
                 <rect x="1" y="12" width="3" height="5" :class="{ on: cellLevel >= 1 }" />
                 <rect x="5.5" y="9" width="3" height="8" :class="{ on: cellLevel >= 2 }" />
                 <rect x="10" y="5.5" width="3" height="11.5" :class="{ on: cellLevel >= 3 }" />
@@ -157,7 +160,7 @@ const usbConnected = computed(() => battery.charging && (battery.pluggedType ===
             </svg>
 
             <!-- battery: level fills from the bottom, bolt while charging -->
-            <svg class="icon battery" :class="{ low: isBatteryLow }" viewBox="0 0 10 18" aria-hidden="true">
+            <svg v-if="show.battery" class="icon battery" :class="{ low: isBatteryLow }" viewBox="0 0 10 18" aria-hidden="true">
                 <rect x="3" y="0.5" width="4" height="2" class="cap" />
                 <rect x="0.75" y="2.25" width="8.5" height="15" rx="1" class="shell" />
                 <rect

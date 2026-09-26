@@ -302,6 +302,7 @@ Revisión de lo que el launcher todavía no aprovecha. De la API publicada queda
 La barra de estado de 2.3 mostraba a la izquierda de la señal un icono por cada cosa activa. Nuestra barra Gingerbread ahora los dibuja, en blanco como los de 2.3 (en gris oscuro sobre las barras claras): **Bluetooth** encendido (la runa), **alarma** puesta (un despertador, idea 49), **GPS** encendido (una mira) y el timbre en **vibrar** (un teléfono entre marcas de vibración) o **silencio** (un altavoz tachado).
 - **API (fork):** `getRingerMode()` / `ringerModeChanged` y `getBluetoothEnabled()` / `bluetoothEnabledChanged`, ya en `useQuickSettingsStore`; `getLocationEnabled()` / `locationEnabledChanged` volvió al store como `locationOn` (solo lectura, sin botón). Con el Bridge original no se muestran.
 - Están en `statusbar/GingerbreadStatusBar.vue`, con la clase `state`.
+- **Qué iconos se ven:** en Apariencia, con la barra Gingerbread elegida, "Iconos de la barra" tiene una casilla por icono (notificaciones, Bluetooth, alarma, GPS, vibrar y silencio, actividad de datos, Wi-Fi, señal y batería; la hora siempre se ve), guardadas en `settings.statusBarIcons`. Las casillas son `components/GbCheckRow.vue`, la casilla de 2.3.
 - **Esfuerzo:** bajo.
 
 ### 40. Batería real y el aviso de batería baja ✅ Hecho

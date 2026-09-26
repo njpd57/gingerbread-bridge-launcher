@@ -38,6 +38,7 @@ Funciona con el Bridge original, y con **[nuestro fork de Bridge](https://github
 - **Apariencia**:
   - Barra de estado **nativa** (la del sistema) o una **barra propia de Gingerbread**, que muestra la hora y la batería reales.
     - **Con nuestro fork**, también son reales la señal móvil, el Wi-Fi, las flechas de datos, el icono de USB y los iconos de notificaciones (con el acceso a notificaciones), y como en 2.3 aparecen iconos de Bluetooth, alarma puesta, GPS y timbre en vibrar o silencio. Al tocarla se abre el **panel de notificaciones** del launcher (ver abajo).
+    - Puedes elegir qué iconos muestra la barra Gingerbread (notificaciones, Bluetooth, alarma, GPS, vibrar y silencio, actividad de datos, Wi-Fi, señal y batería); la hora siempre se ve.
     - Con la barra Gingerbread, las pantallas propias de Bridge (sus ajustes, su consola) pasan a tema oscuro; al volver a la barra nativa, recuperan el tema que tenían.
     - Con el Bridge original, la señal y el Wi-Fi son simulados (suben y bajan poco a poco), los iconos de notificaciones son decorativos y al tocarla se abre la cortina de Android.
   - Fondo de la barra de estado: transparente, degradado gris, degradado negro, blanco o negro.

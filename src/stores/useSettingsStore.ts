@@ -17,6 +17,10 @@ export type StatusBarBackground = 'none' | 'gray' | 'blackGradient' | 'white' | 
 export const MAX_STATUS_BAR_HEIGHT = 80;
 export const MAX_STATUS_BAR_SIDE_MARGIN = 60;
 
+/** The Gingerbread status bar's icons the user can hide (the clock always shows). */
+export type StatusBarIcon = 'notifications' | 'bluetooth' | 'alarm' | 'gps' | 'ringer' | 'dataActivity' | 'wifi' | 'signal' | 'battery';
+export const STATUS_BAR_ICONS: StatusBarIcon[] = ['notifications', 'bluetooth', 'alarm', 'gps', 'ringer', 'dataActivity', 'wifi', 'signal', 'battery'];
+
 export const NEXUS_PULSES: Record<Level, number> = { low: 5, normal: 9, high: 15 };
 export const NEXUS_SPEED: Record<Level, number> = { low: 0.6, normal: 1, high: 1.6 };
 
@@ -38,6 +42,11 @@ export const useSettingsStore = defineStore('settings', () =>
     const gingerbreadStatusBar = useLocalStorage<boolean>('settings.gingerbreadStatusBar', false);
     // side padding of the Gingerbread bar, in CSS px, so rounded screen corners don't cover it
     const statusBarSideMargin = useLocalStorage<number>('settings.statusBarSideMargin', 16);
+    // which icons the Gingerbread bar shows; all by default, and icons added later start visible
+    const statusBarIcons = useLocalStorage<Record<StatusBarIcon, boolean>>(
+        'settings.statusBarIcons',
+        Object.fromEntries(STATUS_BAR_ICONS.map(i => [i, true])) as Record<StatusBarIcon, boolean>,
+        { mergeDefaults: true });
     // the Bridge status bar appearance to restore when turning the Gingerbread bar off
     const savedStatusBarAppearance = useLocalStorage<SystemBarAppearance>('settings.savedStatusBarAppearance', 'light-fg');
     // Bridge's own theme to restore when the Gingerbread bar is turned off; '' when we didn't change it
@@ -135,6 +144,7 @@ export const useSettingsStore = defineStore('settings', () =>
         statusBarHeight,
         gingerbreadStatusBar,
         statusBarSideMargin,
+        statusBarIcons,
         gingerbreadOverscroll,
         addIconOnInstall,
         iconScale,

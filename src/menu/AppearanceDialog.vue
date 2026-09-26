@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { MAX_GRID_ROWS, MIN_GRID_ROWS, useHomeLayoutStore } from '@/stores/useHomeLayoutStore';
 import { MAX_ICON_SCALE, MIN_ICON_SCALE } from '@/utils/iconSize';
-import { MAX_STATUS_BAR_HEIGHT, MAX_STATUS_BAR_SIDE_MARGIN, useSettingsStore, type StatusBarBackground } from '@/stores/useSettingsStore';
+import { MAX_STATUS_BAR_HEIGHT, MAX_STATUS_BAR_SIDE_MARGIN, STATUS_BAR_ICONS, useSettingsStore, type StatusBarBackground, type StatusBarIcon } from '@/stores/useSettingsStore';
 import { useWindowInsetsStore } from '@/stores/useWindowInsetsStore';
 import { useTogglesStore } from '@/stores/useTogglesStore';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
@@ -11,6 +11,7 @@ import type { BridgeButtonVisibility } from '@bridgelauncher/api';
 import GbDialog from '@/components/GbDialog.vue';
 import GbButton from '@/components/GbButton.vue';
 import GbRadioRow from '@/components/GbRadioRow.vue';
+import GbCheckRow from '@/components/GbCheckRow.vue';
 
 const menu = useMenuStore();
 const layout = useHomeLayoutStore();
@@ -46,6 +47,23 @@ const statusBarOptions: { value: StatusBarBackground; label: string }[] = [
     { value: 'white', label: 'Blanco' },
     { value: 'black', label: 'Negro' },
 ];
+
+const statusBarIconLabels: Record<StatusBarIcon, { label: string; hint?: string }> = {
+    notifications: { label: 'Notificaciones' },
+    bluetooth: { label: 'Bluetooth', hint: 'Cuando está encendido' },
+    alarm: { label: 'Alarma', hint: 'Cuando hay una alarma puesta' },
+    gps: { label: 'GPS', hint: 'Cuando la ubicación está encendida' },
+    ringer: { label: 'Vibrar y silencio', hint: 'Cuando el timbre no suena' },
+    dataActivity: { label: 'Actividad de datos', hint: 'Las flechas de subida y bajada' },
+    wifi: { label: 'Wi-Fi' },
+    signal: { label: 'Señal móvil' },
+    battery: { label: 'Batería' },
+};
+
+function setStatusBarIcon(icon: StatusBarIcon, visible: boolean)
+{
+    settings.statusBarIcons = { ...settings.statusBarIcons, [icon]: visible };
+}
 
 const isHeightAuto = computed(() => settings.statusBarHeight < 0);
 
@@ -147,6 +165,22 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
                 nativa. También mueve el contenido de las pantallas para que no quede debajo.
             </div>
         </section>
+
+        <template v-if="settings.gingerbreadStatusBar">
+            <section class="options">
+                <div class="field-label">Iconos de la barra</div>
+                <div class="field-hint">
+                    La hora siempre se muestra. Bluetooth, alarma, GPS y modo de sonido necesitan nuestro fork de Bridge.
+                </div>
+            </section>
+            <GbCheckRow
+                v-for="icon in STATUS_BAR_ICONS"
+                :key="icon"
+                :label="statusBarIconLabels[icon].label"
+                :hint="statusBarIconLabels[icon].hint"
+                :model-value="settings.statusBarIcons[icon]"
+                @update:model-value="setStatusBarIcon(icon, $event)" />
+        </template>
 
         <section v-if="settings.gingerbreadStatusBar" class="options">
             <div class="field-label">Margen lateral de la barra</div>
