@@ -35,6 +35,17 @@ export function toInsets(value: unknown): WindowInsets
     }
 }
 
+/**
+ * Undoes Bridge's top/left swap. Stock Bridge fills every inset (getters and events) positionally as
+ * (left, top, right, bottom) into a type declared (top, left, right, bottom), so the real top arrives as
+ * `left` and vice versa. Our fork fixed it and says so with `getWindowInsetsSwapFixed()`; builds without
+ * that method all have the bug.
+ */
+export function unswapInsets(i: WindowInsets, swapFixed: boolean): WindowInsets
+{
+    return swapFixed ? i : { left: i.top, top: i.left, right: i.right, bottom: i.bottom };
+}
+
 const SOURCES = {
     statusBars: () => Bridge.getStatusBarsWindowInsets(),
     statusBarsIgnoringVisibility: () => Bridge.getStatusBarsIgnoringVisibilityWindowInsets(),
@@ -82,11 +93,13 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
 
     const insets = reactive({} as Record<InsetsName, WindowInsets>);
 
+    const swapFixed = bridgeHas('getWindowInsetsSwapFixed') && Bridge.getWindowInsetsSwapFixed();
+
     function refresh()
     {
         for (const name of Object.keys(SOURCES) as InsetsName[])
         {
-            try { insets[name] = toInsets(SOURCES[name]()); }
+            try { insets[name] = unswapInsets(toInsets(SOURCES[name]()), swapFixed); }
             catch { insets[name] = ZERO; }
         }
     }
@@ -105,7 +118,7 @@ export const useWindowInsetsStore = defineStore('windowInsets', () =>
         }
         const changed = parseInsetsEvent(ev as { name: string } & Record<string, unknown>);
         if (changed)
-            insets[changed.name] = changed.value;
+            insets[changed.name] = unswapInsets(changed.value, swapFixed);
     };
     bridgeEvents.addEventListener(onBridgeEvent);
 

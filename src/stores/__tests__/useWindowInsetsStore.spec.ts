@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInsetsEvent, toInsets } from '../useWindowInsetsStore';
+import { parseInsetsEvent, toInsets, unswapInsets } from '../useWindowInsetsStore';
 
 describe('toInsets', () =>
 {
@@ -40,5 +40,20 @@ describe('parseInsetsEvent', () =>
     {
         expect(parseInsetsEvent({ name: 'afterResume' })).toBeNull();
         expect(parseInsetsEvent({ name: 'ImeAnimationTargetWindowInsetsChanged', insets: {} })).toBeNull();
+    });
+});
+
+describe('unswapInsets', () =>
+{
+    it("swaps top and left back on stock Bridge, where the status bar's 33 px arrive as left", () =>
+    {
+        expect(unswapInsets({ left: 33, top: 0, right: 0, bottom: 48 }, false))
+            .toEqual({ left: 0, top: 33, right: 0, bottom: 48 });
+    });
+
+    it('leaves the insets alone when the fork already fixed the swap', () =>
+    {
+        const insets = { left: 0, top: 33, right: 0, bottom: 48 };
+        expect(unswapInsets(insets, true)).toBe(insets);
     });
 });
