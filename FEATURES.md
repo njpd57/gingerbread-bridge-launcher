@@ -1,6 +1,6 @@
 # Funciones posibles con la API de Bridge
 
-**Estado:** las ideas 1 a 7, 9, 12, 15 a 37 ya están implementadas (marcadas con ✅), salvo la variante 4×2 de la 35. Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono, menos los widgets 17, 18, 19, 21, 22, 23, 24 y 27, la 34 y los contactos (35 a 37). La 25, de la 30 a la 33 y de la 35 a la 37 necesitan nuestro fork.
+**Estado:** las ideas 1 a 7, 9, 12, 15 a 37 ya están implementadas (marcadas con ✅), salvo la variante 4×2 de la 35. Las ideas 8, 10 y 11 quedan para más adelante (marcadas con ⏬ Baja prioridad). Las ideas 1 a 5 están probadas en un Samsung Galaxy Z Flip5 con Bridge 0.1.0alpha. Con nuestro fork de Bridge están probadas en el teléfono la 5 (con el estado de Wi-Fi, Bluetooth y GPS), la 7 (con la búsqueda web), la 16 (con eventos), la 25 y de la 30 a la 33. Todas las ideas implementadas están probadas en el teléfono. La 25, de la 30 a la 33 y de la 35 a la 37 necesitan nuestro fork.
 
 Revisión de todo lo que ofrece `@bridgelauncher/api` v0.1.0 (la última publicada), qué usa ya el launcher y qué se podría agregar. Las ideas van ordenadas por lo bien que encajan con Gingerbread y por el esfuerzo que requieren.
 
@@ -273,7 +273,7 @@ El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda r
 - **Esfuerzo:** bajo-medio en el launcher.
 
 #### Contactos en el fork (lo que necesitan las ideas 35 a 37)
-✅ Implementado en el fork de Bridge (instalado en el teléfono) y consumido en el launcher: `useContactsStore`, el widget de favoritos, marcación/mensaje directo y la búsqueda. **Falta probar las tres cosas en el teléfono.**
+✅ Implementado en el fork de Bridge (instalado en el teléfono) y consumido en el launcher: `useContactsStore`, el widget de favoritos, marcación/mensaje directo y la búsqueda. Las tres cosas están probadas en el teléfono.
 - **Permiso `READ_CONTACTS`**, pedido con el diálogo de Android: `getCanReadContacts()`, `requestContactsPermission()` y el evento `canReadContactsChanged`.
 - **`getContactsURL(query?, starredOnly?, limit?)`** (parámetros posicionales, no un objeto): JSON con `id`, `lookupKey`, `name`, `starred`, `hasPhoto` y los números (`number`, `label`, `isPrimary` — el principal va primero y sin duplicados), leídos de `ContactsContract`. `query` busca por nombre y número igual que la app de Contactos (pasar `''` para no filtrar, no `undefined`); `limit` en 0 es sin límite. Evento `contactsChanged` cuando cambian.
 - **`getContactPhotoURL(lookupKey)`**: la foto del contacto en alta resolución, 404 si no tiene (revisar `hasPhoto`).
