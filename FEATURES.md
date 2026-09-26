@@ -83,6 +83,16 @@ En Gingerbread, tocar el widget del reloj abría la app de alarmas. Tocar el rel
 - La pulsación larga sigue moviendo el widget: `HomeGrid` ya descarta el toque que termina una pulsación larga.
 - **Esfuerzo:** muy bajo en el launcher; bajo en el fork.
 
+### 38. Más fondos animados de Gingerbread ✅ Hecho
+Además de Nexus, Gingerbread traía otros fondos animados. Están recreados en canvas, con los nombres que tenían en Android 2.3 en español, y se eligen en **Fondo de pantalla**:
+- **Hierba:** hierba mecida por el viento bajo un cielo que sigue la hora del día (noche con estrellas, amanecer y atardecer naranjas, día azul). Como el original, usa la salida y puesta del sol reales: las de la ciudad del widget del tiempo (`useWeatherStore`), o 7:00 y 19:30 si no hay ciudad.
+- **Galaxia:** una galaxia espiral de dos brazos, un poco inclinada, que gira despacio sobre estrellas y nebulosas. Se dibuja una vez en un canvas aparte y solo se rota en cada fotograma.
+- **Humo mágico:** nubes de humo de colores que se desplazan y cambian de color. Al tocar un hueco vacío sale una bocanada de humo en ese punto.
+- **Reloj polar:** la hora en anillos que se llenan desde arriba en el sentido de las agujas del reloj: segundos, minutos, horas, día de la semana, día del mes y mes. El color de cada anillo cambia según lo lleno que está.
+- Todos se desplazan más lento que las páginas, se pausan con el cajón abierto o el launcher en segundo plano, y usan el ajuste de fluidez (30/60/120 fps). La base común está en `src/wallpaper/useLiveWallpaper.ts`, la lista en `src/wallpaper/liveWallpapers.ts` y la lógica pura (cielo según la hora, anillos del reloj) en `src/utils/liveWallpapers.ts`, con tests.
+- **API:** ninguna; son canvas del launcher.
+- **Esfuerzo:** medio.
+
 ---
 
 ## Mejoras de uso

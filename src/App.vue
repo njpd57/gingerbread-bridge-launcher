@@ -14,7 +14,7 @@ import Dock from './home/Dock.vue';
 import DragLayer from './home/DragLayer.vue';
 import AppShortcutsMenu from './shortcuts/AppShortcutsMenu.vue';
 import AppDrawer from './drawer/AppDrawer.vue';
-import NexusWallpaper from './wallpaper/NexusWallpaper.vue';
+import { LIVE_WALLPAPERS, type LiveWallpaperInstance } from './wallpaper/liveWallpapers';
 import OptionsMenu from './menu/OptionsMenu.vue';
 import WallpaperDialog from './menu/WallpaperDialog.vue';
 import AddDialog from './menu/AddDialog.vue';
@@ -55,7 +55,8 @@ function isTyping()
         || (el instanceof HTMLElement && el.isContentEditable);
 }
 
-const wallpaper = ref<InstanceType<typeof NexusWallpaper>>();
+const wallpaper = ref<LiveWallpaperInstance>();
+const liveWallpaper = computed(() => settings.wallpaper === 'system' ? null : LIVE_WALLPAPERS[settings.wallpaper]);
 
 // empty space = anywhere on the workspace that isn't an icon or widget
 function isEmptySpace(target: EventTarget | null)
@@ -72,8 +73,8 @@ function onPointerDown(e: PointerEvent)
         longPress.down(null, e);
 }
 
-// a tap on empty space sends pulses across the Nexus wallpaper, or is passed on to the system
-// wallpaper (live wallpapers react to it, like Gingerbread's own Nexus did)
+// a tap on empty space goes to the live wallpaper (Nexus sends out pulses, Magic Smoke puffs), or is
+// passed on to the system wallpaper (Android's live wallpapers react to it, like Gingerbread's did)
 function onWorkspaceClick(e: MouseEvent)
 {
     if (longPress.consumeLongPress() || drag.justDropped()) return;
@@ -81,7 +82,7 @@ function onWorkspaceClick(e: MouseEvent)
     if (settings.wallpaper === 'system')
         Bridge.sendWallpaperTap(e.clientX, e.clientY);
     else
-        wallpaper.value?.burst(e.clientX, e.clientY);
+        wallpaper.value?.tap?.(e.clientX, e.clientY);
 }
 
 </script>
@@ -97,7 +98,7 @@ function onWorkspaceClick(e: MouseEvent)
             '--drawer-icon-size': `${scaledIconSize(settings.iconScale)}px`,
         }">
 
-        <NexusWallpaper v-if="settings.wallpaper === 'nexus'" ref="wallpaper" />
+        <component :is="liveWallpaper" v-if="liveWallpaper" ref="wallpaper" />
 
         <Workspace
             class="workspace"

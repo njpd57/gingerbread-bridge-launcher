@@ -7,7 +7,9 @@ import { useBridgeEventStore } from "./useBridgeEventStore";
 import { useHomeLayoutStore } from "./useHomeLayoutStore";
 import { DEFAULT_PAGE, PAGE_COUNT, useWorkspaceStore } from "./useWorkspaceStore";
 
-export type WallpaperKind = 'nexus' | 'system';
+/** A live wallpaper drawn by the launcher (src/wallpaper/), or Android's own wallpaper. */
+export type LiveWallpaperKind = 'nexus' | 'grass' | 'galaxy' | 'magicSmoke' | 'polarClock';
+export type WallpaperKind = LiveWallpaperKind | 'system';
 export type Level = 'low' | 'normal' | 'high';
 export type NexusFps = 30 | 60 | 120;
 export type StatusBarBackground = 'none' | 'gray' | 'blackGradient' | 'white' | 'black';
@@ -47,7 +49,7 @@ export const useSettingsStore = defineStore('settings', () =>
     // app icon size, in percent of Gingerbread's 48 px (utils/iconSize.ts)
     const iconScale = useLocalStorage<number>('settings.iconScale', 100);
 
-    // Bridge only needs to draw the system wallpaper when the Nexus canvas isn't covering it
+    // Bridge only needs to draw the system wallpaper when a live wallpaper canvas isn't covering it
     watch(wallpaper, kind =>
     {
         const drawSystem = kind === 'system';

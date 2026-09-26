@@ -59,7 +59,7 @@ Development happens on the **`dev`** branch. Keep `.claude/` (other agents' work
 ## Architecture
 
 `App.vue` stacks absolutely positioned layers, bottom to top:
-1. `NexusWallpaper` (a canvas), or nothing when the system wallpaper is selected.
+1. The live wallpaper (a canvas: Nexus, Grass, Galaxy, Magic Smoke or Polar Clock, mapped in `wallpaper/liveWallpapers.ts`; those that react to taps expose `tap(x, y)`), or nothing when the system wallpaper is selected. They share `wallpaper/useLiveWallpaper.ts`: sizing, parallax (a world 1.5 screens wide), the frame loop at `settings.nexusFps` and pausing.
 2. `Workspace`: `PAGE_COUNT` (5) horizontally scroll-snapped pages, starting on `DEFAULT_PAGE` (2), each rendering a `HomeGrid`.
 3. `Dock`.
 4. `AppDrawer`.
