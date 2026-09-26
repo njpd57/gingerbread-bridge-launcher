@@ -35,6 +35,53 @@ export interface BridgeConnectivity
     dataActivity: BridgeDataActivity;
 }
 
+export interface BridgePhoneNumber
+{
+    number: string;
+    /** "Móvil", "Casa"… in the device's language, or the custom label. */
+    label: string | null;
+    /** The contact's default number. */
+    isPrimary: boolean;
+}
+
+/** A contact with at least one phone number, from `getContactsURL()`. */
+export interface BridgeContact
+{
+    id: number;
+    /** Stable across syncs; what `getContactPhotoURL` and `requestOpenContact` take. */
+    lookupKey: string;
+    name: string;
+    /** Marked as favorite in the contacts app. */
+    starred: boolean;
+    hasPhoto: boolean;
+    /** The default number first. */
+    phoneNumbers: BridgePhoneNumber[];
+}
+
+export interface BridgeGetContactsResponse
+{
+    /** By name. */
+    contacts: BridgeContact[];
+}
+
+/** One app's usage within a range, from `getAppUsageURL()`. */
+export interface BridgeAppUsage
+{
+    packageName: string;
+    /** Time in the foreground, in milliseconds. */
+    totalTimeMs: number;
+    /** How many times the user switched to the app. */
+    openCount: number;
+    /** Milliseconds since the epoch, or null if unused within the range. */
+    lastTimeUsed: number | null;
+}
+
+export interface BridgeGetAppUsageResponse
+{
+    /** Most used (by time) first. */
+    apps: BridgeAppUsage[];
+}
+
 /** An occurrence of a calendar event, from `getCalendarEventsURL()`. */
 export interface BridgeCalendarEvent
 {
@@ -91,24 +138,6 @@ export interface BridgeMediaSession
     artVersion: number;
     canSkipToNext: boolean;
     canSkipToPrevious: boolean;
-}
-
-/** One app's usage within a range, from `getAppUsageURL()`. */
-export interface BridgeAppUsage
-{
-    packageName: string;
-    /** Time in the foreground, in milliseconds. */
-    totalTimeMs: number;
-    /** How many times the user switched to the app. */
-    openCount: number;
-    /** Milliseconds since the epoch, or null if unused within the range. */
-    lastTimeUsed: number | null;
-}
-
-export interface BridgeGetAppUsageResponse
-{
-    /** Most used (by time) first. */
-    apps: BridgeAppUsage[];
 }
 
 /** An active notification, as served by `getNotificationsURL()` and the `notificationPosted` event. */
@@ -168,7 +197,10 @@ export type BridgeForkEvent =
     | { name: 'connectivityChanged'; newValue: BridgeConnectivity }
     | { name: 'canReadCalendarChanged'; newValue: boolean }
     | { name: 'calendarChanged' }
-    | { name: 'canReadUsageStatsChanged'; newValue: boolean };
+    | { name: 'canReadUsageStatsChanged'; newValue: boolean }
+    | { name: 'canReadContactsChanged'; newValue: boolean }
+    | { name: 'canCallPhoneChanged'; newValue: boolean }
+    | { name: 'contactsChanged' };
 
 declare module '@bridgelauncher/api'
 {
@@ -208,6 +240,30 @@ declare module '@bridgelauncher/api'
         /** Sends text through a notification's "Reply" action. */
         requestReplyToNotification(key: string, actionIndex: number, text: string, showToastIfFailed?: boolean): boolean;
 
+        /** Whether Bridge may read contacts (READ_CONTACTS). Fires `canReadContactsChanged`. */
+        getCanReadContacts(): boolean;
+        /** Shows Android's dialog asking for contacts access (or Bridge's app settings if it was refused for good). */
+        requestContactsPermission(showToastIfFailed?: boolean): boolean;
+        /**
+         * URL of a {@link BridgeGetContactsResponse} JSON: contacts with a phone number, by name. `query` matches
+         * names and numbers ('' for all); `limit` 0 means no limit. 403 without permission. Fires `contactsChanged`.
+         */
+        getContactsURL(query?: string, starredOnly?: boolean, limit?: number): string;
+        /** The contact's photo; 404 when it has none (check `hasPhoto`). */
+        getContactPhotoURL(lookupKey: string): string;
+        /** Opens the contact's card in the contacts app. */
+        requestOpenContact(lookupKey: string, showToastIfFailed?: boolean): boolean;
+        /** Whether Bridge may place calls itself (CALL_PHONE). Fires `canCallPhoneChanged`. */
+        getCanCallPhone(): boolean;
+        requestCallPhonePermission(showToastIfFailed?: boolean): boolean;
+        /** Calls the number right away with CALL_PHONE; without it, opens the dialer with the number typed in. */
+        requestCallPhoneNumber(number: string, showToastIfFailed?: boolean): boolean;
+
+        /** Whether the user gave Bridge "Usage access". Fires `canReadUsageStatsChanged` (checked on resume). */
+        getCanReadUsageStats(): boolean;
+        requestOpenUsageAccessSettings(showToastIfFailed?: boolean): boolean;
+        /** URL of a {@link BridgeGetAppUsageResponse} JSON for [from, to) (ms). 403 without access. */
+        getAppUsageURL(from: number, to: number): string;
 
         /** A {@link BridgeMediaSession} as JSON, or `"null"`. Needs notification access. Fires `mediaSessionChanged`. */
         getMediaSession(): string;
@@ -241,12 +297,6 @@ declare module '@bridgelauncher/api'
         requestOpenCalendarEvent(eventId: number, begin: number, end: number, showToastIfFailed?: boolean): boolean;
         /** Opens the calendar app at a time (e.g. a day tapped in a month view). */
         requestOpenCalendarAt(time: number, showToastIfFailed?: boolean): boolean;
-
-        /** Whether the user gave Bridge "Usage access". Fires `canReadUsageStatsChanged` (checked on resume). */
-        getCanReadUsageStats(): boolean;
-        requestOpenUsageAccessSettings(showToastIfFailed?: boolean): boolean;
-        /** URL of a {@link BridgeGetAppUsageResponse} JSON for [from, to) (ms). 403 without access. */
-        getAppUsageURL(from: number, to: number): string;
 
         /** Whether Bridge can read apps' shortcuts: only the default launcher can, on Android 7.1+. */
         getCanAccessAppShortcuts(): boolean;

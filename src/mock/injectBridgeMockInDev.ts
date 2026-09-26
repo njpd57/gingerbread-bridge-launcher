@@ -191,6 +191,54 @@ class ForkBridgeMock extends BridgeMock
         return true;
     }
 
+    getCanReadContacts()
+    {
+        return true;
+    }
+
+    requestContactsPermission()
+    {
+        return true;
+    }
+
+    getContactsURL(query = '', starredOnly = false)
+    {
+        const contacts = [
+            { id: 1, lookupKey: 'ana', name: 'Ana García', starred: true, hasPhoto: false, phoneNumbers: [{ number: '+56 9 1234 5678', label: 'Móvil', isPrimary: true }] },
+            { id: 2, lookupKey: 'mama', name: 'Mamá', starred: true, hasPhoto: false, phoneNumbers: [{ number: '+56 9 8765 4321', label: 'Móvil', isPrimary: true }, { number: '+56 2 2345 6789', label: 'Casa', isPrimary: false }] },
+            { id: 3, lookupKey: 'tomas', name: 'Tomás Pérez', starred: false, hasPhoto: false, phoneNumbers: [{ number: '+56 9 5555 0000', label: 'Trabajo', isPrimary: true }] },
+        ].filter(c => (!starredOnly || c.starred)
+            && (!query || c.name.toLowerCase().includes(query.toLowerCase()) || c.phoneNumbers.some(p => p.number.replace(/\D/g, '').includes(query.replace(/\D/g, '') || '\u0000'))));
+        return 'data:application/json,' + encodeURIComponent(JSON.stringify({ contacts }));
+    }
+
+    getContactPhotoURL()
+    {
+        return '';
+    }
+
+    requestOpenContact(lookupKey: string)
+    {
+        alert(`Would open contact ${lookupKey}.`);
+        return true;
+    }
+
+    getCanCallPhone()
+    {
+        return false;
+    }
+
+    requestCallPhonePermission()
+    {
+        return true;
+    }
+
+    requestCallPhoneNumber(number: string)
+    {
+        alert(`Would call ${number}.`);
+        return true;
+    }
+
     getCanReadUsageStats()
     {
         return true;

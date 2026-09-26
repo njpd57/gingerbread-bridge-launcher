@@ -271,13 +271,14 @@ El panel de búsqueda (idea 7) también busca **contactos**, como la búsqueda r
 - **Esfuerzo:** bajo-medio en el launcher.
 
 #### Contactos en el fork (lo que necesitan las ideas 35 a 37)
-Nada de esto existe todavía en Bridge. Propuesta, siguiendo lo que ya hay para el calendario:
-- **Permiso `READ_CONTACTS`**, pedido con el diálogo de Android: `getCanReadContacts()`, `requestContactsPermission()` y el evento `canReadContactsChanged` (el mecanismo `BridgeRuntimePermissionRequester` ya existe).
-- **`getContactsURL({ query?, starredOnly? })`**: JSON con `id`, `lookupKey`, `name`, `starred`, `hasPhoto` y los números (`number`, `label`: móvil, casa, trabajo…), leídos de `ContactsContract`. Evento `contactsChanged` cuando cambian.
-- **`getContactPhotoURL(lookupKey)`**: la foto del contacto, servida por un endpoint como los iconos.
+✅ Ya implementado en el fork de Bridge (instalado en el teléfono, falta probarlo desde el launcher y hacer commit). Ya está declarado en `src/types/bridge-fork.d.ts` y `ForkBridgeMock` (con contactos de ejemplo); falta todo el consumo (store, widgets, búsqueda).
+- **Permiso `READ_CONTACTS`**, pedido con el diálogo de Android: `getCanReadContacts()`, `requestContactsPermission()` y el evento `canReadContactsChanged`.
+- **`getContactsURL(query?, starredOnly?, limit?)`** (parámetros posicionales, no un objeto): JSON con `id`, `lookupKey`, `name`, `starred`, `hasPhoto` y los números (`number`, `label`, `isPrimary` — el principal va primero y sin duplicados), leídos de `ContactsContract`. `query` busca por nombre y número igual que la app de Contactos (pasar `''` para no filtrar, no `undefined`); `limit` en 0 es sin límite. Evento `contactsChanged` cuando cambian.
+- **`getContactPhotoURL(lookupKey)`**: la foto del contacto en alta resolución, 404 si no tiene (revisar `hasPhoto`).
 - **`requestOpenContact(lookupKey)`**: abre la ficha del contacto.
-- **`requestCallPhoneNumber(number)`**: llama directamente. Necesita el permiso `CALL_PHONE` (también con el diálogo de Android); sin él, el launcher usa `requestOpenUrl('tel:…')`, que abre el marcador. Los mensajes van con `requestOpenUrl('smsto:…')`.
-- En el launcher: declararlo en `src/types/bridge-fork.d.ts` y `ForkBridgeMock` (con contactos de ejemplo), y un `useContactsStore`.
+- **Permiso `CALL_PHONE` aparte de `READ_CONTACTS`**, también con el diálogo de Android: `getCanCallPhone()`, `requestCallPhonePermission()` y el evento `canCallPhoneChanged`. Las ideas 35-37 necesitan pedir los dos permisos, no solo uno.
+- **`requestCallPhoneNumber(number)`**: llama directamente si hay permiso `CALL_PHONE`; si no, abre el marcador con el número ya escrito (equivalente a `requestOpenUrl('tel:…')`, sin pedir el permiso). Los mensajes van con `requestOpenUrl('smsto:…')`.
+- Falta en el launcher: un `useContactsStore` y el consumo en las ideas 35 a 37 (nada de esto tiene código todavía).
 
 ---
 

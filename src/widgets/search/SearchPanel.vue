@@ -2,20 +2,29 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { useAppsStore, type InstalledAppInfo } from '@/stores/useAppsStore';
 import { useAppLauncherStore } from '@/stores/useAppLauncherStore';
+import { useContactsStore } from '@/stores/useContactsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useKeyboardInset } from '@/composables/useKeyboardInset';
 import { useOverscrollGlow } from '@/composables/useOverscrollGlow';
-import { searchApps } from '@/utils/search';
+import { useLongPress } from '@/composables/useLongPress';
+import { searchApps, searchContacts, looksLikePhoneNumber } from '@/utils/search';
 import { bridgeHas } from '@/utils/bridge-utils';
+import type { BridgeContact } from '@/types/bridge-fork';
 import OverscrollGlow from '@/components/OverscrollGlow.vue';
+import GbDialog from '@/components/GbDialog.vue';
 import SearchGlyph from './SearchGlyph.vue';
+import ContactGlyph from './ContactGlyph.vue';
 
 // Full-screen app search, styled after Gingerbread's Quick Search Box: the search bar at the top
-// with the keyboard up, and a white list of results that filters as you type.
+// with the keyboard up, and a white list of results that filters as you type. Below the apps, a
+// "Contactos" section (only with our Bridge fork) matches names and numbers like Gingerbread's Quick
+// Search Box did: tap to call (directly with CALL_PHONE, or the dialer with the number typed in
+// otherwise), long-press for their other numbers and to send a message.
 
 const apps = useAppsStore();
 const launcher = useAppLauncherStore();
+const contacts = useContactsStore();
 const menu = useMenuStore();
 const settings = useSettingsStore();
 
@@ -35,6 +44,66 @@ const recentApps = computed(() => launcher.recent
 
 const isQueryEmpty = computed(() => query.value.trim() === '');
 
+// all of the user's contacts, loaded once when the panel is first used and filtered locally
+// (like apps: same accent/case-insensitive ranking), so typing doesn't refetch on every letter
+const allContacts = ref<BridgeContact[]>([]);
+const contactResults = computed(() => searchContacts(allContacts.value, query.value));
+const showsCallRow = computed(() => !isQueryEmpty.value && looksLikePhoneNumber(query.value));
+
+watch(() => contacts.canRead && menu.isSearchOpen, async (ready) =>
+{
+    if (!ready) return;
+    allContacts.value = await contacts.fetchContacts();
+}, { immediate: true });
+
+watch(() => contacts.version, async () =>
+{
+    if (contacts.canRead) allContacts.value = await contacts.fetchContacts();
+});
+
+// the contact whose long-press menu (other numbers, message) is open
+const menuFor = ref<BridgeContact | null>(null);
+const longPress = useLongPress<BridgeContact>(c => menuFor.value = c);
+
+function primaryNumber(c: BridgeContact)
+{
+    return c.phoneNumbers.find(p => p.isPrimary) ?? c.phoneNumbers[0];
+}
+
+function callContact(c: BridgeContact)
+{
+    if (longPress.consumeLongPress()) return;
+    menu.closeAll();
+    contacts.call(primaryNumber(c).number);
+}
+
+function callNumber(number: string)
+{
+    menuFor.value = null;
+    menu.closeAll();
+    contacts.call(number);
+}
+
+function messageNumber(number: string)
+{
+    menuFor.value = null;
+    menu.closeAll();
+    Bridge.requestOpenUrl(`smsto:${number}`);
+}
+
+function viewContact(c: BridgeContact)
+{
+    menuFor.value = null;
+    menu.closeAll();
+    contacts.openContact(c);
+}
+
+function callQuery()
+{
+    menu.closeAll();
+    contacts.call(query.value.trim());
+}
+
 // v-model waits for the keyboard's composition (the underlined word) to end, which on Android means
 // until space; the input event fires on every letter
 function onInput(e: Event)
@@ -48,6 +117,7 @@ const shownApps = computed(() => isQueryEmpty.value ? recentApps.value : results
 
 watch(() => menu.isSearchOpen, async open =>
 {
+    menuFor.value = null;
     if (!open) return;
     query.value = '';
     await nextTick();
@@ -129,10 +199,51 @@ function clear()
                         <span class="web-icon"><SearchGlyph /></span>
                         <span class="label">Buscar «{{ query.trim() }}» en la web</span>
                     </button>
+
+                    <template v-if="contacts.canRead && contactResults.length > 0">
+                        <div class="section">Contactos</div>
+                        <button
+                            v-for="c in contactResults"
+                            :key="c.lookupKey"
+                            class="row contact"
+                            @pointerdown="longPress.down(c, $event)"
+                            @pointermove="longPress.move"
+                            @pointerup="longPress.cancel"
+                            @pointercancel="longPress.cancel"
+                            @pointerleave="longPress.cancel"
+                            @contextmenu.prevent
+                            @click="callContact(c)">
+                            <img v-if="c.hasPhoto" :src="contacts.photoUrl(c)" alt="" draggable="false" />
+                            <span v-else class="contact-icon"><ContactGlyph /></span>
+                            <span class="texts">
+                                <span class="label">{{ c.name }}</span>
+                                <span class="number">{{ primaryNumber(c).number }}</span>
+                            </span>
+                        </button>
+                    </template>
+
+                    <button v-if="showsCallRow" class="row web" @click="callQuery">
+                        <span class="web-icon"><ContactGlyph /></span>
+                        <span class="label">Llamar a «{{ query.trim() }}»</span>
+                    </button>
                 </div>
                 <OverscrollGlow edge="top" :intensity="glow.start.value" :pulling="glow.pulling.value" />
                 <OverscrollGlow edge="bottom" :intensity="glow.end.value" :pulling="glow.pulling.value" />
             </div>
+
+            <!-- the long-press menu on a contact: their other numbers, message, view contact -->
+            <GbDialog
+                :open="!!menuFor"
+                :title="menuFor?.name ?? ''"
+                @close="menuFor = null">
+                <div class="contact-menu">
+                    <button v-for="p in menuFor?.phoneNumbers" :key="p.number" @click="callNumber(p.number)">
+                        Llamar{{ p.label ? ` · ${p.label}` : '' }}: {{ p.number }}
+                    </button>
+                    <button @click="messageNumber(primaryNumber(menuFor!).number)">Enviar mensaje</button>
+                    <button @click="viewContact(menuFor!)">Ver contacto</button>
+                </div>
+            </GbDialog>
         </div>
     </Transition>
 </template>
@@ -252,10 +363,13 @@ $gingerbread-orange: #ffa800;
                 }
 
                 > img,
-                > .web-icon {
+                > .web-icon,
+                > .contact-icon {
                     flex-shrink: 0;
                     width: 40px;
                     height: 40px;
+                    border-radius: 50%;
+                    object-fit: cover;
                 }
 
                 > .web-icon {
@@ -266,6 +380,39 @@ $gingerbread-orange: #ffa800;
                     > :deep(svg) {
                         width: 28px;
                         height: 28px;
+                    }
+                }
+
+                // Android 2.x's default contact photo: a gray circle with a darker silhouette
+                > .contact-icon {
+                    display: grid;
+                    place-items: center;
+                    background: #b0b0b0;
+                    color: #7d7d7d;
+
+                    > :deep(svg) {
+                        width: 30px;
+                        height: 30px;
+                    }
+                }
+
+                > .texts {
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 0;
+
+                    > .label {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+
+                    > .number {
+                        overflow: hidden;
+                        color: #777;
+                        font-size: 14px;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
                     }
                 }
 
@@ -291,5 +438,33 @@ $gingerbread-orange: #ffa800;
 .search-enter-from,
 .search-leave-to {
     opacity: 0;
+}
+
+// the contact's long-press menu rows, like the other Gingerbread lists
+.contact-menu {
+    display: flex;
+    flex-direction: column;
+
+    > button {
+        appearance: none;
+        min-height: 52px;
+        padding: 8px 16px;
+        border: none;
+        border-bottom: 1px solid rgba(#000, 0.15);
+        background: none;
+        color: inherit;
+        font: inherit;
+        font-size: 17px;
+        text-align: left;
+        cursor: pointer;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:active {
+            background: linear-gradient(to bottom, #ffc64d, #ff8a00);
+        }
+    }
 }
 </style>
