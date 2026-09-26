@@ -54,12 +54,7 @@ Imitar el widget clásico de 4×1 con lo que Bridge **sí** puede hacer:
   - **Notificaciones** (`requestExpandNotificationShade`).
   - **Ajustes** (`requestOpenAndroidSettings`).
 - Cada botón se desactiva si no hay permiso, según `getCanLockScreen()` y `getCanRequestSystemNightMode()`, y reacciona a sus eventos `canLockScreenChanged` y `canRequestSystemNightModeChanged`.
-- **Con nuestro fork de Bridge** el widget pasa a los 5 botones del original de Android 2.3: **Wi-Fi, Bluetooth, GPS, sincronización y brillo**. Bloquear y modo noche siguen ahí con una pulsación larga: sobre el brillo cambia el modo noche y sobre la sincronización bloquea la pantalla (esos dos botones ya no sirven para mover el widget; los otros tres sí). Sincronización y brillo cambian de verdad; Wi-Fi, Bluetooth y GPS solo abren el panel de Android (`requestOpenSystemPanel`) y **no muestran su estado**, salvo Wi-Fi, que se enciende en verde si la conexión es Wi-Fi.
-- **Pendiente en el fork:** para que Wi-Fi, Bluetooth y GPS tengan su barra verde o gris hace falta que Bridge exponga su estado:
-  - `getWifiEnabled()` con `WifiManager.isWifiEnabled()` (permiso `ACCESS_WIFI_STATE`, normal, no se le pide al usuario) y el evento `wifiEnabledChanged` (broadcast `WIFI_STATE_CHANGED_ACTION`).
-  - `getBluetoothEnabled()` con `BluetoothAdapter.isEnabled()` y el evento `bluetoothEnabledChanged` (broadcast `ACTION_STATE_CHANGED`). Desde Android 12 necesita el permiso `BLUETOOTH_CONNECT`, que el usuario tiene que conceder.
-  - `getLocationEnabled()` con `LocationManager.isLocationEnabled()` (sin permiso) y el evento `locationEnabledChanged` (broadcast `PROVIDERS_CHANGED_ACTION`).
-  - Del lado del launcher: declararlos en `src/types/bridge-fork.d.ts` y en `ForkBridgeMock`, leerlos en `useQuickSettingsStore` y cambiar los `indicator none` de `PowerControlWidget.vue` y `QuickToggles.vue` por `onOffIndicator(...)` (y añadir el GPS al panel).
+- **Con nuestro fork de Bridge** el widget pasa a los 5 botones del original de Android 2.3: **Wi-Fi, Bluetooth, GPS, sincronización y brillo**. Bloquear y modo noche siguen ahí con una pulsación larga: sobre el brillo cambia el modo noche y sobre la sincronización bloquea la pantalla (esos dos botones ya no sirven para mover el widget; los otros tres sí). Sincronización y brillo cambian de verdad; Wi-Fi, Bluetooth y GPS solo abren el panel de Android (`requestOpenSystemPanel`), porque las apps ya no pueden cambiarlos, pero **muestran su estado** (`getWifiEnabled`, `getBluetoothEnabled`, `getLocationEnabled` y sus eventos). El panel de notificaciones también tiene un botón GPS.
 - **Esfuerzo:** medio. Aprovecha lo que ya existe para añadir widgets.
 
 > Para el botón del modo noche hay que conceder el permiso una vez con `npm run grant-permissions` (ver "Permisos opcionales" en el README). Bridge 0.1.0alpha no tiene `getCanRequestSystemNightMode()`, así que el launcher intenta el cambio sin poder comprobar el permiso antes. Los permisos se vuelven a leer al volver al launcher, porque darlos por adb no genera ningún evento.
@@ -226,7 +221,6 @@ Una cita que cambia cada día, elegida de una lista incluida en el proyecto (sin
 ## Lo que la API no permite (sin ampliar Bridge)
 
 - Widgets nativos de Android.
-- Leer la señal móvil y el Wi-Fi reales. (Leer notificaciones y controlar la música ya se puede con nuestro fork.)
 - Abrir intents que no sean "abrir una app" o una URL.
 - Detectar el botón Atrás. Hay un truco que sí funciona: `history.pushState` al abrir el cajón o la búsqueda, porque Bridge pasa el "atrás" al historial del WebView.
 - Packs de iconos: están en la API como borrador, pero todavía no los ofrece Bridge.

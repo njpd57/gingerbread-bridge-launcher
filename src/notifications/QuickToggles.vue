@@ -5,7 +5,8 @@ import { brightnessStep, nextBrightnessStep, type BrightnessStep } from '@/utils
 
 // The row of quick settings at the top of our notification panel, drawn like Gingerbread's power
 // control widget (indicator bar: green = on, amber = in between, gray = off). Flashlight, brightness,
-// auto-rotate and sync change directly; Wi-Fi and Bluetooth can only open Android's panel for them.
+// auto-rotate and sync change directly; Wi-Fi, Bluetooth and GPS can only open Android's panel for them,
+// but show whether they're on.
 
 type Indicator = 'on' | 'mid' | 'off' | 'none';
 
@@ -17,6 +18,8 @@ const BRIGHTNESS_INDICATORS: Record<BrightnessStep, Indicator> = { auto: 'on', l
 const BRIGHTNESS_LABELS: Record<BrightnessStep, string> = { auto: 'Auto', low: 'Bajo', mid: 'Medio', high: 'Alto' };
 
 const onOff = (on: boolean): Indicator => on ? 'on' : 'off';
+// older fork builds can't read Wi-Fi, Bluetooth and GPS
+const radio = (on: boolean): Indicator => qs.supportsRadioStates ? onOff(on) : 'none';
 </script>
 
 <template>
@@ -27,7 +30,7 @@ const onOff = (on: boolean): Indicator => on ? 'on' : 'off';
                 <circle cx="16" cy="26" r="2.5" fill="currentColor" />
             </svg>
             <span class="label">Wi-Fi</span>
-            <span class="indicator none"></span>
+            <span class="indicator" :class="radio(qs.wifiOn)"></span>
         </button>
 
         <button class="toggle" aria-label="Bluetooth" @click="qs.openPanel('bluetooth')">
@@ -35,7 +38,16 @@ const onOff = (on: boolean): Indicator => on ? 'on' : 'off';
                 <path d="M9 10l14 12-7 6V4l7 6L9 22" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
             </svg>
             <span class="label">Bluetooth</span>
-            <span class="indicator none"></span>
+            <span class="indicator" :class="radio(qs.bluetoothOn)"></span>
+        </button>
+
+        <button class="toggle" aria-label="Ubicación" @click="qs.openPanel('location')">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M16 3a9 9 0 0 0-9 9c0 7 9 17 9 17s9-10 9-17a9 9 0 0 0-9-9z" fill="currentColor" />
+                <circle cx="16" cy="12" r="3.5" fill="#1a1a1a" />
+            </svg>
+            <span class="label">GPS</span>
+            <span class="indicator" :class="radio(qs.locationOn)"></span>
         </button>
 
         <button v-if="qs.isFlashlightAvailable" class="toggle" aria-label="Linterna" @click="qs.toggleFlashlight()">

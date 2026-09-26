@@ -23,6 +23,13 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
     const autoRotateOn = ref(isSupported && Bridge.getAutoRotateOn());
     const masterSyncOn = ref(isSupported && Bridge.getMasterSyncOn());
 
+    // whether Wi-Fi, Bluetooth and location are on (read-only: apps can't toggle them)
+    const supportsRadioStates = bridgeHas('getWifiEnabled') && bridgeHas('getBluetoothEnabled') && bridgeHas('getLocationEnabled');
+    const isBluetoothAvailable = supportsRadioStates && Bridge.getIsBluetoothAvailable();
+    const wifiOn = ref(supportsRadioStates && Bridge.getWifiEnabled());
+    const bluetoothOn = ref(supportsRadioStates && Bridge.getBluetoothEnabled());
+    const locationOn = ref(supportsRadioStates && Bridge.getLocationEnabled());
+
     if (isSupported)
     {
         bridgeEvents.addEventListener(ev =>
@@ -37,6 +44,12 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
                 autoRotateOn.value = ev.newValue;
             else if (ev.name === 'masterSyncChanged')
                 masterSyncOn.value = ev.newValue;
+            else if (ev.name === 'wifiEnabledChanged')
+                wifiOn.value = ev.newValue;
+            else if (ev.name === 'bluetoothEnabledChanged')
+                bluetoothOn.value = ev.newValue;
+            else if (ev.name === 'locationEnabledChanged')
+                locationOn.value = ev.newValue;
             // the permission is granted in Android's settings
             else if (ev.name === 'afterResume')
                 canWriteSystemSettings.value = Bridge.getCanWriteSystemSettings();
@@ -60,6 +73,11 @@ export const useQuickSettingsStore = defineStore('quickSettings', () =>
         brightness,
         autoRotateOn,
         masterSyncOn,
+        supportsRadioStates,
+        isBluetoothAvailable,
+        wifiOn,
+        bluetoothOn,
+        locationOn,
 
         openPanel: (panel: BridgeSystemPanel) => Bridge.requestOpenSystemPanel(panel, true),
         toggleFlashlight: () => Bridge.requestSetFlashlightOn(!flashlightOn.value, true),

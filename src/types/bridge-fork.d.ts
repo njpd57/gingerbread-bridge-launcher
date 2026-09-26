@@ -17,6 +17,24 @@ export interface BridgeScreenBrightness
     level: number;
 }
 
+export type BridgeConnectionType = 'wifi' | 'cellular' | 'ethernet' | 'other' | 'none';
+export type BridgeDataActivity = 'none' | 'in' | 'out' | 'inout' | 'dormant';
+
+/** The real network state, from `getConnectivity()` and `connectivityChanged`. */
+export interface BridgeConnectivity
+{
+    /** The network in use. */
+    type: BridgeConnectionType;
+    /** 0 to 4 while connected to Wi-Fi, otherwise null. */
+    wifiLevel: number | null;
+    /** 0 to 4, or null without a SIM or service. Reported on Wi-Fi too. */
+    cellularLevel: number | null;
+    /** As reported by Android; regular apps may never get it (One UI only reports "dormant"). */
+    cellularDataActivity: BridgeDataActivity;
+    /** Measured from the device's traffic on any network, while the home screen is visible. */
+    dataActivity: BridgeDataActivity;
+}
+
 export type BridgeMediaPlaybackState = 'playing' | 'paused' | 'buffering' | 'stopped' | 'none';
 export type BridgeMediaAction = 'play' | 'pause' | 'playPause' | 'next' | 'previous';
 
@@ -80,7 +98,11 @@ export type BridgeForkEvent =
     | { name: 'screenBrightnessChanged'; newValue: BridgeScreenBrightness }
     | { name: 'autoRotateChanged'; newValue: boolean }
     | { name: 'masterSyncChanged'; newValue: boolean }
-    | { name: 'mediaSessionChanged'; session: BridgeMediaSession | null };
+    | { name: 'mediaSessionChanged'; session: BridgeMediaSession | null }
+    | { name: 'wifiEnabledChanged'; newValue: boolean }
+    | { name: 'bluetoothEnabledChanged'; newValue: boolean }
+    | { name: 'locationEnabledChanged'; newValue: boolean }
+    | { name: 'connectivityChanged'; newValue: BridgeConnectivity };
 
 declare module '@bridgelauncher/api'
 {
@@ -129,6 +151,17 @@ declare module '@bridgelauncher/api'
 
         /** Opens the floating panel (Android 10+) or the settings screen for something projects can't toggle. */
         requestOpenSystemPanel(panel: BridgeSystemPanel, showToastIfFailed?: boolean): boolean;
+
+        /** Whether Wi-Fi is on (not necessarily connected). Fires `wifiEnabledChanged`. */
+        getWifiEnabled(): boolean;
+        getIsBluetoothAvailable(): boolean;
+        /** Fires `bluetoothEnabledChanged` (from Android 12, once the home screen gets the focus back). */
+        getBluetoothEnabled(): boolean;
+        /** Whether location (GPS) is on. Fires `locationEnabledChanged`. */
+        getLocationEnabled(): boolean;
+
+        /** A {@link BridgeConnectivity} as JSON. Fires `connectivityChanged`. */
+        getConnectivity(): string;
 
         getIsFlashlightAvailable(): boolean;
         /** Fires `flashlightChanged`. */

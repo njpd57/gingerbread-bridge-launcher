@@ -20,7 +20,7 @@ import SettingsIcon from '@/home/icons/SettingsIcon.vue';
 
 // Android 2.x's "Power control" widget: a row of buttons, each with an indicator bar underneath.
 // With our Bridge fork it's the original set (Wi-Fi, Bluetooth, GPS, sync, brightness); Wi-Fi,
-// Bluetooth and GPS only open Android's panels, and their state can't be read yet (see FEATURES.md).
+// Bluetooth and GPS only open Android's panels (apps can't toggle them), but show whether they're on.
 // Stock Bridge can toggle none of those, so it gets the actions it can do instead. With the fork,
 // long-pressing brightness toggles night mode and long-pressing sync locks the screen.
 
@@ -32,10 +32,15 @@ const device = useDeviceStatus();
 
 const step = computed(() => brightnessStep(qs.brightness));
 
-// the fork can't tell whether Wi-Fi is on, but a Wi-Fi connection means it is (hidden when the
-// WebView doesn't report the connection type)
+// older fork builds can't tell whether Wi-Fi is on, but a Wi-Fi connection means it is (hidden when
+// the WebView doesn't report the connection type)
 const wifiIndicator = computed<Indicator>(() =>
-    device.connectionType.value === null ? 'none' : onOffIndicator(device.connectionType.value === 'wifi'));
+{
+    if (qs.supportsRadioStates) return onOffIndicator(qs.wifiOn);
+    return device.connectionType.value === null ? 'none' : onOffIndicator(device.connectionType.value === 'wifi');
+});
+const bluetoothIndicator = computed<Indicator>(() => qs.supportsRadioStates ? onOffIndicator(qs.bluetoothOn) : 'none');
+const locationIndicator = computed<Indicator>(() => qs.supportsRadioStates ? onOffIndicator(qs.locationOn) : 'none');
 
 // these buttons stop the press from reaching HomeGrid, whose long press would start dragging the widget
 // (the other buttons still move it)
@@ -79,12 +84,12 @@ function openNotifications()
 
         <button class="toggle" aria-label="Bluetooth" @click="qs.openPanel('bluetooth')">
             <BluetoothIcon />
-            <span class="indicator none"></span>
+            <span class="indicator" :class="bluetoothIndicator"></span>
         </button>
 
         <button class="toggle" aria-label="Ubicación" @click="qs.openPanel('location')">
             <LocationIcon />
-            <span class="indicator none"></span>
+            <span class="indicator" :class="locationIndicator"></span>
         </button>
 
         <button

@@ -90,7 +90,8 @@ const rowOptions = [0, ...Array.from({ length: MAX_GRID_ROWS - MIN_GRID_ROWS + 1
             <div class="field-hint">
                 <template v-if="settings.gingerbreadStatusBar">
                     Oculta la barra del sistema en el launcher y dibuja la de Gingerbread.
-                    La hora y la batería son reales; la señal y el Wi-Fi son decorativos.
+                    La hora y la batería son reales; la señal y el Wi-Fi también, con nuestro fork de Bridge
+                    (si no, son decorativos).
                     <template v-if="notifications.canRead">Muestra los iconos de tus notificaciones.</template>
                     <template v-else>Los iconos de notificaciones son decorativos.</template>
                     Tócala para abrir las notificaciones.

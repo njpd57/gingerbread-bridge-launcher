@@ -158,6 +158,31 @@ class ForkBridgeMock extends BridgeMock
         return true;
     }
 
+    getWifiEnabled()
+    {
+        return true;
+    }
+
+    getIsBluetoothAvailable()
+    {
+        return true;
+    }
+
+    getBluetoothEnabled()
+    {
+        return false;
+    }
+
+    getLocationEnabled()
+    {
+        return true;
+    }
+
+    getConnectivity()
+    {
+        return JSON.stringify({ type: 'wifi', wifiLevel: 3, cellularLevel: 2, cellularDataActivity: 'none', dataActivity: 'in' });
+    }
+
     getIsFlashlightAvailable()
     {
         return true;

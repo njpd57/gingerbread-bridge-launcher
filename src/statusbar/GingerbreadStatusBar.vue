@@ -8,6 +8,8 @@ import NotificationIcons from './NotificationIcons.vue';
 import LiveNotificationIcons from './LiveNotificationIcons.vue';
 import { useNotificationsStore } from '@/stores/useNotificationsStore';
 import { useMenuStore } from '@/stores/useMenuStore';
+import { useConnectivityStore } from '@/stores/useConnectivityStore';
+import { dataActivityArrows, wifiArcs } from '@/utils/connectivity';
 
 const props = defineProps<{
     background: StatusBarBackground;
@@ -29,9 +31,16 @@ function openNotifications()
         Bridge.requestExpandNotificationShade(true);
 }
 
-// Wi-Fi has 3 arcs, the cell signal 4 bars; neither strength is readable, so both drift believably
+// Wi-Fi has 3 arcs, the cell signal 4 bars. Our Bridge fork reports the real levels; on stock Bridge
+// neither is readable, so both drift believably
+const conn = useConnectivityStore();
+const real = computed(() => conn.connectivity);
 const wifi = useSimulatedSignal(3, device.online, device.effectiveType);
 const cell = useSimulatedSignal(4, device.online, device.effectiveType);
+
+const wifiLevel = computed(() => real.value ? wifiArcs(real.value.wifiLevel) : wifi.level.value);
+const cellLevel = computed(() => real.value ? (real.value.cellularLevel ?? 0) : cell.level.value);
+const isOffline = computed(() => real.value ? real.value.type === 'none' : !device.online.value);
 
 // Gingerbread's status bar clock: 12-hour, with a smaller AM/PM ("11:02 AM")
 const clock = computed(() =>
@@ -48,8 +57,16 @@ const clock = computed(() =>
 const isLight = computed(() => props.background === 'gray' || props.background === 'white');
 
 // on mobile data there's no Wi-Fi icon, and the signal gets a "3G" tag and the activity arrows
-const onWifi = computed(() => device.connectionType.value !== 'cellular');
-const activity = computed(() => onWifi.value ? wifi : cell);
+const onWifi = computed(() => real.value ? real.value.type !== 'cellular' : device.connectionType.value !== 'cellular');
+
+// the fork measures the device's real traffic (on any network); stock Bridge gets simulated arrows
+const activity = computed(() =>
+{
+    if (real.value)
+        return dataActivityArrows(real.value.dataActivity);
+    const simulated = onWifi.value ? wifi : cell;
+    return { in: simulated.activityIn.value, out: simulated.activityOut.value };
+});
 
 // without the Battery Status API, show a full battery
 const batteryLevel = computed(() => device.batteryLevel.value ?? 1);
@@ -61,7 +78,7 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
 <template>
     <div
         class="gb-status-bar"
-        :class="[background, { light: isLight, offline: !device.online.value }]"
+        :class="[background, { light: isLight, offline: isOffline }]"
         :style="{ '--side-margin': `${sideMargin}px` }"
         role="button"
         aria-label="Abrir notificaciones"
@@ -74,25 +91,25 @@ const isBatteryLow = computed(() => device.batteryLevel.value !== null && batter
         <div class="icons">
             <!-- data activity: down (in) and up (out) arrows, lit while "transferring" -->
             <svg class="icon activity" viewBox="0 0 8 18" aria-hidden="true">
-                <path d="M4 17L0.8 12.5h6.4z" :class="{ on: activity.activityIn.value }" />
-                <path d="M4 1L7.2 5.5H0.8z" :class="{ on: activity.activityOut.value }" />
+                <path d="M4 17L0.8 12.5h6.4z" :class="{ on: activity.in }" />
+                <path d="M4 1L7.2 5.5H0.8z" :class="{ on: activity.out }" />
             </svg>
 
             <!-- Wi-Fi: a wedge and two arcs, lit up to the current level (1..3) -->
             <svg v-if="onWifi" class="icon wifi" viewBox="0 0 20 18" aria-hidden="true">
-                <path d="M10 16.5l2.4-2.9a3.8 3.8 0 0 0-4.8 0z" :class="{ on: wifi.level.value >= 1 }" />
-                <path d="M5.8 11.4a6.6 6.6 0 0 1 8.4 0l1.7-2.1a9.4 9.4 0 0 0-11.8 0z" :class="{ on: wifi.level.value >= 2 }" />
-                <path d="M2.3 7.2a12 12 0 0 1 15.4 0l1.7-2.1a14.8 14.8 0 0 0-18.8 0z" :class="{ on: wifi.level.value >= 3 }" />
+                <path d="M10 16.5l2.4-2.9a3.8 3.8 0 0 0-4.8 0z" :class="{ on: wifiLevel >= 1 }" />
+                <path d="M5.8 11.4a6.6 6.6 0 0 1 8.4 0l1.7-2.1a9.4 9.4 0 0 0-11.8 0z" :class="{ on: wifiLevel >= 2 }" />
+                <path d="M2.3 7.2a12 12 0 0 1 15.4 0l1.7-2.1a14.8 14.8 0 0 0-18.8 0z" :class="{ on: wifiLevel >= 3 }" />
             </svg>
 
             <span v-else class="network-tag">3G</span>
 
             <!-- signal: four rising bars, lit up to the current level -->
             <svg class="icon signal" viewBox="0 0 18 18" aria-hidden="true">
-                <rect x="1" y="12" width="3" height="5" :class="{ on: cell.level.value >= 1 }" />
-                <rect x="5.5" y="9" width="3" height="8" :class="{ on: cell.level.value >= 2 }" />
-                <rect x="10" y="5.5" width="3" height="11.5" :class="{ on: cell.level.value >= 3 }" />
-                <rect x="14.5" y="1.5" width="3" height="15.5" :class="{ on: cell.level.value >= 4 }" />
+                <rect x="1" y="12" width="3" height="5" :class="{ on: cellLevel >= 1 }" />
+                <rect x="5.5" y="9" width="3" height="8" :class="{ on: cellLevel >= 2 }" />
+                <rect x="10" y="5.5" width="3" height="11.5" :class="{ on: cellLevel >= 3 }" />
+                <rect x="14.5" y="1.5" width="3" height="15.5" :class="{ on: cellLevel >= 4 }" />
             </svg>
 
             <!-- battery: level fills from the bottom, bolt while charging -->
