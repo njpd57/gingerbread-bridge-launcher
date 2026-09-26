@@ -1,5 +1,5 @@
 import { BridgeMock } from '@bridgelauncher/api-mock';
-import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeScreenBrightness, BridgeScreenOrientation, BridgeSystemPanel } from '@/types/bridge-fork';
+import type { BridgeDefaultAppRole, BridgeGetNotificationsResponse, BridgeMediaAction, BridgeMediaSession, BridgeScreenBrightness, BridgeScreenOrientation, BridgeSystemPanel } from '@/types/bridge-fork';
 
 // a couple of notifications for the Gingerbread status bar in the browser
 const MOCK_NOTIFICATIONS: BridgeGetNotificationsResponse = {
@@ -17,6 +17,15 @@ const MOCK_NOTIFICATIONS: BridgeGetNotificationsResponse = {
     ],
 };
 
+// an orange square with a note, standing in for album art
+const MOCK_MEDIA_ART = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#ff8a00"/><path fill="#fff" d="M26 16h22v6H32v22a7 7 0 1 1-6-7z"/></svg>');
+
+const MOCK_TRACKS = [
+    { title: 'Gingerbread', artist: 'Nexus S', album: 'Android 2.3' },
+    { title: 'Froyo', artist: 'Nexus One', album: 'Android 2.2' },
+];
+
 // a white envelope, standing in for a notification's small icon
 const MOCK_NOTIFICATION_ICON = 'data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#fff" d="M2 5h20v14H2z"/></svg>');
@@ -29,6 +38,17 @@ class ForkBridgeMock extends BridgeMock
     private brightness: BridgeScreenBrightness = { isAuto: true, level: 0.5 };
     private autoRotateOn = false;
     private masterSyncOn = true;
+    private track = 0;
+    private media: BridgeMediaSession = this.mediaSession('paused', 30_000);
+
+    private mediaSession(state: BridgeMediaSession['state'], positionMs: number): BridgeMediaSession
+    {
+        return {
+            packageName: 'com.spotify.music', ...MOCK_TRACKS[this.track], state,
+            durationMs: 200_000, positionMs, positionUpdatedAt: Date.now(), playbackSpeed: 1,
+            hasArt: true, artVersion: this.track, canSkipToNext: true, canSkipToPrevious: true,
+        };
+    }
 
     // like Bridge, tell the page about a change through onBridgeEvent
     private emit(event: object)
@@ -95,6 +115,40 @@ class ForkBridgeMock extends BridgeMock
     requestDismissNotification(key: string)
     {
         alert(`Would dismiss notification ${key}.`);
+        return true;
+    }
+
+    getMediaSession()
+    {
+        return JSON.stringify(this.media);
+    }
+
+    getMediaArtURL()
+    {
+        return MOCK_MEDIA_ART;
+    }
+
+    requestMediaAction(action: BridgeMediaAction)
+    {
+        const m = this.media;
+        const position = (m.positionMs ?? 0) + (m.state === 'playing' ? Date.now() - m.positionUpdatedAt : 0);
+        if (action === 'next' || action === 'previous')
+        {
+            this.track = (this.track + 1) % MOCK_TRACKS.length;
+            this.media = this.mediaSession(m.state, 0);
+        }
+        else
+        {
+            const play = action === 'play' || (action === 'playPause' && m.state !== 'playing');
+            this.media = this.mediaSession(play ? 'playing' : 'paused', position);
+        }
+        this.emit({ name: 'mediaSessionChanged', session: this.media });
+        return true;
+    }
+
+    requestOpenMediaApp()
+    {
+        alert(`Would open ${this.media.packageName}.`);
         return true;
     }
 

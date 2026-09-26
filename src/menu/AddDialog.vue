@@ -43,6 +43,7 @@ const widgets: { kind: WidgetKind; label: string }[] = [
     { kind: 'battery', label: 'Batería' },
     { kind: 'quote', label: 'Frase del día' },
     { kind: 'photo', label: 'Marco de fotos' },
+    { kind: 'music', label: 'Música' },
     { kind: 'weather', label: 'Tiempo' },
     { kind: 'power', label: 'Control de energía' },
     { kind: 'search', label: 'Búsqueda de aplicaciones' },

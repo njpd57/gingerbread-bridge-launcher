@@ -17,6 +17,30 @@ export interface BridgeScreenBrightness
     level: number;
 }
 
+export type BridgeMediaPlaybackState = 'playing' | 'paused' | 'buffering' | 'stopped' | 'none';
+export type BridgeMediaAction = 'play' | 'pause' | 'playPause' | 'next' | 'previous';
+
+/** The media session that's playing (or was last playing), from `getMediaSession()` and `mediaSessionChanged`. */
+export interface BridgeMediaSession
+{
+    packageName: string;
+    title: string | null;
+    artist: string | null;
+    album: string | null;
+    state: BridgeMediaPlaybackState;
+    durationMs: number | null;
+    /** The position at `positionUpdatedAt`; while playing, it advances at `playbackSpeed`. */
+    positionMs: number | null;
+    /** Milliseconds since the epoch. */
+    positionUpdatedAt: number;
+    playbackSpeed: number;
+    hasArt: boolean;
+    /** Changes with every track, like the URL from `getMediaArtURL()`. */
+    artVersion: number;
+    canSkipToNext: boolean;
+    canSkipToPrevious: boolean;
+}
+
 /** An active notification, as served by `getNotificationsURL()` and the `notificationPosted` event. */
 export interface BridgeNotification
 {
@@ -53,7 +77,8 @@ export type BridgeForkEvent =
     | { name: 'flashlightChanged'; newValue: boolean }
     | { name: 'screenBrightnessChanged'; newValue: BridgeScreenBrightness }
     | { name: 'autoRotateChanged'; newValue: boolean }
-    | { name: 'masterSyncChanged'; newValue: boolean };
+    | { name: 'masterSyncChanged'; newValue: boolean }
+    | { name: 'mediaSessionChanged'; session: BridgeMediaSession | null };
 
 declare module '@bridgelauncher/api'
 {
@@ -88,6 +113,17 @@ declare module '@bridgelauncher/api'
 
         /** Dismisses a clearable notification. */
         requestDismissNotification(key: string, showToastIfFailed?: boolean): boolean;
+
+        /** A {@link BridgeMediaSession} as JSON, or `"null"`. Needs notification access. Fires `mediaSessionChanged`. */
+        getMediaSession(): string;
+
+        /** The current track's art (404 when it has none); the URL changes with every track. */
+        getMediaArtURL(): string;
+
+        requestMediaAction(action: BridgeMediaAction, showToastIfFailed?: boolean): boolean;
+
+        /** Opens the app that's playing, on its player screen when it says which one that is. */
+        requestOpenMediaApp(showToastIfFailed?: boolean): boolean;
 
         /** Opens the floating panel (Android 10+) or the settings screen for something projects can't toggle. */
         requestOpenSystemPanel(panel: BridgeSystemPanel, showToastIfFailed?: boolean): boolean;

@@ -11,6 +11,8 @@ import { formatNotificationTime, notificationPanelSections } from '@/utils/notif
 import type { BridgeNotification } from '@/types/bridge-fork';
 import OverscrollGlow from '@/components/OverscrollGlow.vue';
 import QuickToggles from './QuickToggles.vue';
+import MusicPlayer from '@/widgets/music/MusicPlayer.vue';
+import { useMediaStore } from '@/stores/useMediaStore';
 
 // Our own notification panel, in the style of Gingerbread's (2.3's dark one): "Borrar" at the top,
 // "En curso" and "Notificaciones" sections, and a handle at the bottom to close it. On top, a row of
@@ -21,6 +23,7 @@ const notifications = useNotificationsStore();
 const qs = useQuickSettingsStore();
 const apps = useAppsStore();
 const settings = useSettingsStore();
+const media = useMediaStore();
 
 const listEl = ref<HTMLElement>();
 const glow = useOverscrollGlow(listEl, 'y', () => settings.gingerbreadOverscroll);
@@ -82,6 +85,9 @@ function openSystemShade()
                 <span class="date">{{ dateLabel }}</span>
                 <button v-if="hasClearable" class="clear" @click="clearAll">Borrar</button>
             </div>
+
+            <!-- only while something is playing (or paused), like Android's media controls -->
+            <MusicPlayer v-if="media.session" variant="panel" class="player" />
 
             <div class="list-wrap">
                 <div class="list" ref="listEl">
