@@ -30,18 +30,16 @@ function submit()
         weather.setCityAsync(cityInput.value);
 }
 
-function onWidgetClick()
+function onContentClick()
 {
-    if (!weather.city)
-        startEditing();
-    else
+    if (weather.city)
         weather.refreshAsync();
 }
 
 </script>
 
 <template>
-    <div class="weather-widget" @click="onWidgetClick">
+    <div class="weather-widget">
 
         <!-- a dialog rather than a field in the widget: the widget can sit low on the screen, where
              the keyboard would cover it, while the dialog recenters above the keyboard. Mounted only
@@ -65,100 +63,119 @@ function onWidgetClick()
             </GbDialog>
         </Teleport>
 
-        <div v-if="!weather.city" class="empty">
-            Toca para elegir tu ciudad
-        </div>
+        <button class="city-bar" @click="startEditing">{{ weather.city?.name ?? 'Elige tu ciudad' }}</button>
 
-        <template v-else>
-            <WeatherIcon
-                v-if="description && weather.data"
-                class="icon"
-                :kind="description.kind"
-                :is-day="weather.data.isDay" />
-
-            <div v-if="weather.data" class="temperature">
-                {{ Math.round(weather.data.temperature) }}°
+        <div class="content" @click="onContentClick">
+            <div v-if="!weather.city" class="empty">
+                Toca la ciudad para elegirla
             </div>
 
-            <div class="details">
-                <button class="city" @click.stop="startEditing">{{ weather.city.name }}</button>
-                <div v-if="description" class="condition">{{ description.label }}</div>
-                <div v-if="weather.data" class="range">
-                    {{ Math.round(weather.data.max) }}° / {{ Math.round(weather.data.min) }}°
+            <template v-else>
+                <WeatherIcon
+                    v-if="description && weather.data"
+                    class="icon"
+                    :kind="description.kind"
+                    :is-day="weather.data.isDay" />
+
+                <div v-if="weather.data" class="temperature">
+                    {{ Math.round(weather.data.temperature) }}°
                 </div>
-                <div v-if="weather.status === 'loading'" class="status">Actualizando…</div>
-                <div v-else-if="weather.status === 'error'" class="status error">{{ weather.errorMessage }}</div>
-            </div>
-        </template>
+
+                <div class="details">
+                    <div v-if="description" class="condition">{{ description.label }}</div>
+                    <div v-if="weather.data" class="range">
+                        {{ Math.round(weather.data.max) }}° / {{ Math.round(weather.data.min) }}°
+                    </div>
+                    <div v-if="weather.status === 'loading'" class="status">Actualizando…</div>
+                    <div v-else-if="weather.status === 'error'" class="status error">{{ weather.errorMessage }}</div>
+                </div>
+            </template>
+        </div>
 
     </div>
 </template>
 
 <style scoped lang="scss">
+// Songbird's look: a gray frame, the city on a dark bar, the reading recessed below
 .weather-widget {
+    @include gb-widget-frame;
     display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 88px;
-    padding: 10px 14px;
-    // the power control's glossy panel
-    @include gb-widget-glossy;
-    text-shadow: 0 1px 2px #000;
-    cursor: pointer;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    text-shadow: 0 1px 1px #000;
 
-    > .icon {
-        flex-shrink: 0;
-        width: 64px;
-        height: 64px;
-    }
-
-    > .temperature {
-        font-size: 44px;
-        line-height: 1;
-        font-weight: 300;
-    }
-
-    > .details {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 2px;
-        margin-left: auto;
-        text-align: right;
+    > .city-bar {
+        @include gb-widget-bar;
+        appearance: none;
+        padding: 3px 8px;
+        border: 1px solid #111;
+        border-radius: 4px;
+        font: inherit;
         font-size: 13px;
+        font-weight: bold;
+        text-align: left;
+        cursor: pointer;
 
-        > .city {
-            appearance: none;
-            border: none;
-            background: none;
-            padding: 0;
-            color: inherit;
-            font: inherit;
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: inherit;
-            cursor: pointer;
+        &:active {
+            @include gb-pressed;
+        }
+    }
+
+    > .content {
+        @include gb-widget-inset;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 0;
+        padding: 4px 10px;
+        cursor: pointer;
+
+        > .icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
         }
 
-        > .condition,
-        > .range {
-            color: rgba(#fff, 0.85);
+        > .temperature {
+            font-size: 34px;
+            line-height: 1;
+            font-weight: 300;
         }
 
-        > .status {
-            font-size: 11px;
-            color: rgba(#fff, 0.6);
+        > .details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            margin-left: auto;
+            text-align: right;
+            font-size: 13px;
 
-            &.error {
-                color: #ffb74d;
+            > .condition,
+            > .range {
+                color: rgba(#fff, 0.85);
+            }
+
+            > .status {
+                font-size: 11px;
+                color: rgba(#fff, 0.6);
+
+                &.error {
+                    color: #ffb74d;
+                }
             }
         }
-    }
 
-    > .empty {
-        flex: 1;
-        text-align: center;
-        color: rgba(#fff, 0.8);
+        > .empty {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: #ccc;
+        }
     }
 }
 
